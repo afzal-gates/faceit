@@ -10,7 +10,8 @@
       "Bash(python generate_reference_images.py:*)",
       "Bash(python overlay_landmarks_on_images.py:*)",
       "Bash(git push)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
