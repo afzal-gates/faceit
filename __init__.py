@@ -132,6 +132,32 @@ class FaceitPreferences(bpy.types.AddonPreferences):
         row = col_right.row()
         row.prop(self, "auto_lock_3d_view", icon='RESTRICT_VIEW_ON')
 
+        # Cleanup section
+        layout.separator()
+        layout.separator()
+        box = layout.box()
+        box.label(text="Cleanup & Uninstall", icon='TRASH')
+
+        # Data cleanup button
+        row = box.row()
+        row.operator("faceit.cleanup_data", text="Clean Up FaceIt Data", icon='BRUSH_DATA')
+
+        box.separator()
+
+        # Uninstall instructions
+        col = box.column(align=True)
+        col.label(text="To completely uninstall this addon:")
+        col.label(text="1. Click 'Clean Up FaceIt Data' above (optional)")
+        col.label(text="2. Look for the 'Remove' button below")
+        col.label(text="3. Click 'Remove' then restart Blender")
+
+        box.separator()
+
+        # Direct uninstall button
+        row = box.row()
+        row.scale_y = 1.5
+        row.operator("faceit.uninstall_addon", text="Uninstall FACEIT Addon", icon='X')
+
 
 def cleanse_modules():
     """search for your plugin modules in blender python sys.modules and remove them"""
