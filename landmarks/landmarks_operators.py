@@ -906,3 +906,161 @@ class FACEIT_OT_FinishEditLandmarks(bpy.types.Operator):
         bpy.ops.faceit.unmask_main('EXEC_DEFAULT')
         bpy.ops.object.mode_set(mode='OBJECT')
         return {'FINISHED'}
+
+
+class FACEIT_OT_SnapLandmarkToVertex(bpy.types.Operator):
+    '''Pick a vertex from the main mesh to snap the selected landmark point. Select a landmark vertex first, then click this button and pick a vertex from your face mesh'''
+    bl_idname = 'faceit.snap_landmark_to_vertex'
+    bl_label = 'Pick Vertex to Snap'
+    bl_options = {'UNDO', 'INTERNAL'}
+
+    _timer = None
+    _handle = None
+    picking_active = False
+    selected_landmark_indices = []
+
+    @ classmethod
+    def poll(cls, context):
+        if context.object:
+            return context.object.name == 'facial_landmarks' and context.mode == 'EDIT_MESH'
+
+    def modal(self, context, event):
+        context.area.tag_redraw()
+
+        if event.type in {'ESC', 'RIGHTMOUSE'}:
+            self.cancel(context)
+            self.report({'INFO'}, "Vertex picking cancelled")
+            return {'CANCELLED'}
+
+        if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
+            # Get the clicked position
+            if context.region and context.space_data.type == 'VIEW_3D':
+                from bpy_extras import view3d_utils
+
+                # Get mouse position
+                mouse_pos = (event.mouse_region_x, event.mouse_region_y)
+
+                # Perform ray cast to find clicked vertex
+                ray_origin = view3d_utils.region_2d_to_origin_3d(
+                    context.region,
+                    context.space_data.region_3d,
+                    mouse_pos
+                )
+                ray_direction = view3d_utils.region_2d_to_vector_3d(
+                    context.region,
+                    context.space_data.region_3d,
+                    mouse_pos
+                )
+
+                # Get the main face object
+                main_obj = futils.get_main_faceit_object()
+                if not main_obj:
+                    self.report({'WARNING'}, "No main face object found")
+                    return {'RUNNING_MODAL'}
+
+                # Convert ray to object's local space
+                ray_origin_local = main_obj.matrix_world.inverted() @ ray_origin
+                ray_direction_local = main_obj.matrix_world.inverted().to_3x3() @ ray_direction
+
+                # Perform ray cast on main object in local space
+                result, location, normal, face_index = main_obj.ray_cast(
+                    ray_origin_local,
+                    ray_direction_local
+                )
+
+                if result:
+                    # Find the closest vertex to the hit location (in local space)
+                    mesh = main_obj.data
+                    face = mesh.polygons[face_index]
+                    closest_vert_index = None
+                    min_distance = float('inf')
+
+                    # Check vertices of the hit face (compare in local space)
+                    for vert_idx in face.vertices:
+                        vert = mesh.vertices[vert_idx]
+                        distance = (vert.co - location).length
+                        if distance < min_distance:
+                            min_distance = distance
+                            closest_vert_index = vert_idx
+
+                    if closest_vert_index is not None:
+                        # Get world position of the picked vertex
+                        picked_vert = mesh.vertices[closest_vert_index]
+                        world_pos = main_obj.matrix_world @ picked_vert.co
+
+                        # Snap selected landmark vertices to this position
+                        lm_obj = context.object
+                        lm_mesh = bmesh.from_edit_mesh(lm_obj.data)
+                        lm_mesh.verts.ensure_lookup_table()
+
+                        # Get mirror mapping
+                        mirror_dict = lm_data.LANDMARKS_MIRROR_VERTICES_DICT
+                        reverse_mirror_dict = {v: k for k, v in mirror_dict.items()}
+
+                        snapped_count = 0
+                        mirrored_count = 0
+
+                        for vert_idx in self.selected_landmark_indices:
+                            if vert_idx < len(lm_mesh.verts):
+                                lm_vert = lm_mesh.verts[vert_idx]
+                                # Convert world position to landmark object local space
+                                local_pos = lm_obj.matrix_world.inverted() @ world_pos
+                                lm_vert.co = local_pos
+                                snapped_count += 1
+
+                                # Mirror if this vertex has a mirror pair
+                                mirror_idx = None
+                                if vert_idx in mirror_dict:
+                                    mirror_idx = mirror_dict[vert_idx]
+                                elif vert_idx in reverse_mirror_dict:
+                                    mirror_idx = reverse_mirror_dict[vert_idx]
+
+                                if mirror_idx is not None and mirror_idx < len(lm_mesh.verts):
+                                    # Mirror the position across X axis
+                                    mirror_vert = lm_mesh.verts[mirror_idx]
+                                    mirrored_pos = local_pos.copy()
+                                    mirrored_pos.x = -mirrored_pos.x
+                                    mirror_vert.co = mirrored_pos
+                                    mirrored_count += 1
+
+                        bmesh.update_edit_mesh(lm_obj.data)
+
+                        report_msg = f"Snapped {snapped_count} landmark(s) to vertex {closest_vert_index}"
+                        if mirrored_count > 0:
+                            report_msg += f" | Mirrored {mirrored_count} landmark(s)"
+                        self.report({'INFO'}, report_msg)
+                        self.cancel(context)
+                        return {'FINISHED'}
+                else:
+                    self.report({'WARNING'}, "No vertex found at clicked location. Try clicking closer to the mesh")
+                    return {'RUNNING_MODAL'}
+
+        return {'RUNNING_MODAL'}
+
+    def invoke(self, context, event):
+        # Get selected landmark vertices
+        lm_obj = context.object
+        lm_mesh = bmesh.from_edit_mesh(lm_obj.data)
+        lm_mesh.verts.ensure_lookup_table()
+
+        self.selected_landmark_indices = [v.index for v in lm_mesh.verts if v.select]
+
+        if len(self.selected_landmark_indices) == 0:
+            self.report({'WARNING'}, "Please select at least one landmark vertex first")
+            return {'CANCELLED'}
+
+        # Start modal operation
+        self.picking_active = True
+        context.window_manager.modal_handler_add(self)
+
+        # Add timer for UI updates
+        self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
+
+        self.report({'INFO'}, f"Click on a vertex from your face mesh to snap {len(self.selected_landmark_indices)} landmark(s)")
+        return {'RUNNING_MODAL'}
+
+    def cancel(self, context):
+        if self._timer:
+            context.window_manager.event_timer_remove(self._timer)
+        self.picking_active = False
+        context.area.header_text_set(None)

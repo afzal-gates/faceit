@@ -107,6 +107,17 @@ class FACEIT_PT_Landmarks(FACEIT_PT_BaseRig, bpy.types.Panel):
             row = col.row(align=True)
             row.operator('faceit.edit_landmarks', icon='EDITMODE_HLT')
             row.operator('faceit.finish_edit_landmarks', text='', icon='CHECKMARK')
+            # Vertex picker for snapping landmarks
+            if context.object and context.object.name == 'facial_landmarks' and context.mode == 'EDIT_MESH':
+                box = col.box()
+                box_col = box.column(align=True)
+                box_col.label(text='Snap to Vertex', icon='EYEDROPPER')
+                box_col.label(text='1. Select landmark vertex', icon='BLANK1')
+                box_col.label(text='2. Click button below', icon='BLANK1')
+                box_col.label(text='3. Click face vertex', icon='BLANK1')
+                row = box_col.row()
+                row.scale_y = 1.2
+                row.operator('faceit.snap_landmark_to_vertex', icon='EYEDROPPER')
 
 
 class FACEIT_OT_SearchVertexGroups(bpy.types.Operator):
