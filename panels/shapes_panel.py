@@ -116,11 +116,61 @@ class FACEIT_PT_TargetShapeLists(FACEIT_PT_BaseRetargetShapes, bpy.types.Panel):
                 row.operator('faceit.export_retargeting_map', text='Save Profile').expression_sets = 'A2F'
 
 
+class FACEIT_PT_ShapeKeyDriverControl(FACEIT_PT_BaseRetargetShapes, bpy.types.Panel):
+    bl_label = 'Shape Key Driver Control'
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_idname = 'FACEIT_PT_ShapeKeyDriverControl'
+    faceit_predecessor = 'FACEIT_PT_TargetShapeLists'
+
+    @classmethod
+    def poll(cls, context):
+        return super().poll(context)
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+
+        col = layout.column(align=True)
+
+        # Info box
+        box = col.box()
+        box_col = box.column(align=True)
+        box_col.label(text="Manual Shape Key Control", icon='INFO')
+        box_col.separator(factor=0.5)
+        box_col.label(text="If shape keys don't respond to manual", icon='BLANK1')
+        box_col.label(text="changes, they may have active drivers.", icon='BLANK1')
+        box_col.separator(factor=0.5)
+        box_col.label(text="Use the buttons below to toggle driver", icon='BLANK1')
+        box_col.label(text="control on/off.", icon='BLANK1')
+
+        col.separator()
+
+        # Driver control buttons
+        box = col.box()
+        box_col = box.column(align=True)
+        box_col.label(text="Driver Control:", icon='DRIVER')
+
+        row = box_col.row(align=True)
+        row.scale_y = 1.3
+        row.operator('faceit.mute_shape_key_drivers', text="Enable Manual", icon='HAND')
+        row.operator('faceit.unmute_shape_key_drivers', text="Enable Drivers", icon='DRIVER')
+
+        col.separator()
+
+        # Utility buttons
+        box = col.box()
+        box_col = box.column(align=True)
+        box_col.label(text="Utilities:", icon='MODIFIER')
+
+        row = box_col.row()
+        row.operator('faceit.list_shape_key_drivers', text="List Drivers in Console", icon='CONSOLE')
+
+
 class FACEIT_PT_RetargetShapesSetup(FACEIT_PT_BaseRetargetShapes, bpy.types.Panel):
     bl_label = 'Target Shapes Setup'
     bl_options = set()
     bl_idname = 'FACEIT_PT_RetargetShapesSetup'
-    faceit_predecessor = 'FACEIT_PT_TargetShapeLists'
+    faceit_predecessor = 'FACEIT_PT_ShapeKeyDriverControl'
 
     @classmethod
     def poll(cls, context):
