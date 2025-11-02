@@ -1,0 +1,19 @@
+LANDMARK REFERENCE IMAGES - REQUIRED FILENAMES
+===============================================
+
+Place your reference images in this directory with these exact filenames:
+
+Required Images:
+  1. face_outline.png  - 17 facial outline points (jaw to temples)
+  2. eyebrows.png      - 10 eyebrow points (5 per eyebrow)
+  3. eyes.png          - 12 eye points (6 per eye)
+  4. nose.png          - 9 nose points (bridge + nostrils)
+  5. mouth.png         - 20 mouth points (outer 12 + inner 8)
+  6. teeth.png         - 2 teeth points (upper + lower)
+  7. tongue.png        - 3 tongue points (tip, center, back)
+  8. ears.png          - 12 ear points (6 per ear)
+
+Format: PNG or JPG
+Recommended Size: 512x512 to 1024x1024 pixels
+
+See README.md in this directory for detailed guidelines on creating these images.

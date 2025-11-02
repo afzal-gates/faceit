@@ -5,7 +5,12 @@
       "Bash(python build_release.py:*)",
       "Bash(python -m zipfile:*)",
       "Bash(cat:*)",
-      "Bash(nul)"
+      "Bash(nul)",
+      "Bash(python -m py_compile:*)",
+      "Bash(python generate_reference_images.py:*)",
+      "Bash(python overlay_landmarks_on_images.py:*)",
+      "Bash(git push)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
