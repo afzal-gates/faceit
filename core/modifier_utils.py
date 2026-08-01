@@ -1,37 +1,37 @@
 
 import bpy
 
-from .faceit_utils import get_faceit_armature
-from .faceit_data import BAKE_MOD_TYPES, MOD_TYPE_ICON_DICT, GENERATORS
+from .expresso_utils import get_expresso_armature
+from .expresso_data import BAKE_MOD_TYPES, MOD_TYPE_ICON_DICT, GENERATORS
 
 
-def add_faceit_armature_modifier(obj, rig, force=False, force_original=True):
-    '''add faceit_ARMATURE modifier. Set the rig object as target. reorder and setup. return mod'''
+def add_expresso_armature_modifier(obj, rig, force=False, force_original=True):
+    '''add expresso_ARMATURE modifier. Set the rig object as target. reorder and setup. return mod'''
     if rig is None:
-        rig = get_faceit_armature(force_original=force_original)
+        rig = get_expresso_armature(force_original=force_original)
         if rig is None and not force:
             return
     if obj is None:
         return
-    mod = get_faceit_armature_modifier(obj, force_original=force_original)
+    mod = get_expresso_armature_modifier(obj, force_original=force_original)
     if mod:
         obj.modifiers.remove(mod)
-    mod = obj.modifiers.new(name='Faceit_Armature', type='ARMATURE')
+    mod = obj.modifiers.new(name='Expresso_Armature', type='ARMATURE')
     mod.object = rig
     reorder_armature_in_modifier_stack(obj, mod)
     mod.show_on_cage = True
     mod.show_in_editmode = True
     mod.show_viewport = True
     mod.show_render = True
-    set_bake_modifier_item(mod, set_bake=True, is_faceit_mod=True)
+    set_bake_modifier_item(mod, set_bake=True, is_expresso_mod=True)
     return mod
 
 
-def get_faceit_armature_modifier(obj, force_original=True):
-    '''Get the faceit armature modifier for a specific object.'''
-    rig = get_faceit_armature(force_original=force_original)
+def get_expresso_armature_modifier(obj, force_original=True):
+    '''Get the expresso armature modifier for a specific object.'''
+    rig = get_expresso_armature(force_original=force_original)
     if rig is None:
-        print("No FaceitRig found")
+        print("No ExpressoRig found")
         return
     for mod in obj.modifiers:
         if mod.type == 'ARMATURE':
@@ -40,7 +40,7 @@ def get_faceit_armature_modifier(obj, force_original=True):
 
 
 def restore_modifier_order(obj):
-    obj_item = bpy.context.scene.faceit_face_objects[obj.name]
+    obj_item = bpy.context.scene.expresso_face_objects[obj.name]
     for mod_item in obj_item.modifiers:
         mod = obj.modifiers.get(mod_item.name)
         if mod:
@@ -60,7 +60,7 @@ def restore_modifier_order(obj):
 
 
 def set_mod_bake(obj, mod, bake=True):
-    obj_item = bpy.context.scene.faceit_face_objects.get(obj.name)
+    obj_item = bpy.context.scene.expresso_face_objects.get(obj.name)
     if obj_item is not None:
         mod_item = obj_item.modifiers.get(mod.name)
         if mod_item is not None:
@@ -148,10 +148,10 @@ def set_bake_modifier_properties(mod, mod_item):
         mod_item.invert_vertex_group = mod.invert_vertex_group
 
 
-def set_bake_modifier_item(mod, obj_item=None, set_bake=False, is_faceit_mod=False, index=-1):
+def set_bake_modifier_item(mod, obj_item=None, set_bake=False, is_expresso_mod=False, index=-1):
     '''Set properties of a modifier to a modifier item. Create a new modifier item if it doesn't exist.'''
     if obj_item is None:
-        obj_item = bpy.context.scene.faceit_face_objects.get(mod.id_data.name)
+        obj_item = bpy.context.scene.expresso_face_objects.get(mod.id_data.name)
         if obj_item is None:
             return None
     mod_item = obj_item.modifiers.get(mod.name)
@@ -163,7 +163,7 @@ def set_bake_modifier_item(mod, obj_item=None, set_bake=False, is_faceit_mod=Fal
     mod_item.bake = set_bake
     if index != -1:
         mod_item.index = index
-    mod_item.is_faceit_modifier = is_faceit_mod
+    mod_item.is_expresso_modifier = is_expresso_mod
     if mod.type in BAKE_MOD_TYPES:
         mod_item.can_bake = True
         if mod.show_viewport and not mod.type == 'NODES':
@@ -173,25 +173,25 @@ def set_bake_modifier_item(mod, obj_item=None, set_bake=False, is_faceit_mod=Fal
 
 def populate_bake_modifier_items(objects):
     '''Populates the bake modifier list for all passed objects.
-    @objects: Should be a list of objects in faceit_face_objects.
+    @objects: Should be a list of objects in expresso_face_objects.
     '''
     for obj in objects:
-        obj_item = bpy.context.scene.faceit_face_objects.get(obj.name)
+        obj_item = bpy.context.scene.expresso_face_objects.get(obj.name)
         if obj_item is None:
             continue
         bake_mods = []
-        faceit_mods = []
+        expresso_mods = []
         if not obj_item.modifiers:
-            arma_mod = get_faceit_armature_modifier(obj, force_original=False)
+            arma_mod = get_expresso_armature_modifier(obj, force_original=False)
             if arma_mod:
-                bake_mods = faceit_mods = [arma_mod.name, ]
+                bake_mods = expresso_mods = [arma_mod.name, ]
         else:
             bake_mods = [mod_item.name for mod_item in obj_item.modifiers if mod_item.bake]
-            faceit_mods = [mod_item.name for mod_item in obj_item.modifiers if mod_item.is_faceit_modifier]
+            expresso_mods = [mod_item.name for mod_item in obj_item.modifiers if mod_item.is_expresso_modifier]
         obj_item.modifiers.clear()
         for i, mod in enumerate(obj.modifiers):
             set_bake_modifier_item(mod, obj_item=obj_item, set_bake=mod.name in bake_mods,
-                                   is_faceit_mod=mod.name in faceit_mods, index=i)
+                                   is_expresso_mod=mod.name in expresso_mods, index=i)
 
 
 def restore_bake_modifiers(obj, modifier_list):
@@ -358,7 +358,7 @@ def bind_valid_bake_modifiers(obj, modifier_list):
 def reorder_armature_in_modifier_stack(obj, arm_mod=None):
     '''Reorder the armature modifier in the modifier stack.'''
     # deformers = ['SURFACE_DEFORM']
-    above_faceit_arma = ['MIRROR', 'SURFACE_DEFORM', 'LATTICE', 'SMOOTH', 'SURFACE_DEFORM',
+    above_expresso_arma = ['MIRROR', 'SURFACE_DEFORM', 'LATTICE', 'SMOOTH', 'SURFACE_DEFORM',
                          'LAPLACIANSMOOTH', 'SIMPLE_DEFORM', 'BEVEL', 'BOOLEAN', 'BUILD', 'EDGE_SPLIT', 'NODES', 'SKIN',
                          'SOLIDIFY', 'TRIANGULATE', 'VOLUME_TO_MESH', 'WELD', 'SHRINKWRAP', 'WARP'
                          'CURVE', 'CAST']
@@ -369,7 +369,7 @@ def reorder_armature_in_modifier_stack(obj, arm_mod=None):
         above_mods = [i for i, mod in enumerate(obj.modifiers) if mod.type == 'ARMATURE' and mod != arm_mod]
         if not above_mods:
             above_mods = [i for i, m in enumerate(
-                obj.modifiers) if m.type in above_faceit_arma and not m.use_pin_to_last]
+                obj.modifiers) if m.type in above_expresso_arma and not m.use_pin_to_last]
         if above_mods:
             # Move it right below other armature mods
             new_idx = max(above_mods)

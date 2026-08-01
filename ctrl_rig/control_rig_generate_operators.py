@@ -4,8 +4,8 @@ from mathutils import Vector
 
 from ..core.vgroup_utils import get_objects_with_vertex_group
 
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..rigging import rig_utils
 from ..animate.animate_utils import exit_nla_tweak_mode
 from . import control_rig_data as ctrl_data
@@ -15,9 +15,9 @@ from ..core.shape_key_utils import set_slider_max, set_slider_min
 from ..core.retarget_list_utils import get_all_set_target_shapes, get_index_of_collection_item, get_target_shape_keys, eval_target_shapes
 
 
-class FACEIT_OT_GenerateControlRig(bpy.types.Operator):
+class EXPRESSO_OT_GenerateControlRig(bpy.types.Operator):
     '''Generate a control rig armature to control the shape keys. Works with mocap, animation layers, mirroring, etc.'''
-    bl_idname = 'faceit.generate_control_rig'
+    bl_idname = 'expresso.generate_control_rig'
     bl_label = 'Generate Control Rig'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -54,7 +54,7 @@ class FACEIT_OT_GenerateControlRig(bpy.types.Operator):
 
     ctrl_rig_name: StringProperty(
         name='Rig Name',
-        default='FaceitControlRig',
+        default='ExpressoControlRig',
         description='Enter the name of your character or project or leave it at default. Up to you.',
     )
     copy_amplify_values: BoolProperty(
@@ -69,16 +69,16 @@ class FACEIT_OT_GenerateControlRig(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.mode == 'OBJECT':
-            return len(context.scene.faceit_face_objects) >= 1
+            return len(context.scene.expresso_face_objects) >= 1
 
     def invoke(self, context, event):
-        c_rig_count = len(futils.get_faceit_control_armatures())
+        c_rig_count = len(futils.get_expresso_control_armatures())
         if c_rig_count > 1:
             self.auto_connect = False
-        head_obj = context.scene.faceit_head_target_object
+        head_obj = context.scene.expresso_head_target_object
         if head_obj is not None and head_obj.type == 'ARMATURE':
             head_bone = head_obj.pose.bones.get(
-                context.scene.faceit_head_sub_target)
+                context.scene.expresso_head_sub_target)
 
             self.head_bone_exists = self.set_child_of_head = head_bone is not None
 
@@ -108,17 +108,17 @@ class FACEIT_OT_GenerateControlRig(bpy.types.Operator):
         scene = context.scene
         landmarks = bpy.data.objects.get('facial_landmarks')
         if not landmarks:
-            # Try to reverse engineer landmarks based on faceitrig!
+            # Try to reverse engineer landmarks based on expressorig!
             self.report(
                 {'WARNING'},
-                'You need to setup the Faceit Landmarks for your character in order to create the Control Rig.')
+                'You need to setup the Expresso Landmarks for your character in order to create the Control Rig.')
             return {'CANCELLED'}
 
-        if not eval_target_shapes(scene.faceit_arkit_retarget_shapes):
+        if not eval_target_shapes(scene.expresso_arkit_retarget_shapes):
             self.report({'WARNING'}, 'ARKit Shape list is not initiated.')
             return {'CANCELLED'}
         c_rig_filepath = fdata.get_control_rig_file()
-        faceit_collection = futils.get_faceit_collection(
+        expresso_collection = futils.get_expresso_collection(
             force_access=True, create=True)
 
         with bpy.data.libraries.load(c_rig_filepath) as (data_from, data_to):
@@ -129,8 +129,8 @@ class FACEIT_OT_GenerateControlRig(bpy.types.Operator):
         obj = None
         for obj in data_to.objects:
             if obj:
-                if obj.type == 'ARMATURE' and 'FaceitControlRig' in obj.name:
-                    faceit_collection.objects.link(obj)
+                if obj.type == 'ARMATURE' and 'ExpressoControlRig' in obj.name:
+                    expresso_collection.objects.link(obj)
                     obj['ctrl_rig_id'] = new_rig_id
                     ctrl_rig = obj
                     break
@@ -141,13 +141,13 @@ class FACEIT_OT_GenerateControlRig(bpy.types.Operator):
         futils.clear_object_selection()
         futils.set_active_object(ctrl_rig.name)
         ctrl_rig.name = self.ctrl_rig_name
-        context.scene.faceit_control_armature = ctrl_rig
+        context.scene.expresso_control_armature = ctrl_rig
         # Generate the collections in 4.0
         if bpy.app.version >= (4, 0, 0):
-            bpy.ops.faceit.update_bone_collections()
+            bpy.ops.expresso.update_bone_collections()
         ctrl_rig.animation_data_create()
         ctrl_rig['ctrl_rig_version'] = ctrl_data.CNTRL_RIG_VERSION
-        bpy.ops.faceit.match_control_rig(
+        bpy.ops.expresso.match_control_rig(
             'EXEC_DEFAULT', apply_scale=self.apply_scale)
         ctrl_utils.populate_control_rig_target_objects_from_scene(ctrl_rig)
         ctrl_utils.populate_control_rig_target_shapes_from_scene(
@@ -156,13 +156,13 @@ class FACEIT_OT_GenerateControlRig(bpy.types.Operator):
             range=self.slider_range
         )
         if self.slider_range == 'POS':
-            bpy.ops.faceit.control_rig_set_slider_ranges(
+            bpy.ops.expresso.control_rig_set_slider_ranges(
                 'EXEC_DEFAULT', new_range='POS', reconnect=False)
         else:
             if self.auto_min_range:
                 target_objects = ctrl_utils.get_crig_objects_list(ctrl_rig)
                 all_target_shapes = get_all_set_target_shapes(
-                    ctrl_rig.faceit_crig_targets)
+                    ctrl_rig.expresso_crig_targets)
                 for obj in target_objects:
                     for shape_name in all_target_shapes:
                         if obj.data.shape_keys:
@@ -171,16 +171,16 @@ class FACEIT_OT_GenerateControlRig(bpy.types.Operator):
                             if sk:
                                 set_slider_min(sk, value=-1.0)
         if self.auto_connect:
-            bpy.ops.faceit.setup_control_drivers('EXEC_DEFAULT')
+            bpy.ops.expresso.setup_control_drivers('EXEC_DEFAULT')
         if self.set_child_of_head:
-            bpy.ops.faceit.constrain_to_body_rig(
+            bpy.ops.expresso.constrain_to_body_rig(
                 'EXEC_DEFAULT', target_bone='HEAD')
         return {'FINISHED'}
 
 
-class FACEIT_OT_MatchControlRig(bpy.types.Operator):
+class EXPRESSO_OT_MatchControlRig(bpy.types.Operator):
     '''matches the bones with reference mesh positions'''
-    bl_idname = 'faceit.match_control_rig'
+    bl_idname = 'expresso.match_control_rig'
     bl_label = 'Match Control Rig'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -191,7 +191,7 @@ class FACEIT_OT_MatchControlRig(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object == futils.get_faceit_control_armature():
+        if context.active_object == futils.get_expresso_control_armature():
             return True
 
     def execute(self, context):
@@ -199,16 +199,16 @@ class FACEIT_OT_MatchControlRig(bpy.types.Operator):
         if scene.is_nla_tweakmode:
             exit_nla_tweak_mode(context)
 
-        rig = futils.get_faceit_control_armature()
+        rig = futils.get_expresso_control_armature()
         # the landmarks mesh holds the bone locations
         landmarks = futils.get_object('facial_landmarks')
         if not landmarks:
             self.report(
                 {'WARNING'},
-                'You need to setup the Faceit Landmarks for your character in order to fit the Control Rig to your character.')
+                'You need to setup the Expresso Landmarks for your character in order to fit the Control Rig to your character.')
             return {'CANCELLED'}
         landmarks.hide_viewport = False
-        use_asymmetry = scene.faceit_asymmetric
+        use_asymmetry = scene.expresso_asymmetric
         # save Settings
         rig.data.use_mirror_x = False if use_asymmetry else True
 
@@ -280,27 +280,27 @@ class FACEIT_OT_MatchControlRig(bpy.types.Operator):
                 target_point.x = 0
             # innerbones all on ZY (X=0) plane at landmarks pos 22
             elif i == 102:
-                vert_id = 22 if not scene.faceit_asymmetric else 25
+                vert_id = 22 if not scene.expresso_asymmetric else 25
                 target_point = landmarks.matrix_world @ landmarks.data.vertices[vert_id].co
                 target_point.x = 0
             # Move eyebones to the correct height.
             elif i == 103:
-                if context.scene.faceit_eye_pivot_placement == 'MANUAL':
-                    target_point = context.scene.faceit_eye_manual_pivot_point_L
+                if context.scene.expresso_eye_pivot_placement == 'MANUAL':
+                    target_point = context.scene.expresso_eye_manual_pivot_point_L
                 else:
-                    target_point = context.scene.faceit_eye_pivot_point_L
+                    target_point = context.scene.expresso_eye_pivot_point_L
                 # empty_locator = bpy.data.objects.get('eye_locator_L')
                 # if empty_locator:
                 #     target_point = empty_locator.location
                 # else:
-                #     eye_obj_L = get_objects_with_vertex_group("faceit_left_eyeball")
+                #     eye_obj_L = get_objects_with_vertex_group("expresso_left_eyeball")
                 #     if eye_obj_L:
                     # vertex_locations = rig_utils.get_evaluated_vertex_group_positions(
-                    #     eye_obj_L, "faceit_left_eyeball")
+                    #     eye_obj_L, "expresso_left_eyeball")
                     # if vertex_locations:
                     #     bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'z')
                     #     target_point = rig_utils.get_median_pos(bounds)
-                    # if scene.faceit_asymmetric:
+                    # if scene.expresso_asymmetric:
                     #     bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'x')
                     #     target_point.x = futils.get_median_pos(bounds).x
                     # else:
@@ -317,18 +317,18 @@ class FACEIT_OT_MatchControlRig(bpy.types.Operator):
                     target_bone.translate(vec)
                     # if target_point
             elif i == 104:
-                if context.scene.faceit_eye_pivot_placement == 'MANUAL':
-                    target_point = context.scene.faceit_eye_manual_pivot_point_R
+                if context.scene.expresso_eye_pivot_placement == 'MANUAL':
+                    target_point = context.scene.expresso_eye_manual_pivot_point_R
                 else:
-                    target_point = context.scene.faceit_eye_pivot_point_R
+                    target_point = context.scene.expresso_eye_pivot_point_R
                 # empty_locator = bpy.data.objects.get('eye_locator_R')
                 # if empty_locator:
                 #     target_point = empty_locator.location
                 # else:
-                #     eye_obj_R = get_objects_with_vertex_group("faceit_right_eyeball")
+                #     eye_obj_R = get_objects_with_vertex_group("expresso_right_eyeball")
                 #     if eye_obj_R:
                 #         vertex_locations = rig_utils.get_evaluated_vertex_group_positions(
-                #             eye_obj_R, "faceit_right_eyeball")
+                #             eye_obj_R, "expresso_right_eyeball")
                 #         if vertex_locations:
                 #             bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'z')
                 #             target_point = rig_utils.get_median_pos(bounds)
@@ -347,7 +347,7 @@ class FACEIT_OT_MatchControlRig(bpy.types.Operator):
                     print(vec)
                     target_bone.translate(vec)
             elif i == 105:
-                vert_id = 28 if not scene.faceit_asymmetric else 41
+                vert_id = 28 if not scene.expresso_asymmetric else 41
                 target_point = landmarks.matrix_world @ landmarks.data.vertices[vert_id].co
                 for b in bone_dict['all']:
                     bone = edit_bones[b]

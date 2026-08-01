@@ -6,10 +6,10 @@ from .. panels.draw_utils import draw_text_block
 
 
 from ..core.detection_manager import get_expression_name_double_entries
-from ..core.modifier_utils import add_faceit_armature_modifier, bind_valid_bake_modifiers, get_faceit_armature_modifier, populate_bake_modifier_items, reorder_armature_in_modifier_stack, restore_bake_modifiers, restore_modifier_order
+from ..core.modifier_utils import add_expresso_armature_modifier, bind_valid_bake_modifiers, get_expresso_armature_modifier, populate_bake_modifier_items, reorder_armature_in_modifier_stack, restore_bake_modifiers, restore_modifier_order
 from ..core.pose_utils import reset_pb
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils
 from ..shape_keys.corrective_shape_keys_utils import (
     mute_corrective_shape_keys, reevaluate_corrective_shape_keys)
@@ -20,26 +20,26 @@ def get_load_action_items(self, context):
         ('TEST', 'Test', 'Load the shape key test action'),
         ('NONE', 'None', 'Do not load any action'),
     ]
-    if context.scene.faceit_mocap_action or context.scene.faceit_head_action or context.scene.faceit_eye_action:
+    if context.scene.expresso_mocap_action or context.scene.expresso_head_action or context.scene.expresso_eye_action:
         items.insert(1, ('MOCAP', 'Mocap', 'Load the last motion capture action'))
     return items
 
 
-class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
+class EXPRESSO_OT_GenerateShapekeys(bpy.types.Operator):
     '''Bakes all deformation stored in the created expressions to shape keys on the registered objects'''
-    bl_idname = 'faceit.generate_shapekeys'
+    bl_idname = 'expresso.generate_shapekeys'
     bl_label = 'Bake Shape Keys'
     bl_options = {'UNDO', 'INTERNAL'}
 
     modifier_action: EnumProperty(
         name="Modifier Action",
         items=(
-            ('FACEIT', 'Keep Active', 'All bake modifiers will be preserved as is. Only remove the Faceit modifiers.'),
+            ('EXPRESSO', 'Keep Active', 'All bake modifiers will be preserved as is. Only remove the Expresso modifiers.'),
             ('HIDE', 'Hide', 'All bake modifiers will be hidden (Show Viewport disabled). Re-enable them individually after baking.'),
             ('REMOVE', 'Remove', 'All bake modifiers will be removed. Warning: modifier drivers might not be restored properly.'),
         ),
         # description="In order to avoid double deformation, the bake modifiers should be removed or hidden after baking the shape keys. All modifiers are restored upon Back to Rigging.",
-        default='FACEIT'
+        default='EXPRESSO'
     )
     load_action: EnumProperty(
         name="Load Action",
@@ -55,10 +55,10 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
         default=False,
         description='Populate the Audio2Face target shapes automatically.',
     )
-    keep_faceit_rig_active: BoolProperty(
-        name='Keep Faceit Rig Active',
+    keep_expresso_rig_active: BoolProperty(
+        name='Keep Expresso Rig Active',
         default=False,
-        description='Keep the Bone Rig active after baking the shape keys. Activate this if you want to use the Faceit rig beyond generating shapes.',
+        description='Keep the Bone Rig active after baking the shape keys. Activate this if you want to use the Expresso rig beyond generating shapes.',
     )
     disable_auto_keying: BoolProperty(
         name='Disable Auto Keying',
@@ -83,11 +83,11 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
     # test all bake modifiers
     # hide specific modifiers?
 
-    faceit_action_found = False
+    expresso_action_found = False
     expressions_generated = False
     arkit_expressions_found = False
     a2f_expressions_found = False
-    faceit_original_rig = True
+    expresso_original_rig = True
     auto_keying_enabled = False
     found_bake_modifiers = False
     some_objects_without_bake_modifiers = False
@@ -95,22 +95,22 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.scene.faceit_shapes_generated is False:
-            if context.scene.faceit_face_objects:
-                if futils.get_faceit_armature():
-                    return context.scene.faceit_expression_list and 'overwrite_shape_action' in bpy.data.actions
+        if context.scene.expresso_shapes_generated is False:
+            if context.scene.expresso_face_objects:
+                if futils.get_expresso_armature():
+                    return context.scene.expresso_expression_list and 'overwrite_shape_action' in bpy.data.actions
 
     def invoke(self, context, event):
         self.disable_auto_keying = self.auto_keying_enabled = context.scene.tool_settings.use_keyframe_insert_auto
-        faceit_objects = context.scene.faceit_face_objects
-        rig = futils.get_faceit_armature()
-        self.faceit_original_rig = bool(futils.get_faceit_armature(force_original=True))
+        expresso_objects = context.scene.expresso_face_objects
+        rig = futils.get_expresso_armature()
+        self.expresso_original_rig = bool(futils.get_expresso_armature(force_original=True))
         action = None
         if rig.animation_data:
             action = rig.animation_data.action
         if action:
-            self.faceit_action_found = True
-        expression_list = context.scene.faceit_expression_list
+            self.expresso_action_found = True
+        expression_list = context.scene.expresso_expression_list
         if expression_list:
             self.expressions_generated = True
             # Check if there are ARKit expressions among the expression list.
@@ -121,7 +121,7 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
             a2f_names = fdata.get_a2f_shape_data().keys()
             self.init_a2f_shape_list = self.a2f_expressions_found = any(
                 [n.name in a2f_names for n in expression_list])
-        for obj_item in faceit_objects:
+        for obj_item in expresso_objects:
             if obj_item.modifiers:
                 if any((m.bake is True for m in obj_item.modifiers)):
                     self.found_bake_modifiers = True
@@ -192,7 +192,7 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
             )
             row = box.row()
             row.prop(self, 'bake_duplicate_option', expand=True, icon='BLANK1')
-        if self.faceit_original_rig:
+        if self.expresso_original_rig:
             box = draw_text_block(
                 context,
                 layout,
@@ -201,7 +201,7 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
                 in_operator=True,
             )
             row = box.row()
-            row.prop(self, 'keep_faceit_rig_active', icon='BLANK1')  # icon='ARMATURE_DATA')
+            row.prop(self, 'keep_expresso_rig_active', icon='BLANK1')  # icon='ARMATURE_DATA')
         if self.auto_keying_enabled:
             box = draw_text_block(
                 context,
@@ -218,26 +218,26 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
         if futils.get_object_mode_from_context_mode(context.mode) != 'OBJECT' and context.object is not None:
             bpy.ops.object.mode_set()
         # Hide these modifiers during baking.
-        rig_obj = futils.get_faceit_armature()
-        expression_list = scene.faceit_expression_list
+        rig_obj = futils.get_expresso_armature()
+        expression_list = scene.expresso_expression_list
         if not self.expressions_generated:
-            self.report({'WARNING'}, 'No Expressions found. Please load Faceit Expressions in Animate Tab first.')
-        if not self.faceit_action_found:
-            self.report({'WARNING'}, 'No Action found on the Faceit Armature')
-        bake_objects = futils.get_faceit_objects_list()
+            self.report({'WARNING'}, 'No Expressions found. Please load Expresso Expressions in Animate Tab first.')
+        if not self.expresso_action_found:
+            self.report({'WARNING'}, 'No Action found on the Expresso Armature')
+        bake_objects = futils.get_expresso_objects_list()
         # Double check if the bake modifiers are populated...
         populate_bake_modifier_items(bake_objects)
-        bpy.ops.faceit.reset_expression_values()
+        bpy.ops.expresso.reset_expression_values()
 
         obj_settings = dict()
-        if scene.faceit_use_corrective_shapes:
+        if scene.expresso_use_corrective_shapes:
             reevaluate_corrective_shape_keys(expression_list, bake_objects)
         # hidden states of all objects
         futils.set_hidden_states(overwrite=True, objects=bake_objects, hide_value=False)
         save_frame = scene.frame_current
         scene.frame_set(0)
         dg = context.evaluated_depsgraph_get()
-        for obj_item in scene.faceit_face_objects:
+        for obj_item in scene.expresso_face_objects:
             obj = scene.objects.get(obj_item.name)
             _show_vp_drivers = []
             _mods = []
@@ -339,10 +339,10 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
                 obj.modifiers[mod].show_viewport = True
             obj.data.use_mirror_x = settings["mirror_x"]
 
-            obj_item = scene.faceit_face_objects.get(obj.name)
-            # remove only the Faceit armature modifier
-            if not self.keep_faceit_rig_active:
-                armature_mod = get_faceit_armature_modifier(obj)
+            obj_item = scene.expresso_face_objects.get(obj.name)
+            # remove only the Expresso armature modifier
+            if not self.keep_expresso_rig_active:
+                armature_mod = get_expresso_armature_modifier(obj)
                 if armature_mod:
                     mod_item = obj_item.modifiers.get(armature_mod.name)
                     if mod_item.bake:
@@ -379,19 +379,19 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
                             print("hide modifier", mod.name)
                             mod.show_viewport = False
         # Mute corrective shape keys
-        if scene.faceit_use_corrective_shapes:
+        if scene.expresso_use_corrective_shapes:
             mute_corrective_shape_keys(expression_list, bake_objects)
         # Set Fake user before removing the action
         overwrite_action = bpy.data.actions.get('overwrite_shape_action')
         if overwrite_action:
             overwrite_action.use_fake_user = True
-        shape_action = bpy.data.actions.get('faceit_shape_action')
+        shape_action = bpy.data.actions.get('expresso_shape_action')
         if shape_action:
             shape_action.use_fake_user = True
         if rig_obj.animation_data:
             rig_obj.animation_data.action = None
         # Don't reset the entire pose, instead just reset the relevant bones. (Get bones with animation data.)
-        bones_to_reset = fdata.FACEIT_CTRL_BONES
+        bones_to_reset = fdata.EXPRESSO_CTRL_BONES
         for fc in overwrite_action.fcurves:
             if fc.data_path.startswith('pose.bones["'):
                 bone_name = fc.data_path.split('"')[1]
@@ -402,30 +402,30 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
             if bone:
                 reset_pb(bone)
         scene.frame_current = save_frame
-        scene.faceit_shapes_generated = True
+        scene.expresso_shapes_generated = True
         expression_sets = ''
         if self.init_arkit_shape_list and self.init_a2f_shape_list:
             expression_sets = 'ALL'
-            scene.faceit_display_retarget_list = 'ARKIT'
+            scene.expresso_display_retarget_list = 'ARKIT'
         elif not self.init_arkit_shape_list and self.init_a2f_shape_list:
             expression_sets = 'A2F'
-            scene.faceit_display_retarget_list = 'A2F'
+            scene.expresso_display_retarget_list = 'A2F'
         elif self.init_arkit_shape_list and not self.init_a2f_shape_list:
             expression_sets = 'ARKIT'
-            scene.faceit_display_retarget_list = 'ARKIT'
+            scene.expresso_display_retarget_list = 'ARKIT'
         if expression_sets:
-            bpy.ops.faceit.init_retargeting('EXEC_DEFAULT', expression_sets=expression_sets)
+            bpy.ops.expresso.init_retargeting('EXEC_DEFAULT', expression_sets=expression_sets)
         if self.load_action == 'TEST':
             # load the test action
-            bpy.ops.faceit.test_action()
+            bpy.ops.expresso.test_action()
         elif self.load_action == 'MOCAP':
             # Populate motion capture actions
-            if scene.faceit_mocap_action:
-                bpy.ops.faceit.populate_action(action_name=scene.faceit_mocap_action.name, set_mocap_action=False)
-            if scene.faceit_head_action:
-                bpy.ops.faceit.populate_head_action(action_name=scene.faceit_head_action.name, set_mocap_action=False)
-            if scene.faceit_eye_action:
-                bpy.ops.faceit.populate_eye_action(action_name=scene.faceit_eye_action.name, set_mocap_action=False)
+            if scene.expresso_mocap_action:
+                bpy.ops.expresso.populate_action(action_name=scene.expresso_mocap_action.name, set_mocap_action=False)
+            if scene.expresso_head_action:
+                bpy.ops.expresso.populate_head_action(action_name=scene.expresso_head_action.name, set_mocap_action=False)
+            if scene.expresso_eye_action:
+                bpy.ops.expresso.populate_eye_action(action_name=scene.expresso_eye_action.name, set_mocap_action=False)
         else:
             pass
         futils.restore_scene_state(context, state_dict)
@@ -436,14 +436,14 @@ class FACEIT_OT_GenerateShapekeys(bpy.types.Operator):
             lm_obj.hide_viewport = True
         if futils.get_object_mode_from_context_mode(context.mode) != 'OBJECT' and context.object != None:
             bpy.ops.object.mode_set()
-        if self.faceit_original_rig and not self.keep_faceit_rig_active:
+        if self.expresso_original_rig and not self.keep_expresso_rig_active:
             rig_obj.hide_viewport = True
         return {'FINISHED'}
 
 
-class FACEIT_OT_BackToRigging(bpy.types.Operator):
-    '''Reset Faceit to Rigging and Posing functionality, removes the baked Shape Keys'''
-    bl_idname = 'faceit.back_to_rigging'
+class EXPRESSO_OT_BackToRigging(bpy.types.Operator):
+    '''Reset Expresso to Rigging and Posing functionality, removes the baked Shape Keys'''
+    bl_idname = 'expresso.back_to_rigging'
     bl_label = 'Back to Rigging'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -456,7 +456,7 @@ class FACEIT_OT_BackToRigging(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.mode == 'OBJECT':
-            return context.scene.faceit_face_objects  # and futils.get_faceit_armature()
+            return context.scene.expresso_face_objects  # and futils.get_expresso_armature()
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -468,27 +468,27 @@ class FACEIT_OT_BackToRigging(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-        rig = futils.get_faceit_armature()
-        futils.get_faceit_collection(force_access=True)
+        rig = futils.get_expresso_armature()
+        futils.get_expresso_collection(force_access=True)
         if rig:
             futils.set_hide_obj(rig, False)
         else:
-            self.report({'WARNING'}, 'The Faceit Armature can\'t be found.')
+            self.report({'WARNING'}, 'The Expresso Armature can\'t be found.')
         # Clear the control rig drivers.
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if c_rig:
-            bpy.ops.faceit.remove_control_drivers('EXEC_DEFAULT', remove_all=False)
+            bpy.ops.expresso.remove_control_drivers('EXEC_DEFAULT', remove_all=False)
         # Remove the test action.
-        bake_test_action = bpy.data.actions.get('faceit_bake_test_action')
+        bake_test_action = bpy.data.actions.get('expresso_bake_test_action')
         if bake_test_action:
             bpy.data.actions.remove(bake_test_action)
 
-        faceit_objects = futils.get_faceit_objects_list()
-        expression_list = scene.faceit_expression_list
+        expresso_objects = futils.get_expresso_objects_list()
+        expression_list = scene.expresso_expression_list
         # reset expression values
-        bpy.ops.faceit.reset_expression_values()
-        for obj in faceit_objects:
-            obj_item = scene.faceit_face_objects.get(obj.name)
+        bpy.ops.expresso.reset_expression_values()
+        for obj in expresso_objects:
+            obj_item = scene.expresso_face_objects.get(obj.name)
             if not self.keep_baked_expressions:
                 if shape_key_utils.has_shape_keys(obj):
                     for expression in expression_list:
@@ -500,36 +500,36 @@ class FACEIT_OT_BackToRigging(bpy.types.Operator):
                 restore_bake_modifiers(obj, obj_item.modifiers)
                 restore_modifier_order(obj)
             else:
-                mod = get_faceit_armature_modifier(obj, force_original=False)
+                mod = get_expresso_armature_modifier(obj, force_original=False)
                 if mod:
                     mod.show_viewport = True
                 elif rig is not None:
-                    if futils.is_faceit_original_armature(rig):
-                        add_faceit_armature_modifier(obj, rig, force_original=False)
+                    if futils.is_expresso_original_armature(rig):
+                        add_expresso_armature_modifier(obj, rig, force_original=False)
                 # Restore the modifier order
                 reorder_armature_in_modifier_stack(obj)
 
-        head_obj = scene.faceit_head_target_object
+        head_obj = scene.expresso_head_target_object
         if head_obj is not None:
             if head_obj.animation_data is not None:
                 head_action = head_obj.animation_data.action
                 if head_action is not None:
-                    if head_action.name not in ('overwrite_shape_action', 'faceit_shape_action'):
-                        context.scene.faceit_head_action = head_action
+                    if head_action.name not in ('overwrite_shape_action', 'expresso_shape_action'):
+                        context.scene.expresso_head_action = head_action
                         head_obj.animation_data.action = None
-                        bpy.ops.faceit.reset_head_pose()
+                        bpy.ops.expresso.reset_head_pose()
         # Remove shape key animation.
-        bpy.ops.faceit.populate_action(remove_action=True, set_mocap_action=False)
+        bpy.ops.expresso.populate_action(remove_action=True, set_mocap_action=False)
         # Restore corrective shape key functionality
-        if scene.faceit_use_corrective_shapes:
-            reevaluate_corrective_shape_keys(expression_list, faceit_objects)
+        if scene.expresso_use_corrective_shapes:
+            reevaluate_corrective_shape_keys(expression_list, expresso_objects)
         futils.clear_object_selection()
         action = None
         if rig is not None:
             futils.set_active_object(rig.name)
             action = bpy.data.actions.get('overwrite_shape_action')
             if not action:
-                action = bpy.data.actions.get('faceit_shape_action')
+                action = bpy.data.actions.get('expresso_shape_action')
             if action:
                 anim_data = rig.animation_data
                 if not anim_data:
@@ -542,14 +542,14 @@ class FACEIT_OT_BackToRigging(bpy.types.Operator):
             elif not expression_list:
                 self.report({'WARNING'}, 'The Expressions could not be found.')
         # Update frame
-        scene.faceit_expression_list_index = scene.faceit_expression_list_index
+        scene.expresso_expression_list_index = scene.expresso_expression_list_index
         # Reset properties
         scene.tool_settings.use_keyframe_insert_auto = True
-        scene.faceit_shapes_generated = False
+        scene.expresso_shapes_generated = False
         # clear orphans / drivers
         # bpy.ops.outliner.orphans_purge()
         # fc_dr_utils.clear_invalid_drivers()
-        bpy.ops.faceit.load_bake_modifiers("EXEC_DEFAULT", object_target='ALL')
+        bpy.ops.expresso.load_bake_modifiers("EXEC_DEFAULT", object_target='ALL')
         # scene.frame_set(frame_current)
 
         return {'FINISHED'}

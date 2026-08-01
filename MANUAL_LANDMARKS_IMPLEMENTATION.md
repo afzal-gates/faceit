@@ -1,7 +1,7 @@
 # Manual Landmark Picker - Implementation Summary
 
 ## Overview
-A complete "Manual Landmark Picker" feature has been successfully implemented for the FaceIt Blender addon. This feature allows users to manually set facial landmark points by selecting vertices on their character mesh, providing precise control over landmark placement.
+A complete "Manual Landmark Picker" feature has been successfully implemented for the Expresso Blender addon. This feature allows users to manually set facial landmark points by selecting vertices on their character mesh, providing precise control over landmark placement.
 
 ## Implementation Details
 
@@ -14,13 +14,13 @@ A complete "Manual Landmark Picker" feature has been successfully implemented fo
    - Includes mirror mapping for left/right landmark pairs
 
 2. **landmarks/manual_landmarks_operators.py**
-   - `FACEIT_OT_PickLandmarkVertex` - Pick vertex from mesh for landmark
-   - `FACEIT_OT_ClearLandmark` - Clear individual landmark
-   - `FACEIT_OT_ClearAllLandmarks` - Clear all landmarks (with confirmation)
-   - `FACEIT_OT_InitializeManualLandmarks` - Initialize landmark collection
-   - `FACEIT_OT_PreviewManualLandmarks` - Toggle preview visualization
-   - `FACEIT_OT_ExportManualLandmarks` - Export landmarks to JSON
-   - `FACEIT_OT_ImportManualLandmarks` - Import landmarks from JSON
+   - `EXPRESSO_OT_PickLandmarkVertex` - Pick vertex from mesh for landmark
+   - `EXPRESSO_OT_ClearLandmark` - Clear individual landmark
+   - `EXPRESSO_OT_ClearAllLandmarks` - Clear all landmarks (with confirmation)
+   - `EXPRESSO_OT_InitializeManualLandmarks` - Initialize landmark collection
+   - `EXPRESSO_OT_PreviewManualLandmarks` - Toggle preview visualization
+   - `EXPRESSO_OT_ExportManualLandmarks` - Export landmarks to JSON
+   - `EXPRESSO_OT_ImportManualLandmarks` - Import landmarks from JSON
 
 3. **properties/manual_landmarks_properties.py**
    - `ManualLandmarkItem` PropertyGroup - Stores individual landmark data
@@ -29,8 +29,8 @@ A complete "Manual Landmark Picker" feature has been successfully implemented fo
    - Update handlers for preview system
 
 4. **panels/manual_landmarks_panel.py**
-   - `FACEIT_PT_ManualLandmarks` - Main landmark picker panel with expand/collapse categories
-   - `FACEIT_PT_ManualLandmarksQuickView` - Quick view for unset landmarks
+   - `EXPRESSO_PT_ManualLandmarks` - Main landmark picker panel with expand/collapse categories
+   - `EXPRESSO_PT_ManualLandmarksQuickView` - Quick view for unset landmarks
    - Organized category-based UI with progress tracking
    - Reference image display integration
 
@@ -77,15 +77,15 @@ A complete "Manual Landmark Picker" feature has been successfully implemented fo
 ✅ **Vertex Index Display** - Show which vertex is selected
 
 ### Integration
-✅ **Auto-Load Compatible** - Automatically registered by FaceIt's auto_load system
+✅ **Auto-Load Compatible** - Automatically registered by Expresso's auto_load system
 ✅ **Sub-Panel Structure** - Integrated into Landmarks section
-✅ **FaceIt UI Standards** - Follows existing panel patterns
+✅ **Expresso UI Standards** - Follows existing panel patterns
 ✅ **Non-Intrusive** - Doesn't interfere with existing landmarks system
 
 ## How to Use
 
 ### Quick Start
-1. Open FaceIt panel → CREATE tab → Landmarks section
+1. Open Expresso panel → CREATE tab → Landmarks section
 2. Expand "Manual Landmark Picker" sub-panel
 3. Select your character's head mesh as Target Mesh
 4. Click "Initialize Manual Landmarks"
@@ -108,14 +108,14 @@ A complete "Manual Landmark Picker" feature has been successfully implemented fo
 
 ### Data Storage
 ```python
-Scene.faceit_manual_landmarks  # CollectionProperty of ManualLandmarkItem
+Scene.expresso_manual_landmarks  # CollectionProperty of ManualLandmarkItem
   ├─ landmark_id: str          # Unique identifier
   ├─ vertex_index: int         # Selected vertex index
   ├─ object_name: str          # Mesh object name
   └─ is_set: bool              # Assignment status
 
-Scene.faceit_manual_landmarks_target_mesh   # Target mesh reference
-Scene.faceit_manual_landmarks_preview       # Preview toggle
+Scene.expresso_manual_landmarks_target_mesh   # Target mesh reference
+Scene.expresso_manual_landmarks_preview       # Preview toggle
 ```
 
 ### Landmark Categories
@@ -130,7 +130,7 @@ Scene.faceit_manual_landmarks_preview       # Preview toggle
 - **Total**: 85 landmarks
 
 ### Preview System
-- Creates collection "FaceIt_Manual_Landmarks_Preview"
+- Creates collection "Expresso_Manual_Landmarks_Preview"
 - Generates sphere empties at landmark vertex world positions
 - Empties are labeled and show in front
 - Automatically updates when landmarks change
@@ -208,7 +208,7 @@ See `landmarks/TESTING_CHECKLIST.md` for comprehensive testing checklist includi
 
 ## Integration Points
 
-### With Existing FaceIt Systems
+### With Existing Expresso Systems
 - **Landmarks System**: Complementary to automatic landmarks
 - **Rigging**: Can be used as reference for custom rigging
 - **Control Rig**: Potential input for facial tracking
@@ -218,19 +218,19 @@ See `landmarks/TESTING_CHECKLIST.md` for comprehensive testing checklist includi
 All operators are accessible via Blender Python API:
 ```python
 # Initialize landmarks
-bpy.ops.faceit.initialize_manual_landmarks()
+bpy.ops.expresso.initialize_manual_landmarks()
 
 # Pick landmark (requires Edit Mode context)
-bpy.ops.faceit.pick_landmark_vertex(landmark_id="left_eye_outer")
+bpy.ops.expresso.pick_landmark_vertex(landmark_id="left_eye_outer")
 
 # Toggle preview
-bpy.context.scene.faceit_manual_landmarks_preview = True
+bpy.context.scene.expresso_manual_landmarks_preview = True
 
 # Export landmarks
-bpy.ops.faceit.export_manual_landmarks(filepath="/path/to/file.json")
+bpy.ops.expresso.export_manual_landmarks(filepath="/path/to/file.json")
 
 # Access landmark data
-for lm in bpy.context.scene.faceit_manual_landmarks:
+for lm in bpy.context.scene.expresso_manual_landmarks:
     if lm.is_set:
         print(f"{lm.landmark_id}: vertex {lm.vertex_index} on {lm.object_name}")
 ```
@@ -238,7 +238,7 @@ for lm in bpy.context.scene.faceit_manual_landmarks:
 ## Maintenance Notes
 
 ### Code Organization
-- Follows FaceIt addon patterns and conventions
+- Follows Expresso addon patterns and conventions
 - Uses auto_load registration system
 - Implements proper poll methods for operators
 - Includes error handling and user feedback
@@ -246,7 +246,7 @@ for lm in bpy.context.scene.faceit_manual_landmarks:
 ### Dependencies
 - Requires Blender 2.80+ (uses CollectionProperty, UIList patterns)
 - No external Python packages required
-- Compatible with FaceIt's existing infrastructure
+- Compatible with Expresso's existing infrastructure
 
 ### Known Considerations
 - Vertex indices are mesh-specific (re-pick if mesh changes)
@@ -257,7 +257,7 @@ for lm in bpy.context.scene.faceit_manual_landmarks:
 ## Success Criteria
 
 ✅ **Functionality**: All core features implemented and working
-✅ **Integration**: Seamlessly integrated into FaceIt UI
+✅ **Integration**: Seamlessly integrated into Expresso UI
 ✅ **Usability**: Clear workflow with visual feedback
 ✅ **Data Persistence**: Landmarks saved with .blend files
 ✅ **Documentation**: Comprehensive guides and testing checklist
@@ -275,7 +275,7 @@ The Manual Landmark Picker feature is complete and ready for testing. All reques
 5. ✅ Preview toggle with visualization
 6. ✅ Data persistence between sessions
 
-The implementation provides a robust, user-friendly system for manual landmark placement that integrates seamlessly with the existing FaceIt addon architecture.
+The implementation provides a robust, user-friendly system for manual landmark placement that integrates seamlessly with the existing Expresso addon architecture.
 
 ---
 

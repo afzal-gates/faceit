@@ -8,13 +8,13 @@ import bpy
 from bpy.types import Operator
 from bpy.props import BoolProperty
 
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils as sk_utils
 
 
-class FACEIT_OT_ToggleShapeKeyDrivers(Operator):
+class EXPRESSO_OT_ToggleShapeKeyDrivers(Operator):
     """Toggle (mute/unmute) all shape key drivers to enable manual control"""
-    bl_idname = "faceit.toggle_shape_key_drivers"
+    bl_idname = "expresso.toggle_shape_key_drivers"
     bl_label = "Toggle Shape Key Drivers"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -29,15 +29,15 @@ class FACEIT_OT_ToggleShapeKeyDrivers(Operator):
         return True
 
     def execute(self, context):
-        faceit_objects = futils.get_faceit_objects_list()
-        if not faceit_objects:
-            self.report({'WARNING'}, "No FaceIt objects found")
+        expresso_objects = futils.get_expresso_objects_list()
+        if not expresso_objects:
+            self.report({'WARNING'}, "No Expresso objects found")
             return {'CANCELLED'}
 
         total_drivers = 0
         affected_objects = 0
 
-        for obj in faceit_objects:
+        for obj in expresso_objects:
             if not sk_utils.has_shape_keys(obj):
                 continue
 
@@ -75,9 +75,9 @@ class FACEIT_OT_ToggleShapeKeyDrivers(Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_MuteShapeKeyDrivers(Operator):
+class EXPRESSO_OT_MuteShapeKeyDrivers(Operator):
     """Mute all shape key drivers to enable manual shape key control"""
-    bl_idname = "faceit.mute_shape_key_drivers"
+    bl_idname = "expresso.mute_shape_key_drivers"
     bl_label = "Enable Manual Control"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -86,13 +86,13 @@ class FACEIT_OT_MuteShapeKeyDrivers(Operator):
         return True
 
     def execute(self, context):
-        bpy.ops.faceit.toggle_shape_key_drivers('EXEC_DEFAULT', mute=True)
+        bpy.ops.expresso.toggle_shape_key_drivers('EXEC_DEFAULT', mute=True)
         return {'FINISHED'}
 
 
-class FACEIT_OT_UnmuteShapeKeyDrivers(Operator):
+class EXPRESSO_OT_UnmuteShapeKeyDrivers(Operator):
     """Unmute all shape key drivers to restore automatic control"""
-    bl_idname = "faceit.unmute_shape_key_drivers"
+    bl_idname = "expresso.unmute_shape_key_drivers"
     bl_label = "Enable Driver Control"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -101,13 +101,13 @@ class FACEIT_OT_UnmuteShapeKeyDrivers(Operator):
         return True
 
     def execute(self, context):
-        bpy.ops.faceit.toggle_shape_key_drivers('EXEC_DEFAULT', mute=False)
+        bpy.ops.expresso.toggle_shape_key_drivers('EXEC_DEFAULT', mute=False)
         return {'FINISHED'}
 
 
-class FACEIT_OT_RemoveSpecificShapeKeyDriver(Operator):
+class EXPRESSO_OT_RemoveSpecificShapeKeyDriver(Operator):
     """Remove driver from a specific shape key to allow permanent manual control"""
-    bl_idname = "faceit.remove_shape_key_driver"
+    bl_idname = "expresso.remove_shape_key_driver"
     bl_label = "Remove Driver"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -163,9 +163,9 @@ class FACEIT_OT_RemoveSpecificShapeKeyDriver(Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ListShapeKeyDrivers(Operator):
+class EXPRESSO_OT_ListShapeKeyDrivers(Operator):
     """List all shape keys with drivers in the console"""
-    bl_idname = "faceit.list_shape_key_drivers"
+    bl_idname = "expresso.list_shape_key_drivers"
     bl_label = "List Shape Key Drivers"
     bl_options = {'REGISTER'}
 
@@ -174,9 +174,9 @@ class FACEIT_OT_ListShapeKeyDrivers(Operator):
         return True
 
     def execute(self, context):
-        faceit_objects = futils.get_faceit_objects_list()
-        if not faceit_objects:
-            self.report({'WARNING'}, "No FaceIt objects found")
+        expresso_objects = futils.get_expresso_objects_list()
+        if not expresso_objects:
+            self.report({'WARNING'}, "No Expresso objects found")
             return {'CANCELLED'}
 
         print("\n" + "="*60)
@@ -184,7 +184,7 @@ class FACEIT_OT_ListShapeKeyDrivers(Operator):
         print("="*60 + "\n")
 
         total_drivers = 0
-        for obj in faceit_objects:
+        for obj in expresso_objects:
             if not sk_utils.has_shape_keys(obj):
                 continue
 

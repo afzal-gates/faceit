@@ -7,7 +7,7 @@ from bpy.types import PropertyGroup, Scene
 
 from ..shape_keys.corrective_shape_keys_utils import mute_corrective_shape_keys, reevaluate_corrective_shape_keys
 
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils
 
 # --------------- CLASSES --------------------
@@ -21,7 +21,7 @@ PROCEDURAL_EXPRESSION_ITEMS = (
 )
 
 
-class FaceitExpressions(PropertyGroup):
+class ExpressoExpressions(PropertyGroup):
     '''Properties stored in each expression item'''
     name: StringProperty(
         options=set(),
@@ -56,33 +56,33 @@ class FaceitExpressions(PropertyGroup):
 
 def update_expression_list_index(self, context):
     scene = self
-    if scene.faceit_expression_list:
-        new_expression = scene.faceit_expression_list[scene.faceit_expression_list_index]
-        rig = futils.get_faceit_armature()
+    if scene.expresso_expression_list:
+        new_expression = scene.expresso_expression_list[scene.expresso_expression_list_index]
+        rig = futils.get_expresso_armature()
         if rig:
-            actions_disabled = rig.hide_viewport is True or scene.faceit_shapes_generated
+            actions_disabled = rig.hide_viewport is True or scene.expresso_shapes_generated
         else:
-            actions_disabled = scene.faceit_shapes_generated
+            actions_disabled = scene.expresso_shapes_generated
         if actions_disabled:
             if new_expression:
-                bpy.ops.faceit.set_active_shape_key_index(
+                bpy.ops.expresso.set_active_shape_key_index(
                     'EXEC_DEFAULT',
                     shape_name=new_expression.name,
                     get_active_target_shapes=False,
                 )
         else:
-            bpy.ops.faceit.reset_expression_values()
+            bpy.ops.expresso.reset_expression_values()
             use_mirror = new_expression.mirror_name == ''
             scene.frame_current = new_expression.frame
-            if rig and scene.faceit_use_auto_mirror_x:
+            if rig and scene.expresso_use_auto_mirror_x:
                 rig.pose.use_mirror_x = use_mirror
-            if context.scene.faceit_try_mirror_corrective_shapes:
-                for obj in futils.get_faceit_objects_list():
+            if context.scene.expresso_try_mirror_corrective_shapes:
+                for obj in futils.get_expresso_objects_list():
                     obj.data.use_mirror_x = use_mirror
             # Get corrective shape on new index
-            if scene.faceit_use_corrective_shapes and new_expression.corr_shape_key:
-                corr_sk_name = 'faceit_cc_' + new_expression.name
-                for obj in futils.get_faceit_objects_list():
+            if scene.expresso_use_corrective_shapes and new_expression.corr_shape_key:
+                corr_sk_name = 'expresso_cc_' + new_expression.name
+                for obj in futils.get_expresso_objects_list():
                     if shape_key_utils.has_shape_keys(obj):
                         shape_keys = obj.data.shape_keys.key_blocks
                         if corr_sk_name in shape_keys:
@@ -93,20 +93,20 @@ def update_expression_list_index(self, context):
 
 def update_corrective_shape_key_values(self, context):
     '''Update function for '''
-    if self.faceit_use_corrective_shapes:
+    if self.expresso_use_corrective_shapes:
         reevaluate_corrective_shape_keys()
     else:
         mute_corrective_shape_keys()
 
 
 def update_auto_mirror_x(self, context):
-    rig = futils.get_faceit_armature()
-    expression = self.faceit_expression_list[self.faceit_expression_list_index]
+    rig = futils.get_expresso_armature()
+    expression = self.expresso_expression_list[self.expresso_expression_list_index]
     use_mirror = expression.mirror_name == ''
     if rig is not None:
         rig.pose.use_mirror_x = use_mirror
-    if expression.corr_shape_key and context.scene.faceit_try_mirror_corrective_shapes:
-        for obj in futils.get_faceit_objects_list():
+    if expression.corr_shape_key and context.scene.expresso_try_mirror_corrective_shapes:
+        for obj in futils.get_expresso_objects_list():
             obj.data.use_mirror_x = use_mirror
 
 
@@ -117,30 +117,30 @@ def update_auto_mirror_x(self, context):
 
 def register():
 
-    Scene.faceit_expression_list_index = IntProperty(
+    Scene.expresso_expression_list_index = IntProperty(
         default=0,
         update=update_expression_list_index,
         options=set(),
     )
 
-    Scene.faceit_expression_list = CollectionProperty(
+    Scene.expresso_expression_list = CollectionProperty(
         name='animation property collection',
         description='holds all expressions',
-        type=FaceitExpressions,
+        type=ExpressoExpressions,
         options=set(),
     )
 
-    Scene.faceit_use_corrective_shapes = BoolProperty(
+    Scene.expresso_use_corrective_shapes = BoolProperty(
         name='Use Corrective Shape Keys',
-        description='Add Corrective Shape Keys to all generated Expressions. Shows options to add corrective shape for active object. (Prefix: "faceit_cc_")',
+        description='Add Corrective Shape Keys to all generated Expressions. Shows options to add corrective shape for active object. (Prefix: "expresso_cc_")',
         default=True, update=update_corrective_shape_key_values,)
 
-    Scene.faceit_try_mirror_corrective_shapes = BoolProperty(
+    Scene.expresso_try_mirror_corrective_shapes = BoolProperty(
         name='Mirror Corrective Shapes',
-        description='Try to mirror the Corrective Shape Key for mirrored Expressions. all registered objects. (Prefix: "faceit_cc_")',
+        description='Try to mirror the Corrective Shape Key for mirrored Expressions. all registered objects. (Prefix: "expresso_cc_")',
         default=True, update=update_corrective_shape_key_values,)
 
-    Scene.faceit_corrective_sk_mirror_method = EnumProperty(
+    Scene.expresso_corrective_sk_mirror_method = EnumProperty(
         name='Mirror Method',
         items=(
             ('NORMAL', 'Normal', 'Default Blender Shape Key Mirror'),
@@ -150,12 +150,12 @@ def register():
         default='NORMAL',
     )
 
-    Scene.faceit_corrective_sk_mirror_affect_only_selected_objects = BoolProperty(
+    Scene.expresso_corrective_sk_mirror_affect_only_selected_objects = BoolProperty(
         name='Mirror Selected Objects Only',
         default=False,
         description='Mirrors only corrective shape keys on selected objects.',
     )
-    Scene.faceit_corrective_shape_keys_edit_mode = EnumProperty(
+    Scene.expresso_corrective_shape_keys_edit_mode = EnumProperty(
         name='Default Editing Mode',
         items=(
             ('SCULPT', 'Sculpt', 'Edit corrective Shape Keys in Sculpt mode. Feel free to switch manually'),
@@ -164,7 +164,7 @@ def register():
         default='SCULPT',
     )
 
-    Scene.faceit_use_auto_mirror_x = BoolProperty(
+    Scene.expresso_use_auto_mirror_x = BoolProperty(
         name='Auto Mirror X',
         default=True,
         description='Automatically enable mirrorX pose option on expression change',
@@ -173,8 +173,8 @@ def register():
 
 
 def unregister():
-    del Scene.faceit_expression_list_index
-    del Scene.faceit_expression_list
-    del Scene.faceit_use_corrective_shapes
-    del Scene.faceit_try_mirror_corrective_shapes
-    del Scene.faceit_use_auto_mirror_x
+    del Scene.expresso_expression_list_index
+    del Scene.expresso_expression_list
+    del Scene.expresso_use_corrective_shapes
+    del Scene.expresso_try_mirror_corrective_shapes
+    del Scene.expresso_use_auto_mirror_x

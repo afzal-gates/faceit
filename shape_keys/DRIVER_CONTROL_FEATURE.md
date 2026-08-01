@@ -8,7 +8,7 @@ When playing shape key animations, everything works fine. However, when trying t
 
 **Drivers Override Manual Input**
 
-Shape keys controlled by the FaceIt Control Rig have **drivers** attached to them. These drivers automatically calculate shape key values based on control rig bone positions/rotations.
+Shape keys controlled by the Expresso Control Rig have **drivers** attached to them. These drivers automatically calculate shape key values based on control rig bone positions/rotations.
 
 When you manually try to change a shape key value:
 1. You move the slider
@@ -23,16 +23,16 @@ This feature provides operators to **mute/unmute drivers** temporarily, allowing
 ## Features
 
 ### 1. Enable Manual Control
-**Operator**: `faceit.mute_shape_key_drivers`
+**Operator**: `expresso.mute_shape_key_drivers`
 
-Mutes all shape key drivers on FaceIt objects, allowing you to:
+Mutes all shape key drivers on Expresso objects, allowing you to:
 - Manually adjust any shape key value
 - Test shape key combinations
 - Create custom expressions without driver interference
 - Sculpt or adjust shape key deformations
 
 ### 2. Enable Driver Control
-**Operator**: `faceit.unmute_shape_key_drivers`
+**Operator**: `expresso.unmute_shape_key_drivers`
 
 Unmutes all shape key drivers, restoring automatic control:
 - Control rig bones control shape keys again
@@ -40,7 +40,7 @@ Unmutes all shape key drivers, restoring automatic control:
 - Drivers calculate shape key values automatically
 
 ### 3. List Shape Key Drivers
-**Operator**: `faceit.list_shape_key_drivers`
+**Operator**: `expresso.list_shape_key_drivers`
 
 Prints a detailed report to the console showing:
 - All objects with shape key drivers
@@ -51,7 +51,7 @@ Prints a detailed report to the console showing:
 
 ### Method 1: UI Panel (Recommended)
 
-1. Go to the **SHAPES** tab in FaceIt
+1. Go to the **SHAPES** tab in Expresso
 2. Find the **"Shape Key Driver Control"** panel
 3. Click **"Enable Manual"** to mute drivers
 4. Manually adjust shape keys as needed
@@ -168,7 +168,7 @@ Only shape key value drivers are affected. Other drivers (transforms, materials,
 ### Want to Permanently Remove Drivers
 
 If you want to permanently remove drivers (not just mute):
-1. Use the existing operator: `faceit.remove_control_drivers`
+1. Use the existing operator: `expresso.remove_control_drivers`
 2. This is in the CONTROL tab
 3. Or: Manually delete drivers in the Drivers Editor
 

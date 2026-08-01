@@ -1,6 +1,6 @@
 import bpy
 
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core.shape_key_utils import get_shape_keys_from_objects, has_shape_keys, get_shape_key_names_from_objects
 from ..core.retarget_list_utils import (get_target_shapes_dict,
                                         set_base_regions_from_dict)
@@ -9,14 +9,14 @@ from . import custom_slider_utils
 
 
 def populate_control_rig_target_objects_from_scene(c_rig):
-    ''' Populates the target objects property on the control rig object from the current faceit_objects '''
+    ''' Populates the target objects property on the control rig object from the current expresso_objects '''
 
-    faceit_objects = futils.get_faceit_objects_list()
+    expresso_objects = futils.get_expresso_objects_list()
 
-    crig_objects = c_rig.faceit_crig_objects
+    crig_objects = c_rig.expresso_crig_objects
     crig_objects.clear()
 
-    for obj in faceit_objects:
+    for obj in expresso_objects:
         item = crig_objects.add()
         item.name = obj.name
         item.obj_pointer = obj
@@ -25,7 +25,7 @@ def populate_control_rig_target_objects_from_scene(c_rig):
 def get_crig_objects_list(c_rig):
     ''' Returns a list of all target objects found in the scene '''
     crig_objects = []
-    for item in c_rig.faceit_crig_objects:
+    for item in c_rig.expresso_crig_objects:
         obj = item.get_object()
         if obj is not None:
             crig_objects.append(obj)
@@ -62,7 +62,7 @@ def populate_control_rig_target_shapes_from_scene(c_rig, update=False, populate_
     @c_rig: the control rig object.
     @update: if this is true, try to find existing amplify values based on version number + find custom controllers.
     '''
-    crig_targets = c_rig.faceit_crig_targets
+    crig_targets = c_rig.expresso_crig_targets
     # Get existing amplify values for conversion
     amplify_value_dict = {}
     region_dict = {}
@@ -73,15 +73,15 @@ def populate_control_rig_target_shapes_from_scene(c_rig, update=False, populate_
                 region_dict[ct.name] = ct.region
         else:
             # Get the scene target shapes
-            crig_scene_targets = bpy.context.scene.faceit_crig_targets
+            crig_scene_targets = bpy.context.scene.expresso_crig_targets
             for ct in crig_scene_targets:
                 amplify_value_dict[ct.name] = ct.amplify
                 region_dict[ct.name] = ct.region
     crig_targets.clear()
 
-    target_shapes_dict = get_target_shapes_dict(bpy.context.scene.faceit_arkit_retarget_shapes)
+    target_shapes_dict = get_target_shapes_dict(bpy.context.scene.expresso_arkit_retarget_shapes)
     if populate_amplify_values:
-        for item in bpy.context.scene.faceit_arkit_retarget_shapes:
+        for item in bpy.context.scene.expresso_arkit_retarget_shapes:
             if item.name in target_shapes_dict:
                 amplify_value_dict[item.name] = item.amplify
     custom_sliders = []
@@ -123,7 +123,7 @@ def populate_control_rig_target_shapes_from_scene(c_rig, update=False, populate_
 
 
 def save_control_rig_template(c_rig, save_amplify_values=True, save_regions=True, save_target_objects=False):
-    retarget_list = c_rig.faceit_crig_targets
+    retarget_list = c_rig.expresso_crig_targets
     # custom_slider_names = custom_slider_utils.get_custom_sliders_in_crig(c_rig)
     data = {}
     # Store the target objects
@@ -166,14 +166,14 @@ def load_control_rig_template(context, c_rig, data, overwrite_existing_controlle
                               load_target_objects=False):
     created_any_custom_controllers = False
     print('INFO', 'Loading control rig template...')
-    crig_targets = c_rig.faceit_crig_targets
+    crig_targets = c_rig.expresso_crig_targets
     if load_target_objects:
         target_objects = data.get('target_objects', [])
         if target_objects:
             for obj_name in target_objects:
-                if obj_name not in c_rig.faceit_crig_objects:
+                if obj_name not in c_rig.expresso_crig_objects:
                     if obj_pointer := bpy.data.objects.get(obj_name):
-                        item = c_rig.faceit_crig_objects.add().name = obj_name
+                        item = c_rig.expresso_crig_objects.add().name = obj_name
                         item.obj_pointer = obj_pointer
     target_shapes_dict = data.get('target_shapes', {})
     for expression_name, target_dict in target_shapes_dict.items():
@@ -187,13 +187,13 @@ def load_control_rig_template(context, c_rig, data, overwrite_existing_controlle
                 if overwrite_existing_controllers:
                     # Remove the existing controller
                     # try:
-                    #     bpy.ops.faceit.remove_custom_controller(
+                    #     bpy.ops.expresso.remove_custom_controller(
                     #         'EXEC_DEFAULT', custom_slider=expression_name)
                     # except (RuntimeError, TypeError):
                     #     print('WARNING', f'Attempted to remove {expression_name} from the rig.')
                     found_index = crig_targets.find(expression_name)
-                    if c_rig.faceit_crig_targets_index >= found_index:
-                        c_rig.faceit_crig_targets_index -= 1
+                    if c_rig.expresso_crig_targets_index >= found_index:
+                        c_rig.expresso_crig_targets_index -= 1
                     crig_targets.remove(found_index)
                 else:
                     print('INFO', f'Skipping {expression_name} because it already exists in the rig.')
@@ -223,7 +223,7 @@ def load_control_rig_template(context, c_rig, data, overwrite_existing_controlle
 
 def load_amplify_values_as_custom_id_props(ctrl_rig):
     '''Transfers the amplify values of the give control rig to custom id properties.'''
-    for target in ctrl_rig.faceit_crig_targets:
+    for target in ctrl_rig.expresso_crig_targets:
         ctrl_rig[target.name] = target.amplify
 
 

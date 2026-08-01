@@ -4,7 +4,7 @@ import csv
 import json
 
 from .mocap_base import MocapBase
-from ..core.faceit_data import get_face_cap_shape_data, get_epic_shape_data, get_a2f_shape_data
+from ..core.expresso_data import get_face_cap_shape_data, get_epic_shape_data, get_a2f_shape_data
 from ..core.shape_key_utils import set_slider_max
 
 

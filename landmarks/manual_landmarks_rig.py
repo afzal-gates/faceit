@@ -1,19 +1,19 @@
 """
 Rig generation from manual landmarks.
-Maps manual landmark IDs to FaceIt rig system and generates facial rig.
+Maps manual landmark IDs to Expresso rig system and generates facial rig.
 """
 
 import bpy
 from mathutils import Vector
 
 
-def get_manual_to_faceit_landmark_mapping():
+def get_manual_to_expresso_landmark_mapping():
     """
-    Maps manual landmark IDs to FaceIt facial_landmarks vertex indices.
-    FaceIt uses indexed vertices (0-71 for face, 100+ for special points).
+    Maps manual landmark IDs to Expresso facial_landmarks vertex indices.
+    Expresso uses indexed vertices (0-71 for face, 100+ for special points).
     """
     mapping = {
-        # Face Outline (17 points) → FaceIt landmarks 0-16
+        # Face Outline (17 points) → Expresso landmarks 0-16
         "face_outline_0": 0,   # Chin center
         "face_outline_1": 2,   # Jaw right start
         "face_outline_2": 3,
@@ -32,21 +32,21 @@ def get_manual_to_faceit_landmark_mapping():
         "face_outline_15": 10,
         "face_outline_16": 11,  # Jaw left end
 
-        # Right Eyebrow (5 points) → FaceIt landmarks 48, 50, 51, 53, 55 (mirrored)
+        # Right Eyebrow (5 points) → Expresso landmarks 48, 50, 51, 53, 55 (mirrored)
         "right_eyebrow_inner": 51,
         "right_eyebrow_inner_mid": 55,
         "right_eyebrow_center": 64,
         "right_eyebrow_outer_mid": 58,
         "right_eyebrow_outer": 50,
 
-        # Left Eyebrow (5 points) → FaceIt landmarks 47, 52, 54, 56, 49
+        # Left Eyebrow (5 points) → Expresso landmarks 47, 52, 54, 56, 49
         "left_eyebrow_outer": 49,
         "left_eyebrow_outer_mid": 57,
         "left_eyebrow_center": 63,
         "left_eyebrow_inner_mid": 56,
         "left_eyebrow_inner": 52,
 
-        # Nose (9 points) → FaceIt landmarks for nose
+        # Nose (9 points) → Expresso landmarks for nose
         "nose_bridge_top": 36,      # Nose bridge top
         "nose_bridge_mid": 21,       # Nose bridge mid
         "nose_bridge_low": 103,      # Nose bridge low
@@ -57,7 +57,7 @@ def get_manual_to_faceit_landmark_mapping():
         "nose_bottom_right_mid": 27, # Nose side right
         "nose_bottom_right": 18,     # Nose wing right
 
-        # Left Eye (6 points) → FaceIt landmarks for left eye
+        # Left Eye (6 points) → Expresso landmarks for left eye
         "left_eye_outer": 32,             # Left eye outer corner
         "left_eye_top_outer": 34,         # Left eye top outer
         "left_eye_top_inner": 37,         # Left eye top inner
@@ -65,7 +65,7 @@ def get_manual_to_faceit_landmark_mapping():
         "left_eye_bottom_inner": 44,      # Left eye bottom inner
         "left_eye_bottom_outer": 30,      # Left eye bottom outer
 
-        # Right Eye (6 points) → FaceIt landmarks for right eye
+        # Right Eye (6 points) → Expresso landmarks for right eye
         "right_eye_inner": 42,            # Right eye inner corner
         "right_eye_top_inner": 38,        # Right eye top inner
         "right_eye_top_outer": 35,        # Right eye top outer
@@ -73,7 +73,7 @@ def get_manual_to_faceit_landmark_mapping():
         "right_eye_bottom_outer": 31,     # Right eye bottom outer
         "right_eye_bottom_inner": 43,     # Right eye bottom inner
 
-        # Mouth Outer (12 points) → FaceIt landmarks for mouth
+        # Mouth Outer (12 points) → Expresso landmarks for mouth
         "mouth_left_corner": 12,          # Mouth left corner (lips.L)
         "mouth_upper_left_outer": 11,     # Upper lip left outer
         "mouth_upper_left_mid": 10,       # Upper lip left mid
@@ -97,17 +97,17 @@ def get_manual_to_faceit_landmark_mapping():
         "mouth_inner_lower_center": 6,
         "mouth_inner_lower_left": 7,
 
-        # Teeth (2 points) → FaceIt special landmarks 106-107
+        # Teeth (2 points) → Expresso special landmarks 106-107
         "teeth_upper": 106,
         "teeth_lower": 107,
 
-        # Tongue (3 points) → FaceIt special landmarks 112-114
+        # Tongue (3 points) → Expresso special landmarks 112-114
         "tongue_tip": 112,
         "tongue_center": 113,
         "tongue_back": 114,
 
-        # Ears (12 points) → FaceIt special landmark 116
-        # FaceIt has limited ear support, map all to general ear position
+        # Ears (12 points) → Expresso special landmark 116
+        # Expresso has limited ear support, map all to general ear position
         "left_ear_top": 116,
         "left_ear_helix": 116,
         "left_ear_middle": 116,
@@ -128,29 +128,29 @@ def get_manual_to_faceit_landmark_mapping():
     return mapping
 
 
-def create_faceit_landmarks_from_manual(context):
+def create_expresso_landmarks_from_manual(context):
     """
     Creates a 'facial_landmarks' object from manual landmarks.
-    This allows using the existing FaceIt rig generation system.
+    This allows using the existing Expresso rig generation system.
 
     Returns the created landmarks object or None if insufficient data.
     """
     scene = context.scene
-    manual_landmarks = scene.faceit_manual_landmarks
+    manual_landmarks = scene.expresso_manual_landmarks
 
     if not manual_landmarks:
         return None
 
     # Check if we have the target mesh
-    target_mesh = scene.faceit_manual_landmarks_target_mesh
+    target_mesh = scene.expresso_manual_landmarks_target_mesh
     if not target_mesh:
         return None
 
     # Get mapping
-    mapping = get_manual_to_faceit_landmark_mapping()
+    mapping = get_manual_to_expresso_landmark_mapping()
 
     # Create vertex positions dictionary
-    # FaceIt expects vertices at indices 0-71, plus special points at 100+
+    # Expresso expects vertices at indices 0-71, plus special points at 100+
     vertex_positions = {}
 
     # Collect manual landmark positions
@@ -171,17 +171,17 @@ def create_faceit_landmarks_from_manual(context):
         vertex = mesh.vertices[lm.vertex_index]
         world_pos = mesh_obj.matrix_world @ vertex.co
 
-        # Map to FaceIt landmark index
-        faceit_index = mapping.get(lm.landmark_id)
-        if faceit_index is not None:
-            # Store position (multiple manual landmarks may map to same faceit index)
+        # Map to Expresso landmark index
+        expresso_index = mapping.get(lm.landmark_id)
+        if expresso_index is not None:
+            # Store position (multiple manual landmarks may map to same expresso index)
             # Use average if multiple map to same index
-            if faceit_index in vertex_positions:
+            if expresso_index in vertex_positions:
                 # Average the positions
-                existing_pos = vertex_positions[faceit_index]
-                vertex_positions[faceit_index] = (existing_pos + world_pos) / 2
+                existing_pos = vertex_positions[expresso_index]
+                vertex_positions[expresso_index] = (existing_pos + world_pos) / 2
             else:
-                vertex_positions[faceit_index] = world_pos
+                vertex_positions[expresso_index] = world_pos
 
     # Check if we have enough landmarks
     if len(vertex_positions) < 30:  # Minimum required landmarks
@@ -285,7 +285,7 @@ def create_faceit_landmarks_from_manual(context):
     mesh.update()
 
     # Mark the object as facial_landmarks
-    landmarks_obj['faceit_landmarks'] = True
+    landmarks_obj['expresso_landmarks'] = True
 
     return landmarks_obj
 
@@ -296,12 +296,12 @@ def validate_manual_landmarks_for_rig(context):
     Returns (is_valid, message) tuple.
     """
     scene = context.scene
-    manual_landmarks = scene.faceit_manual_landmarks
+    manual_landmarks = scene.expresso_manual_landmarks
 
     if not manual_landmarks:
         return (False, "No manual landmarks initialized")
 
-    target_mesh = scene.faceit_manual_landmarks_target_mesh
+    target_mesh = scene.expresso_manual_landmarks_target_mesh
     if not target_mesh:
         return (False, "No target mesh selected")
 

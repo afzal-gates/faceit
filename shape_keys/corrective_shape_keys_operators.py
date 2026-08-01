@@ -1,15 +1,15 @@
 
 import bpy
 
-from ..core.faceit_utils import (get_faceit_armature, get_faceit_objects_list, get_hide_obj, get_object)
-from ..core.modifier_utils import get_faceit_armature_modifier
+from ..core.expresso_utils import (get_expresso_armature, get_expresso_objects_list, get_hide_obj, get_object)
+from ..core.modifier_utils import get_expresso_armature_modifier
 from ..core.shape_key_utils import has_shape_keys
 from . import corrective_shape_keys_utils
 
 
-class FACEIT_OT_ReevaluateCorrectiveShapeKeys(bpy.types.Operator):
+class EXPRESSO_OT_ReevaluateCorrectiveShapeKeys(bpy.types.Operator):
     ''' Sync Corrective Shape Keys. re-evaluate the keyframes and properties for each expression. '''
-    bl_idname = 'faceit.reevaluate_corrective_shape_keys'
+    bl_idname = 'expresso.reevaluate_corrective_shape_keys'
     bl_label = 'Re-evaluate Corrective Shape Keys'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -20,24 +20,24 @@ class FACEIT_OT_ReevaluateCorrectiveShapeKeys(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        rig = context.scene.faceit_armature
+        rig = context.scene.expresso_armature
         if rig:
             if get_hide_obj(rig):
                 return False
-        return context.scene.faceit_expression_list
+        return context.scene.expresso_expression_list
 
     def execute(self, context):
-        expression_list = context.scene.faceit_expression_list
-        corrective_shape_keys_utils.reevaluate_corrective_shape_keys(expression_list, get_faceit_objects_list())
+        expression_list = context.scene.expresso_expression_list
+        corrective_shape_keys_utils.reevaluate_corrective_shape_keys(expression_list, get_expresso_objects_list())
 
         self.report({'INFO'}, 'Re-evaluated the corrective shape keys.')
 
         return {'FINISHED'}
 
 
-class FACEIT_OT_AddCorrectiveShapeKeyToExpression(bpy.types.Operator):
+class EXPRESSO_OT_AddCorrectiveShapeKeyToExpression(bpy.types.Operator):
     '''Add Corrective Shape Key to this Expression (Selected Object). Sculpt additional changes!'''
-    bl_idname = 'faceit.add_corrective_shape_key_to_expression'
+    bl_idname = 'expresso.add_corrective_shape_key_to_expression'
     bl_label = 'Corrective Shape Key'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -51,8 +51,8 @@ class FACEIT_OT_AddCorrectiveShapeKeyToExpression(bpy.types.Operator):
         if context.mode != 'POSE':
             obj = context.object
             if obj is not None:
-                if get_faceit_armature():
-                    if get_faceit_armature_modifier(obj, force_original=False):
+                if get_expresso_armature():
+                    if get_expresso_armature_modifier(obj, force_original=False):
                         return True
 
     def execute(self, context):
@@ -60,19 +60,19 @@ class FACEIT_OT_AddCorrectiveShapeKeyToExpression(bpy.types.Operator):
         objects = context.selected_objects
         if objects:
             for obj in objects:
-                if obj.name not in scene.faceit_face_objects:
+                if obj.name not in scene.expresso_face_objects:
                     obj.select_set(False)
                     objects.remove(obj)
         if not objects:
             self.report({'ERROR'}, 'Select at least one registered Object!')
             return {'CANCELLED'}
-        expression_list = scene.faceit_expression_list
+        expression_list = scene.expresso_expression_list
         exp = expression_list.get(self.expression)
         exp_index = expression_list.find(exp.name)
-        sk_name = 'faceit_cc_' + exp.name
+        sk_name = 'expresso_cc_' + exp.name
         frame = exp.frame
         scene.frame_current = frame
-        scene.faceit_expression_list_index = exp_index
+        scene.expresso_expression_list_index = exp_index
         mirror_x = (exp.mirror_name == '')
         for obj in objects:
             if obj.mode in ('SCULPT', 'EDIT'):
@@ -102,7 +102,7 @@ class FACEIT_OT_AddCorrectiveShapeKeyToExpression(bpy.types.Operator):
             corrective_shape_keys_utils.assign_corrective_sk_action(obj)
         exp.corr_shape_key = True
         corrective_shape_keys_utils.keyframe_corrective_sk_action(exp)
-        if scene.faceit_corrective_shape_keys_edit_mode == 'SCULPT':
+        if scene.expresso_corrective_shape_keys_edit_mode == 'SCULPT':
             bpy.ops.object.mode_set(mode='SCULPT')
         else:
             bpy.ops.object.mode_set(mode='EDIT')
@@ -142,9 +142,9 @@ def get_objects_with_corrective_sk_enum(self, context):
     return objects
 
 
-class FACEIT_OT_RemoveCorrectiveShapeKey(bpy.types.Operator):
+class EXPRESSO_OT_RemoveCorrectiveShapeKey(bpy.types.Operator):
     '''Remove Corrective Shape Key from spec expression'''
-    bl_idname = 'faceit.remove_corrective_shape_key'
+    bl_idname = 'expresso.remove_corrective_shape_key'
     bl_label = 'Remove Corrective Shape Key'
     bl_property = 'operate_objects'
     bl_options = {'UNDO', 'INTERNAL', 'REGISTER'}
@@ -178,7 +178,7 @@ class FACEIT_OT_RemoveCorrectiveShapeKey(bpy.types.Operator):
 
         operate_objects = []
         if self.operate_objects == 'ALL':
-            operate_objects = get_faceit_objects_list()
+            operate_objects = get_expresso_objects_list()
             objects_txt = 'all objects'
         else:
             obj = get_object(self.operate_objects)
@@ -188,7 +188,7 @@ class FACEIT_OT_RemoveCorrectiveShapeKey(bpy.types.Operator):
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
 
-        expression_list = scene.faceit_expression_list
+        expression_list = scene.expresso_expression_list
 
         exp = expression_list.get(self.expression)
         if not exp:
@@ -197,7 +197,7 @@ class FACEIT_OT_RemoveCorrectiveShapeKey(bpy.types.Operator):
 
         frame = exp.frame
         scene.frame_current = frame
-        scene.faceit_expression_list_index = expression_list.find(exp.name)
+        scene.expresso_expression_list_index = expression_list.find(exp.name)
 
         success = corrective_shape_keys_utils.remove_corrective_shape_key(
             expression_list, operate_objects, expression_name=exp.name)
@@ -210,9 +210,9 @@ class FACEIT_OT_RemoveCorrectiveShapeKey(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ClearCorrectiveShapeKeys(bpy.types.Operator):
+class EXPRESSO_OT_ClearCorrectiveShapeKeys(bpy.types.Operator):
     '''Clear all Corrective Shape Keys from registered objects'''
-    bl_idname = 'faceit.clear_all_corrective_shapes'
+    bl_idname = 'expresso.clear_all_corrective_shapes'
     bl_label = 'Clear all Corrective Shape Keys'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -229,14 +229,14 @@ class FACEIT_OT_ClearCorrectiveShapeKeys(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
 
-        expression_list = scene.faceit_expression_list
+        expression_list = scene.expresso_expression_list
 
-        faceit_objects = get_faceit_objects_list()
+        expresso_objects = get_expresso_objects_list()
 
         if self.expression:
             corrective_shape_keys_utils.remove_corrective_shape_key(
-                expression_list, faceit_objects, expression_name=self.expression)
+                expression_list, expresso_objects, expression_name=self.expression)
         else:
-            corrective_shape_keys_utils.clear_all_corrective_shape_keys(faceit_objects, expression_list=expression_list)
+            corrective_shape_keys_utils.clear_all_corrective_shape_keys(expresso_objects, expression_list=expression_list)
 
         return {'FINISHED'}

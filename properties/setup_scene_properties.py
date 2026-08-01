@@ -4,17 +4,17 @@ from bpy.props import (BoolProperty, CollectionProperty, EnumProperty,
 from bpy.types import Object, PropertyGroup, Scene, Armature, Modifier, FCurve, ID
 
 
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 
 
-class FaceitBakeModDrivers(PropertyGroup):
+class ExpressoBakeModDrivers(PropertyGroup):
     data_path: StringProperty(name='Data Path', default='')
     is_muted: BoolProperty(name='Mute', default=False)
 
 
-class FaceitBakeModifiers(PropertyGroup):
+class ExpressoBakeModifiers(PropertyGroup):
     '''
-    Collection of modifiers on faceit objects that can be baked to shape keys.
+    Collection of modifiers on expresso objects that can be baked to shape keys.
     Bakeable modifiers are:
     - ARMATURE
     - SURFACE_DEFORM
@@ -26,10 +26,10 @@ class FaceitBakeModifiers(PropertyGroup):
     type: StringProperty(
         name="Modifier Type",
     )
-    is_faceit_modifier: BoolProperty()
+    is_expresso_modifier: BoolProperty()
     # obj_item: PointerProperty(
-    #     name="Faceit Object",
-    #     type=FaceitObjects,
+    #     name="Expresso Object",
+    #     type=ExpressoObjects,
     # )
     can_bake: BoolProperty(
         name="Can Bake",
@@ -75,7 +75,7 @@ class FaceitBakeModifiers(PropertyGroup):
     )
     drivers: CollectionProperty(
         name="Drivers",
-        type=FaceitBakeModDrivers
+        type=ExpressoBakeModDrivers
     )
     # is_active
     # use_apply_on_spline
@@ -174,9 +174,9 @@ class FaceitBakeModifiers(PropertyGroup):
 
 
 def update_mod_index(self, context):
-    '''Set the active modifier when the faceit_modifiers list index changes.'''
+    '''Set the active modifier when the expresso_modifiers list index changes.'''
     face_item = self
-    bpy.context.scene.faceit_face_index = bpy.context.scene.faceit_face_objects.find(face_item.name)
+    bpy.context.scene.expresso_face_index = bpy.context.scene.expresso_face_objects.find(face_item.name)
     obj = futils.get_object(face_item.name)
     if obj:
         mod = obj.modifiers[face_item.active_mod_index]
@@ -185,7 +185,7 @@ def update_mod_index(self, context):
             # mod.show_expanded = True
 
 
-class FaceitObjects(PropertyGroup):
+class ExpressoObjects(PropertyGroup):
     name: StringProperty(
         name='Object Name',
         description='object name'
@@ -205,8 +205,8 @@ class FaceitObjects(PropertyGroup):
         default=''
     )
     modifiers: CollectionProperty(
-        name='Faceit Modifiers',
-        type=FaceitBakeModifiers,
+        name='Expresso Modifiers',
+        type=ExpressoBakeModifiers,
     )
     active_mod_index: IntProperty(
         name="Active Modifier Index",
@@ -222,7 +222,7 @@ class PickerOptions(PropertyGroup):
     hide_assigned: BoolProperty(
         name='Hide Assigned',
         default=True,
-        description='Hide all vertices that are already assigned to a Faceit Vertex Group.'
+        description='Hide all vertices that are already assigned to a Expresso Vertex Group.'
     )
     pick_geometry: EnumProperty(
         name='Pick Geometry',
@@ -240,11 +240,11 @@ class PickerOptions(PropertyGroup):
 
 
 def update_object_index(self, context):
-    '''Set the active object when the faceit_objects list index changes.'''
+    '''Set the active object when the expresso_objects list index changes.'''
     scene = self
-    faceit_objects = scene.faceit_face_objects
-    index = scene.faceit_face_index
-    item = faceit_objects[index]
+    expresso_objects = scene.expresso_face_objects
+    index = scene.expresso_face_index
+    item = expresso_objects[index]
     object_name = item.name
     if context.active_object:
         if object_name != context.active_object.name or context.selected_objects != [context.active_object]:
@@ -253,39 +253,39 @@ def update_object_index(self, context):
         else:
             return
     if futils.get_object(object_name):
-        bpy.ops.faceit.select_facial_part('INVOKE_DEFAULT', object_name=object_name)
+        bpy.ops.expresso.select_facial_part('INVOKE_DEFAULT', object_name=object_name)
     else:
-        scene.faceit_face_objects.remove(index)
+        scene.expresso_face_objects.remove(index)
 
 
 def register():
 
-    Scene.faceit_face_objects = CollectionProperty(
-        type=FaceitObjects
+    Scene.expresso_face_objects = CollectionProperty(
+        type=ExpressoObjects
     )
-    Scene.faceit_subscribed = BoolProperty(
+    Scene.expresso_subscribed = BoolProperty(
         name="Subscribed",
         default=False,
         description="Whether the msgbus is subscribed to the active object"
     )
-    Scene.faceit_face_index = IntProperty(
+    Scene.expresso_face_index = IntProperty(
         default=0,
         update=update_object_index
     )
 
-    Scene.faceit_show_warnings = BoolProperty(
+    Scene.expresso_show_warnings = BoolProperty(
         name='Show Warnings',
         default=False,
     )
-    Scene.faceit_picker_options = PointerProperty(
+    Scene.expresso_picker_options = PointerProperty(
         name='Picker Options',
         type=PickerOptions
     )
 
 
 def unregister():
-    del Scene.faceit_face_objects
-    del Scene.faceit_subscribed
-    del Scene.faceit_face_index
-    del Scene.faceit_show_warnings
-    del Scene.faceit_picker_options
+    del Scene.expresso_face_objects
+    del Scene.expresso_subscribed
+    del Scene.expresso_face_index
+    del Scene.expresso_show_warnings
+    del Scene.expresso_picker_options

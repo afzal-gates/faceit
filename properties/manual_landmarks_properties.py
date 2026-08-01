@@ -46,19 +46,19 @@ class ManualLandmarkItem(PropertyGroup):
 def update_preview_landmarks(self, context):
     """Update handler for preview toggle."""
     # Check if operator is available to avoid registration order issues
-    if not hasattr(bpy.ops.faceit, 'preview_manual_landmarks'):
+    if not hasattr(bpy.ops.expresso, 'preview_manual_landmarks'):
         return
 
-    if self.faceit_manual_landmarks_preview:
+    if self.expresso_manual_landmarks_preview:
         # Enable preview - will be handled by operator
         try:
-            bpy.ops.faceit.preview_manual_landmarks('INVOKE_DEFAULT', enable=True)
+            bpy.ops.expresso.preview_manual_landmarks('INVOKE_DEFAULT', enable=True)
         except:
             pass
     else:
         # Disable preview
         try:
-            bpy.ops.faceit.preview_manual_landmarks('INVOKE_DEFAULT', enable=False)
+            bpy.ops.expresso.preview_manual_landmarks('INVOKE_DEFAULT', enable=False)
         except:
             pass
 
@@ -67,32 +67,32 @@ def register():
     # ManualLandmarkItem is auto-registered by auto_load.py
     # Only register Scene properties here
 
-    Scene.faceit_manual_landmarks = CollectionProperty(
+    Scene.expresso_manual_landmarks = CollectionProperty(
         name="Manual Landmarks",
         type=ManualLandmarkItem,
         description="Collection of manually placed facial landmarks"
     )
 
-    Scene.faceit_manual_landmarks_preview = BoolProperty(
+    Scene.expresso_manual_landmarks_preview = BoolProperty(
         name="Preview Landmarks",
         description="Display empties at landmark positions for visualization",
         default=False,
         update=update_preview_landmarks
     )
 
-    Scene.faceit_manual_landmarks_active = IntProperty(
+    Scene.expresso_manual_landmarks_active = IntProperty(
         name="Active Landmark",
         description="Currently selected landmark index",
         default=0
     )
 
-    Scene.faceit_landmark_picker_active = BoolProperty(
+    Scene.expresso_landmark_picker_active = BoolProperty(
         name="Landmark Picker Active",
         description="Whether the landmark picker is currently running",
         default=False
     )
 
-    Scene.faceit_manual_landmarks_target_mesh = PointerProperty(
+    Scene.expresso_manual_landmarks_target_mesh = PointerProperty(
         name="Target Mesh",
         description="The mesh object to pick landmarks from",
         type=Object,
@@ -100,63 +100,63 @@ def register():
     )
 
     # Mirror option
-    Scene.faceit_manual_landmarks_mirror = BoolProperty(
+    Scene.expresso_manual_landmarks_mirror = BoolProperty(
         name="Mirror Landmarks",
         description="Automatically set mirrored landmarks (left/right) when picking vertices",
         default=False
     )
 
     # Show reference images option
-    Scene.faceit_manual_landmarks_show_reference = BoolProperty(
+    Scene.expresso_manual_landmarks_show_reference = BoolProperty(
         name="Show Reference Images",
         description="Display reference images to help identify landmark positions",
         default=True
     )
 
     # Expand/collapse properties for categories
-    Scene.faceit_manual_landmarks_expand_face_outline = BoolProperty(
+    Scene.expresso_manual_landmarks_expand_face_outline = BoolProperty(
         name="Expand Face Outline",
         description="Show/hide Face Outline landmarks",
         default=True
     )
 
-    Scene.faceit_manual_landmarks_expand_eyebrows = BoolProperty(
+    Scene.expresso_manual_landmarks_expand_eyebrows = BoolProperty(
         name="Expand Eyebrows",
         description="Show/hide Eyebrows landmarks",
         default=True
     )
 
-    Scene.faceit_manual_landmarks_expand_eyes = BoolProperty(
+    Scene.expresso_manual_landmarks_expand_eyes = BoolProperty(
         name="Expand Eyes",
         description="Show/hide Eyes landmarks",
         default=True
     )
 
-    Scene.faceit_manual_landmarks_expand_nose = BoolProperty(
+    Scene.expresso_manual_landmarks_expand_nose = BoolProperty(
         name="Expand Nose",
         description="Show/hide Nose landmarks",
         default=True
     )
 
-    Scene.faceit_manual_landmarks_expand_mouth = BoolProperty(
+    Scene.expresso_manual_landmarks_expand_mouth = BoolProperty(
         name="Expand Mouth",
         description="Show/hide Mouth landmarks",
         default=True
     )
 
-    Scene.faceit_manual_landmarks_expand_teeth = BoolProperty(
+    Scene.expresso_manual_landmarks_expand_teeth = BoolProperty(
         name="Expand Teeth",
         description="Show/hide Teeth landmarks",
         default=True
     )
 
-    Scene.faceit_manual_landmarks_expand_tongue = BoolProperty(
+    Scene.expresso_manual_landmarks_expand_tongue = BoolProperty(
         name="Expand Tongue",
         description="Show/hide Tongue landmarks",
         default=True
     )
 
-    Scene.faceit_manual_landmarks_expand_ears = BoolProperty(
+    Scene.expresso_manual_landmarks_expand_ears = BoolProperty(
         name="Expand Ears",
         description="Show/hide Ears landmarks",
         default=True
@@ -164,20 +164,20 @@ def register():
 
 
 def unregister():
-    del Scene.faceit_manual_landmarks_expand_ears
-    del Scene.faceit_manual_landmarks_expand_tongue
-    del Scene.faceit_manual_landmarks_expand_teeth
-    del Scene.faceit_manual_landmarks_expand_mouth
-    del Scene.faceit_manual_landmarks_expand_nose
-    del Scene.faceit_manual_landmarks_expand_eyes
-    del Scene.faceit_manual_landmarks_expand_eyebrows
-    del Scene.faceit_manual_landmarks_expand_face_outline
-    del Scene.faceit_manual_landmarks_show_reference
-    del Scene.faceit_manual_landmarks_mirror
-    del Scene.faceit_manual_landmarks_target_mesh
-    del Scene.faceit_landmark_picker_active
-    del Scene.faceit_manual_landmarks_active
-    del Scene.faceit_manual_landmarks_preview
-    del Scene.faceit_manual_landmarks
+    del Scene.expresso_manual_landmarks_expand_ears
+    del Scene.expresso_manual_landmarks_expand_tongue
+    del Scene.expresso_manual_landmarks_expand_teeth
+    del Scene.expresso_manual_landmarks_expand_mouth
+    del Scene.expresso_manual_landmarks_expand_nose
+    del Scene.expresso_manual_landmarks_expand_eyes
+    del Scene.expresso_manual_landmarks_expand_eyebrows
+    del Scene.expresso_manual_landmarks_expand_face_outline
+    del Scene.expresso_manual_landmarks_show_reference
+    del Scene.expresso_manual_landmarks_mirror
+    del Scene.expresso_manual_landmarks_target_mesh
+    del Scene.expresso_landmark_picker_active
+    del Scene.expresso_manual_landmarks_active
+    del Scene.expresso_manual_landmarks_preview
+    del Scene.expresso_manual_landmarks
 
     # ManualLandmarkItem is auto-unregistered by auto_load.py

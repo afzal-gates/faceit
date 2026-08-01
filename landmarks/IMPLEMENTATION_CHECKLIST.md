@@ -3,19 +3,19 @@
 ## ✅ Completed Features
 
 ### Core Functionality
-- [x] Created landmark mapping system (manual IDs → FaceIt indices)
+- [x] Created landmark mapping system (manual IDs → Expresso indices)
 - [x] Implemented landmark position conversion (vertex index → world space)
 - [x] Added special landmark calculation (eye centers, jaw master, face center, tongue master)
 - [x] Created `facial_landmarks` object generation from manual data
 - [x] Implemented landmark validation system (minimum count, critical groups)
 
 ### Operator Implementation
-- [x] Created `FACEIT_OT_GenerateRigFromManualLandmarks` operator
+- [x] Created `EXPRESSO_OT_GenerateRigFromManualLandmarks` operator
 - [x] Added poll function (check landmarks and target mesh)
 - [x] Implemented execute function (validation → conversion → rig generation)
 - [x] Added invoke function (confirmation dialog for low coverage)
-- [x] Integrated with FaceIt's `generate_rig` operator
-- [x] Added target mesh auto-registration in FaceIt system
+- [x] Integrated with Expresso's `generate_rig` operator
+- [x] Added target mesh auto-registration in Expresso system
 - [x] Comprehensive error handling with user feedback
 
 ### UI Integration
@@ -79,7 +79,7 @@
 - [ ] Test with invalid target mesh
 - [ ] Test with deleted mesh
 - [ ] Test with modified mesh topology
-- [ ] Test with no FaceIt registration
+- [ ] Test with no Expresso registration
 
 ### UI/UX Tests
 - [ ] Verify status messages update correctly
@@ -91,7 +91,7 @@
 ## 🚀 Deployment Steps
 
 ### For End User
-1. [ ] Reload FaceIt addon in Blender preferences
+1. [ ] Reload Expresso addon in Blender preferences
 2. [ ] Open Manual Landmark Picker panel
 3. [ ] Verify "Rig Generation" section appears
 4. [ ] Place test landmarks
@@ -161,7 +161,7 @@ All planned features have been implemented:
 
 ### Implemented by: Claude (AI Assistant)
 ### Date: 2025 (from context)
-### Version: FaceIt v2.3.56+
+### Version: Expresso v2.3.56+
 
 ---
 
@@ -170,7 +170,7 @@ All planned features have been implemented:
 If issues arise during testing:
 1. Check Blender console for errors
 2. Review `MANUAL_LANDMARKS_RIG_GENERATION.md` troubleshooting section
-3. Verify FaceIt addon is up to date
+3. Verify Expresso addon is up to date
 4. Test with simple mesh first
 5. Check that auto_load registered the operator
 
@@ -181,7 +181,7 @@ The implementation is considered successful if:
 - [x] Operator registered via auto_load
 - [x] UI displays correctly in panel
 - [ ] Generates rig from 30+ landmarks *(needs user testing)*
-- [ ] Works with FaceIt's standard workflow *(needs user testing)*
+- [ ] Works with Expresso's standard workflow *(needs user testing)*
 - [ ] Error handling prevents crashes *(needs user testing)*
 - [x] Documentation is comprehensive
 

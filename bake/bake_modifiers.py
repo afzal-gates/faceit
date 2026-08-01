@@ -2,19 +2,19 @@ import bpy
 from bpy.props import BoolProperty, EnumProperty
 
 from ..core.modifier_utils import populate_bake_modifier_items
-from ..core.faceit_utils import get_faceit_objects_list
+from ..core.expresso_utils import get_expresso_objects_list
 
 
-class FACEIT_OT_LoadBakeModifiers(bpy.types.Operator):
+class EXPRESSO_OT_LoadBakeModifiers(bpy.types.Operator):
     '''Find all bake operators on the registered objects.'''
-    bl_idname = 'faceit.load_bake_modifiers'
+    bl_idname = 'expresso.load_bake_modifiers'
     bl_label = 'Load Bake Modifiers'
     bl_options = {'UNDO', 'INTERNAL'}
 
     object_target: EnumProperty(
         items=(
             ('ACTIVE', 'Active Object', 'Active Object'),
-            ('ALL', 'All Faceit Objects', 'All Faceit Objects')
+            ('ALL', 'All Expresso Objects', 'All Expresso Objects')
         )
     )
     initialize: BoolProperty(
@@ -24,14 +24,14 @@ class FACEIT_OT_LoadBakeModifiers(bpy.types.Operator):
     )
 
     def execute(self, context):
-        target_objects = [context.object] if self.object_target == 'ACTIVE' else get_faceit_objects_list()
+        target_objects = [context.object] if self.object_target == 'ACTIVE' else get_expresso_objects_list()
         populate_bake_modifier_items(target_objects)
         return {'FINISHED'}
 
 
-class FACEIT_OT_MoveBakeModifier(bpy.types.Operator):
+class EXPRESSO_OT_MoveBakeModifier(bpy.types.Operator):
     '''Move Modfifiers to new index'''
-    bl_idname = 'faceit.move_bake_modifier'
+    bl_idname = 'expresso.move_bake_modifier'
     bl_label = 'Move'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -46,13 +46,13 @@ class FACEIT_OT_MoveBakeModifier(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.faceit_face_objects
+        return context.scene.expresso_face_objects
 
     def execute(self, context):
         scene = context.scene
-        obj_idx = scene.faceit_face_index
-        faceit_objects = scene.faceit_face_objects
-        active_item = faceit_objects[obj_idx]
+        obj_idx = scene.expresso_face_index
+        expresso_objects = scene.expresso_face_objects
+        active_item = expresso_objects[obj_idx]
         obj = active_item.get_object()
         index = active_item.active_mod_index
         mod = obj.modifiers[index]

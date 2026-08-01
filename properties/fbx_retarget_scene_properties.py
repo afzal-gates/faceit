@@ -3,7 +3,7 @@ from bpy.props import (BoolProperty, CollectionProperty, EnumProperty,
                        IntProperty, PointerProperty, StringProperty)
 from bpy.types import Action, Object, PropertyGroup, Scene
 
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core.retarget_list_base import RetargetShapesBase
 
 
@@ -17,12 +17,12 @@ def poll_is_action_shape_key(self, action):
 
 def get_mapping_targets_enum(self, context):
     items = (
-        ('FACEIT', 'Registered Faceit Objects', 'Use all registered Faceit objects to find a valid shape key mapping'),
+        ('EXPRESSO', 'Registered Expresso Objects', 'Use all registered Expresso objects to find a valid shape key mapping'),
         ('TARGET', 'Single Target Object', 'Use a specific object to find a valid shape key mapping'),
     )
-    c_rig = futils.get_faceit_control_armature()
+    c_rig = futils.get_expresso_control_armature()
     if c_rig:
-        if c_rig.faceit_crig_objects:
+        if c_rig.expresso_crig_objects:
             items += (('CRIG', 'Control Rig Targets', 'Use the control rig target objects as mapping targets'),)
     return items
 
@@ -93,12 +93,12 @@ class FBX_Retargeting(PropertyGroup):
 def register():
     ############## Mocap General ##################
 
-    Scene.faceit_retarget_fbx_mapping = PointerProperty(
+    Scene.expresso_retarget_fbx_mapping = PointerProperty(
         type=FBX_Retargeting,
         name='FBX Mapping'
     )
 
-    # Scene.faceit_retarget_fbx_shapes_index = IntProperty(
+    # Scene.expresso_retarget_fbx_shapes_index = IntProperty(
     #     name='Expression Index',
     #     default=0,
     #     options=set(),
@@ -106,4 +106,4 @@ def register():
 
 
 def unregister():
-    del Scene.faceit_retarget_fbx_mapping
+    del Scene.expresso_retarget_fbx_mapping

@@ -5,8 +5,8 @@ from mathutils import Vector
 from .control_rig_data import get_pose_bone_range_from_limit_constraint
 
 from ..core.pose_utils import copy_pose_bone_constraints, copy_pose_bone_properties
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils
 
 
@@ -25,7 +25,7 @@ def get_slider_shape_names_in_crig(c_rig, custom_only=True):
     '''Returns the names of all custom sliders'''
     shape_key_names = []
     if c_rig:
-        crig_targets = c_rig.faceit_crig_targets
+        crig_targets = c_rig.expresso_crig_targets
         if not crig_targets:
             return shape_key_names
         return [n.name for n in crig_targets if get_slider_from_shape(c_rig, n.name, custom_only=custom_only)]
@@ -34,7 +34,7 @@ def get_slider_shape_names_in_crig(c_rig, custom_only=True):
 def get_sliders_in_crig(c_rig, custom_only=True):
     '''Returns the names of all custom sliders'''
     sliders = []
-    for shape_item in c_rig.faceit_crig_targets:
+    for shape_item in c_rig.expresso_crig_targets:
         slider = get_slider_from_shape(
             c_rig, shape_item.name, custom_only=custom_only)
         if slider:
@@ -52,7 +52,7 @@ def get_slider_range_from_limit_constraint(constraint):
 
 def get_properties_for_sliders(c_rig, custom_only=False):
     '''Populate the slider_name, slider_range properties in the crig_targets collection'''
-    for shape_item in c_rig.faceit_crig_targets:
+    for shape_item in c_rig.expresso_crig_targets:
         slider = get_slider_from_shape(
             c_rig, shape_item.name, custom_only=custom_only)
         if not slider:
@@ -67,7 +67,7 @@ def get_custom_sliders_in_crig_targets_enum(self, context):
     # blender is prone to crash without making shapes global
     global shapes
     shapes = []
-    c_rig = futils.get_faceit_control_armature()
+    c_rig = futils.get_expresso_control_armature()
     if c_rig:
         for i, name in enumerate(get_slider_shape_names_in_crig(c_rig, custom_only=self.custom_only)):
             shapes.append((name, name, name, i))
@@ -82,10 +82,10 @@ def get_custom_sliders_enum_for_active_ctrl_rig(self, context):
     # blender is prone to crash without making shapes global
     global shapes
     shapes = []
-    crig = futils.get_faceit_control_armature()
+    crig = futils.get_expresso_control_armature()
     if crig:
-        crig_target_shapes = crig.faceit_crig_targets
-        crig_objects = [item.get_object() for item in crig.faceit_crig_objects if item.get_object()]
+        crig_target_shapes = crig.expresso_crig_targets
+        crig_objects = [item.get_object() for item in crig.expresso_crig_objects if item.get_object()]
         shape_key_names = [n for n in shape_key_utils.get_shape_key_names_from_objects(
             crig_objects) if n not in crig_target_shapes]
         for i, name in enumerate(shape_key_names):
@@ -311,7 +311,7 @@ def generate_extra_sliders(context, shape_name, slider_range, rig_obj, max_rows=
     # Add the slider property to the control bones
     for bone in rig_obj.pose.bones:
         if bone.name in slider_existing_already:
-            bone['faceit_slider'] = 1
+            bone['expresso_slider'] = 1
 
     bpy.ops.object.mode_set(mode='OBJECT')
     if bpy.app.version < (4, 0, 0):
@@ -343,7 +343,7 @@ def get_all_slider_bones(rig, filter='', only_controllers=False):
         if '_ref' in bone.name:
             continue
         if only_controllers:
-            if bone.get('faceit_slider'):
+            if bone.get('expresso_slider'):
                 slider_bones.append(bone.name)
                 continue
             continue

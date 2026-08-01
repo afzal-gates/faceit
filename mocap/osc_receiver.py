@@ -3,7 +3,7 @@ import socket
 import time
 from threading import Thread, Event
 
-from ..core.faceit_data import get_face_cap_shape_data
+from ..core.expresso_data import get_face_cap_shape_data
 
 from .decode_ifacialmocap import decode_ifacial_mocap
 from .decode_live_link_face import decode_live_link_face

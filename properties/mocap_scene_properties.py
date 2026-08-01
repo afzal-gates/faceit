@@ -103,7 +103,7 @@ class Mocap_Engine_Properties(SmoothBaseProperties, PropertyGroup):
 def shapes_action_poll(self, action):
     '''Check if the action is suitable for shape key animation.'''
     if bpy.app.version >= (4, 4, 0):
-        if action.name in ("faceit_shape_action", "overwrite_shape_action"):
+        if action.name in ("expresso_shape_action", "overwrite_shape_action"):
             return False
         return True
     return any(['key_block' in fc.data_path for fc in action.fcurves]) or len(action.fcurves) == 0
@@ -111,7 +111,7 @@ def shapes_action_poll(self, action):
 
 def rig_action_poll(self, action):
     '''Check if the action is suitable for bone animation'''
-    if action.name in ("faceit_shape_action", "overwrite_shape_action"):
+    if action.name in ("expresso_shape_action", "overwrite_shape_action"):
         return False
     if bpy.app.version >= (4, 4, 0):
         return True
@@ -120,105 +120,105 @@ def rig_action_poll(self, action):
 
 def update_head_target_object(self, context):
     '''Create animation data. Check if the sub target is valid for assigned armature.'''
-    head_obj = self.faceit_head_target_object
+    head_obj = self.expresso_head_target_object
     if not head_obj:
         return
     if not head_obj.animation_data:
         head_obj.animation_data_create()
-    head_bone_name = self.faceit_head_sub_target
+    head_bone_name = self.expresso_head_sub_target
     if head_bone_name:
         if head_obj.type == 'ARMATURE':
-            self.faceit_head_sub_target = head_bone_name if head_obj.pose.bones.get(head_bone_name) else ""
+            self.expresso_head_sub_target = head_bone_name if head_obj.pose.bones.get(head_bone_name) else ""
 
 
 def update_mocap_action(self, context):
-    action = self.faceit_mocap_action
+    action = self.expresso_mocap_action
     if action is None:
-        bpy.ops.faceit.populate_action(remove_action=True, set_mocap_action=False)
+        bpy.ops.expresso.populate_action(remove_action=True, set_mocap_action=False)
     else:
-        bpy.ops.faceit.populate_action(action_name=action.name, set_mocap_action=False)
+        bpy.ops.expresso.populate_action(action_name=action.name, set_mocap_action=False)
 
 
 def register():
     ############## Mocap General ##################
 
-    Scene.faceit_mocap_action = PointerProperty(
+    Scene.expresso_mocap_action = PointerProperty(
         type=bpy.types.Action,
         name='Shapes Action',
         poll=shapes_action_poll,
         update=update_mocap_action,
     )
     if bpy.app.version >= (4, 4, 0):
-        Scene.faceit_mocap_slot_handle = IntProperty(
+        Scene.expresso_mocap_slot_handle = IntProperty(
             name='Action Slot',
             default=0,
         )
-    Scene.faceit_bake_crig_to_sk_action = PointerProperty(
+    Scene.expresso_bake_crig_to_sk_action = PointerProperty(
         type=bpy.types.Action,
         name='Ctrl Rig Action',
         poll=rig_action_poll,
     )
-    Scene.faceit_head_target_object = PointerProperty(
+    Scene.expresso_head_target_object = PointerProperty(
         type=Object,
         name="Head Object",
         description="The Head Target Object. MESH or ARMATURE",
         update=update_head_target_object
     )
-    Scene.faceit_head_sub_target = StringProperty(
+    Scene.expresso_head_sub_target = StringProperty(
         name="Head Bone",
         description="The Target Bone for OSC animation."
     )
-    Scene.faceit_use_head_location_offset = BoolProperty(
+    Scene.expresso_use_head_location_offset = BoolProperty(
         name="Use Head Offset",
         description="Use the current position as location offset. (Only for mesh objects)",
         default=True
     )
-    Scene.faceit_head_action = PointerProperty(
+    Scene.expresso_head_action = PointerProperty(
         name="Head Action",
         type=Action,
         description="The active action on the head object. ARMATURE or BONE",
     )
-    Scene.faceit_eye_action = PointerProperty(
+    Scene.expresso_eye_action = PointerProperty(
         name="Head Action",
         type=Action,
         description="The active action on the head object. ARMATURE or BONE",
     )
-    Scene.faceit_eye_target_rig = PointerProperty(
+    Scene.expresso_eye_target_rig = PointerProperty(
         type=Object,
         name="Eye Rig",
         description="The Eye Rig Object. ARMATURE",
     )
-    Scene.faceit_eye_L_sub_target = StringProperty(
+    Scene.expresso_eye_L_sub_target = StringProperty(
         name="Eye L Bone",
         description="The Target Bone for animation."
     )
-    Scene.faceit_eye_R_sub_target = StringProperty(
+    Scene.expresso_eye_R_sub_target = StringProperty(
         name="Eye R Bone",
         description="The Target Bone for animation."
     )
     ############## Live Mocap ##################
 
-    Scene.faceit_live_mocap_settings = CollectionProperty(
+    Scene.expresso_live_mocap_settings = CollectionProperty(
         type=Mocap_Engine_Properties,
         name='Mocap Properties',
     )
     ############## Face Cap App ##################
     if bpy.app.version >= (4, 4, 0):
-        bpy.types.SoundStrip.faceit_audio = BoolProperty(
-            name='Faceit Audio',
-            description='Whether this is a Faceit audio sequence',
+        bpy.types.SoundStrip.expresso_audio = BoolProperty(
+            name='Expresso Audio',
+            description='Whether this is a Expresso audio sequence',
             default=False
         )
     else:
-        bpy.types.SoundSequence.faceit_audio = BoolProperty(
-            name='Faceit Audio',
-            description='Whether this is a Faceit audio sequence',
+        bpy.types.SoundSequence.expresso_audio = BoolProperty(
+            name='Expresso Audio',
+            description='Whether this is a Expresso audio sequence',
             default=False
         )
 
     ############## OSC #####################
 
-    Scene.faceit_live_source = EnumProperty(
+    Scene.expresso_live_source = EnumProperty(
         name="Live Source",
         items=(
             ('EPIC', 'Live Link Face', 'Epic Live Link Face '),
@@ -227,12 +227,12 @@ def register():
         ),
         default='FACECAP'
     )
-    Scene.faceit_osc_receiver_enabled = BoolProperty(
+    Scene.expresso_osc_receiver_enabled = BoolProperty(
         name="Receiver Enabled",
         default=False,
         description="OSC Connection open/closed."
     )
-    Scene.faceit_auto_disconnect_ctrl_rig = BoolProperty(
+    Scene.expresso_auto_disconnect_ctrl_rig = BoolProperty(
         name="Auto Disconnect Drivers",
         description="Disconnect the control rig drivers while recording.",
         default=True,
@@ -240,13 +240,13 @@ def register():
 
 
 def unregister():
-    del Scene.faceit_mocap_action
+    del Scene.expresso_mocap_action
     if bpy.app.version >= (4, 4, 0):
-        del bpy.types.SoundStrip.faceit_audio
-        del Scene.faceit_mocap_slot_handle
+        del bpy.types.SoundStrip.expresso_audio
+        del Scene.expresso_mocap_slot_handle
     else:
-        del bpy.types.SoundSequence.faceit_audio
-    del Scene.faceit_osc_receiver_enabled
-    del Scene.faceit_head_target_object
-    del Scene.faceit_head_sub_target
-    del Scene.faceit_auto_disconnect_ctrl_rig
+        del bpy.types.SoundSequence.expresso_audio
+    del Scene.expresso_osc_receiver_enabled
+    del Scene.expresso_head_target_object
+    del Scene.expresso_head_sub_target
+    del Scene.expresso_auto_disconnect_ctrl_rig

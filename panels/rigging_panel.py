@@ -4,12 +4,12 @@ import bpy
 from .. import __package__ as base_package
 from ..properties.rig_scene_properties import get_enum_vgroups
 from ..rigging.rig_utils import is_metarig
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from . import draw_utils
-from .ui import FACEIT_PT_Base, FACEIT_PT_BaseSub
+from .ui import EXPRESSO_PT_Base, EXPRESSO_PT_BaseSub
 
 
-class FACEIT_PT_BaseRig(FACEIT_PT_Base):
+class EXPRESSO_PT_BaseRig(EXPRESSO_PT_Base):
     UI_TABS = ('CREATE')
 
     @classmethod
@@ -17,21 +17,21 @@ class FACEIT_PT_BaseRig(FACEIT_PT_Base):
         return super().poll(context)
 
 
-class FACEIT_PT_Landmarks(FACEIT_PT_BaseRig, bpy.types.Panel):
+class EXPRESSO_PT_Landmarks(EXPRESSO_PT_BaseRig, bpy.types.Panel):
     bl_label = 'Landmarks'
     bl_options = set()
-    bl_idname = 'FACEIT_PT_Landmarks'
+    bl_idname = 'EXPRESSO_PT_Landmarks'
     UI_TABS = ('CREATE', 'CONTROL')
-    weblink = "https://faceit-doc.readthedocs.io/en/latest/landmarks/"
+    weblink = "https://expresso-doc.readthedocs.io/en/latest/landmarks/"
 
     @classmethod
     def poll(cls, context):
         if super().poll(context):
             scene = context.scene
-            active_tab = scene.faceit_workspace.active_tab
-            if scene.faceit_face_objects:
-                is_ctrl_lm = scene.faceit_show_landmarks_ctrl_rig and active_tab == 'CONTROL'
-                is_rig_lm = not futils.get_faceit_armature(force_original=True) and active_tab == 'CREATE'
+            active_tab = scene.expresso_workspace.active_tab
+            if scene.expresso_face_objects:
+                is_ctrl_lm = scene.expresso_show_landmarks_ctrl_rig and active_tab == 'CONTROL'
+                is_rig_lm = not futils.get_expresso_armature(force_original=True) and active_tab == 'CREATE'
                 return is_rig_lm or is_ctrl_lm
 
     def draw(self, context):
@@ -45,7 +45,7 @@ class FACEIT_PT_Landmarks(FACEIT_PT_BaseRig, bpy.types.Panel):
         if lm_obj:
             if lm_obj.get("state") and lm_obj["state"] == -1:
                 layout.row().label(text='Landmarks need to be updated!')
-                layout.row().operator('faceit.update_landmarks', text='Update Landmarks')
+                layout.row().operator('expresso.update_landmarks', text='Update Landmarks')
                 return
             adaption_state = 1
             adaption_state += lm_obj["state"]
@@ -60,18 +60,18 @@ class FACEIT_PT_Landmarks(FACEIT_PT_BaseRig, bpy.types.Panel):
                     text = 'Match Face Width'
         if adaption_state == 0:
             row = col.row()
-            row.prop(scene, 'faceit_asymmetric', text='Asymmetry', icon='MOD_MIRROR')
+            row.prop(scene, 'expresso_asymmetric', text='Asymmetry', icon='MOD_MIRROR')
         if adaption_state in (0, 1, 11, 2, 3):
             row = col.row()
-            row.operator('faceit.facial_landmarks', text=text, icon='TRACKER')
+            row.operator('expresso.facial_landmarks', text=text, icon='TRACKER')
         if adaption_state == 0:
             row = col.row(align=True)
-            main_obj = futils.get_main_faceit_object(clear_invalid_objects=False)
-            if scene.faceit_workspace.active_tab == 'CONTROL':
+            main_obj = futils.get_main_expresso_object(clear_invalid_objects=False)
+            if scene.expresso_workspace.active_tab == 'CONTROL':
                 row.label(text="Helpers")
                 row = col.row(align=True)
-                picker_running = context.scene.faceit_picker_options.picking_group == "main"
-                op = row.operator('faceit.vertex_group_picker', text='Set Main Group',
+                picker_running = context.scene.expresso_picker_options.picking_group == "main"
+                op = row.operator('expresso.vertex_group_picker', text='Set Main Group',
                                   icon='EYEDROPPER', depress=picker_running)
                 op.additive_group = True
                 op.single_surface = True
@@ -79,9 +79,9 @@ class FACEIT_PT_Landmarks(FACEIT_PT_BaseRig, bpy.types.Panel):
                     row = col.row(align=True)
                     mod = main_obj.modifiers.get("Main Mask")
                     if mod:
-                        row.operator('faceit.unmask_main', icon='X')
+                        row.operator('expresso.unmask_main', icon='X')
                     else:
-                        row.operator('faceit.mask_main', icon='MOD_MASK')
+                        row.operator('expresso.mask_main', icon='MOD_MASK')
             else:
                 if main_obj:
                     row.label(text="Helpers")
@@ -89,24 +89,24 @@ class FACEIT_PT_Landmarks(FACEIT_PT_BaseRig, bpy.types.Panel):
                     row = col.row(align=True)
                     mod = main_obj.modifiers.get("Main Mask")
                     if mod:
-                        row.operator('faceit.unmask_main', icon='X')
+                        row.operator('expresso.unmask_main', icon='X')
                     else:
-                        row.operator('faceit.mask_main', icon='MOD_MASK')
+                        row.operator('expresso.mask_main', icon='MOD_MASK')
         if adaption_state == 4:
             row = col.row()
             row.label(text='Return')
             row = col.row(align=True)
-            row.operator('faceit.reset_facial_landmarks', icon='BACK')
+            row.operator('expresso.reset_facial_landmarks', icon='BACK')
             col.label(text='Landmarks')
-            col.operator('faceit.project_landmarks', icon='CHECKMARK')
+            col.operator('expresso.project_landmarks', icon='CHECKMARK')
         elif adaption_state == 5:
             row = col.row()
             row.label(text='Return')
             row = col.row(align=True)
-            row.operator('faceit.reset_facial_landmarks', icon='BACK')
+            row.operator('expresso.reset_facial_landmarks', icon='BACK')
             row = col.row(align=True)
-            row.operator('faceit.edit_landmarks', icon='EDITMODE_HLT')
-            row.operator('faceit.finish_edit_landmarks', text='', icon='CHECKMARK')
+            row.operator('expresso.edit_landmarks', icon='EDITMODE_HLT')
+            row.operator('expresso.finish_edit_landmarks', text='', icon='CHECKMARK')
             # Vertex picker for snapping landmarks
             if context.object and context.object.name == 'facial_landmarks' and context.mode == 'EDIT_MESH':
                 box = col.box()
@@ -117,12 +117,12 @@ class FACEIT_PT_Landmarks(FACEIT_PT_BaseRig, bpy.types.Panel):
                 box_col.label(text='3. Click face vertex', icon='BLANK1')
                 row = box_col.row()
                 row.scale_y = 1.2
-                row.operator('faceit.snap_landmark_to_vertex', icon='EYEDROPPER')
+                row.operator('expresso.snap_landmark_to_vertex', icon='EYEDROPPER')
 
 
-class FACEIT_OT_SearchVertexGroups(bpy.types.Operator):
+class EXPRESSO_OT_SearchVertexGroups(bpy.types.Operator):
     '''Invoke a search popup for all vertex groups and store the selection in a specific property.'''
-    bl_idname = 'faceit.search_vertex_groups'
+    bl_idname = 'expresso.search_vertex_groups'
     bl_label = 'Search Vertex Groups'
     bl_options = {'REGISTER', 'UNDO'}
     bl_property = 'my_enum'
@@ -151,9 +151,9 @@ class FACEIT_OT_SearchVertexGroups(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ClearVertexGroup(bpy.types.Operator):
+class EXPRESSO_OT_ClearVertexGroup(bpy.types.Operator):
     '''Clear the vertex group of the selected object.'''
-    bl_idname = 'faceit.clear_vertex_group'
+    bl_idname = 'expresso.clear_vertex_group'
     bl_label = 'Clear Vertex Group'
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -164,8 +164,8 @@ class FACEIT_OT_ClearVertexGroup(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         grp_name = getattr(scene, self.vgroup_property_name)
-        if grp_name in ('faceit_left_eyeball', 'faceit_right_eyeball'):
-            for obj in futils.get_faceit_objects_list():
+        if grp_name in ('expresso_left_eyeball', 'expresso_right_eyeball'):
+            for obj in futils.get_expresso_objects_list():
                 vgroup = obj.vertex_groups.get(grp_name)
                 if vgroup:
                     obj.vertex_groups.remove(vgroup)
@@ -173,13 +173,13 @@ class FACEIT_OT_ClearVertexGroup(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_PT_PivotSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
+class EXPRESSO_PT_PivotSetup(EXPRESSO_PT_BaseSub, bpy.types.Panel):
     bl_label = 'Pivot Setup'
     bl_options = set()
-    bl_parent_id = 'FACEIT_PT_Landmarks'
-    bl_idname = 'FACEIT_PT_PivotSetup'
-    faceit_predecessor = 'FACEIT_PT_LandmarkHelpers'
-    weblink = "https://faceit-doc.readthedocs.io/en/latest/landmarks/#pivot-settings"
+    bl_parent_id = 'EXPRESSO_PT_Landmarks'
+    bl_idname = 'EXPRESSO_PT_PivotSetup'
+    expresso_predecessor = 'EXPRESSO_PT_LandmarkHelpers'
+    weblink = "https://expresso-doc.readthedocs.io/en/latest/landmarks/#pivot-settings"
 
     @classmethod
     def poll(cls, context):
@@ -198,15 +198,15 @@ class FACEIT_PT_PivotSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
         row = col.row(align=True)
         row.label(text="Eye Pivots")
         row = col.row(align=True)
-        is_manual = scene.faceit_eye_pivot_placement == 'MANUAL'
-        row.operator('faceit.remove_manual_pivot_vertex', text='Auto', depress=not is_manual)
-        row.operator('faceit.add_manual_pivot_vertex', text='Manual', depress=is_manual)
-        if scene.faceit_eye_pivot_placement == 'AUTO':
+        is_manual = scene.expresso_eye_pivot_placement == 'MANUAL'
+        row.operator('expresso.remove_manual_pivot_vertex', text='Auto', depress=not is_manual)
+        row.operator('expresso.add_manual_pivot_vertex', text='Manual', depress=is_manual)
+        if scene.expresso_eye_pivot_placement == 'AUTO':
             col.separator()
             row = col.row(align=True)
-            row.prop(scene, 'faceit_eye_geometry_type', expand=True)
-            if scene.faceit_eye_geometry_type == 'SPHERE':
-                picking_group = context.scene.faceit_picker_options.picking_group
+            row.prop(scene, 'expresso_eye_geometry_type', expand=True)
+            if scene.expresso_eye_geometry_type == 'SPHERE':
+                picking_group = context.scene.expresso_picker_options.picking_group
                 # EYEBALLS / SHPERES
                 row = col.row(align=True)
                 sub = row.split(factor=0.4)
@@ -219,45 +219,45 @@ class FACEIT_PT_PivotSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
                 sub.alignment = 'RIGHT'
                 sub.label(text='Left Eye')
                 row = sub.row(align=True)
-                row.operator('faceit.search_vertex_groups', text=scene.faceit_eye_pivot_group_L or 'No Group Selected',
-                             icon='VIEWZOOM', emboss=True).vgroup_property_name = 'faceit_eye_pivot_group_L'
+                row.operator('expresso.search_vertex_groups', text=scene.expresso_eye_pivot_group_L or 'No Group Selected',
+                             icon='VIEWZOOM', emboss=True).vgroup_property_name = 'expresso_eye_pivot_group_L'
                 picker_running = picking_group == "left_eyeball"
-                op = row.operator('faceit.vertex_group_picker', text='',
+                op = row.operator('expresso.vertex_group_picker', text='',
                                   icon='EYEDROPPER', depress=picker_running)
                 op.vertex_group_name = 'left_eyeball'
                 op.is_pivot_group = True
                 op.additive_group = True
                 # op.single_surface = True
-                op = row.operator('faceit.draw_faceit_vertex_group', text='', icon='HIDE_OFF')
-                op.faceit_vertex_group_name = scene.faceit_eye_pivot_group_L
-                op = row.operator('faceit.assign_group', text='', icon='GROUP_VERTEX')
+                op = row.operator('expresso.draw_expresso_vertex_group', text='', icon='HIDE_OFF')
+                op.expresso_vertex_group_name = scene.expresso_eye_pivot_group_L
+                op = row.operator('expresso.assign_group', text='', icon='GROUP_VERTEX')
                 op.vertex_group = 'left_eyeball'
                 op.is_pivot_group = True
-                op = row.operator('faceit.clear_vertex_group', text='', icon='X')
-                op.vgroup_property_name = 'faceit_eye_pivot_group_L'
+                op = row.operator('expresso.clear_vertex_group', text='', icon='X')
+                op.vgroup_property_name = 'expresso_eye_pivot_group_L'
                 # Right Eye
                 row = col.row(align=True)
                 sub = row.split(factor=0.4)
                 sub.alignment = 'RIGHT'
                 sub.label(text='Right Eye')
                 row = sub.row(align=True)
-                row.operator('faceit.search_vertex_groups', text=scene.faceit_eye_pivot_group_R or 'No Group Selected',
-                             icon='VIEWZOOM', emboss=True).vgroup_property_name = 'faceit_eye_pivot_group_R'
+                row.operator('expresso.search_vertex_groups', text=scene.expresso_eye_pivot_group_R or 'No Group Selected',
+                             icon='VIEWZOOM', emboss=True).vgroup_property_name = 'expresso_eye_pivot_group_R'
                 picker_running = picking_group == "right_eyeball"
-                op = row.operator('faceit.vertex_group_picker', text='',
+                op = row.operator('expresso.vertex_group_picker', text='',
                                   icon='EYEDROPPER', depress=picker_running)
                 op.vertex_group_name = 'right_eyeball'
                 op.is_pivot_group = True
                 op.additive_group = True
                 # op.single_surface = True
-                op = row.operator('faceit.draw_faceit_vertex_group', text='', icon='HIDE_OFF')
-                op.faceit_vertex_group_name = scene.faceit_eye_pivot_group_R
-                op = row.operator('faceit.assign_group', text='', icon='GROUP_VERTEX')
+                op = row.operator('expresso.draw_expresso_vertex_group', text='', icon='HIDE_OFF')
+                op.expresso_vertex_group_name = scene.expresso_eye_pivot_group_R
+                op = row.operator('expresso.assign_group', text='', icon='GROUP_VERTEX')
                 op.vertex_group = 'right_eyeball'
                 op.is_pivot_group = True
-                op = row.operator('faceit.clear_vertex_group', text='', icon='X')
-                op.vgroup_property_name = 'faceit_eye_pivot_group_R'
-                if not scene.faceit_eye_pivot_group_L or not scene.faceit_eye_pivot_group_R:
+                op = row.operator('expresso.clear_vertex_group', text='', icon='X')
+                op.vgroup_property_name = 'expresso_eye_pivot_group_R'
+                if not scene.expresso_eye_pivot_group_L or not scene.expresso_eye_pivot_group_R:
                     row = col.row(align=True)
                     sub = row.split(factor=0.4)
                     sub.separator()
@@ -275,8 +275,8 @@ class FACEIT_PT_PivotSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
                 sub.alignment = 'RIGHT'
                 sub.label(text='Reference Armature')
                 row = sub.row(align=True)
-                row.prop(scene, 'faceit_pivot_ref_armature', text='', icon='ARMATURE_DATA')
-                ref_rig = scene.faceit_pivot_ref_armature
+                row.prop(scene, 'expresso_pivot_ref_armature', text='', icon='ARMATURE_DATA')
+                ref_rig = scene.expresso_pivot_ref_armature
                 if not ref_rig:
                     row = col.row(align=True)
                     sub = row.split(factor=0.4)
@@ -285,10 +285,10 @@ class FACEIT_PT_PivotSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
                     row.label(text='No existing rig assigned.', icon='ERROR')
                 else:
                     row = col.row(align=True)
-                    row.prop_search(scene, 'faceit_eye_pivot_bone_L',
+                    row.prop_search(scene, 'expresso_eye_pivot_bone_L',
                                     ref_rig.data, 'bones', text='Left Eye Bone')
                     row = col.row(align=True)
-                    row.prop_search(scene, 'faceit_eye_pivot_bone_R',
+                    row.prop_search(scene, 'expresso_eye_pivot_bone_R',
                                     ref_rig.data, 'bones', text='Right Eye Bone')
         else:
             row = col.row(align=True)
@@ -300,18 +300,18 @@ class FACEIT_PT_PivotSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
             sub = row.split(factor=0.4)
             sub.separator()
             row = sub.row(align=True)
-            row.operator('faceit.reset_manual_pivots', text='Reset', icon='LOOP_BACK')
+            row.operator('expresso.reset_manual_pivots', text='Reset', icon='LOOP_BACK')
             row = col.row(align=True)
-            row.prop(scene, 'faceit_pivot_vertex_auto_snap', text='Auto Snap')
+            row.prop(scene, 'expresso_pivot_vertex_auto_snap', text='Auto Snap')
         row = col.row(align=True)
-        row.prop(scene, 'faceit_draw_pivot_locators')
+        row.prop(scene, 'expresso_draw_pivot_locators')
         row = col.row(align=True)
         row.label(text="Jaw Pivot")
         row = col.row(align=True)
-        row.operator('faceit.add_jaw_pivot_empty', text='Add Jaw Pivot', icon='SPHERE')
+        row.operator('expresso.add_jaw_pivot_empty', text='Add Jaw Pivot', icon='SPHERE')
         jaw_pivot_object = context.scene.objects.get('Jaw Pivot')
         if jaw_pivot_object:
-            row.operator('faceit.remove_jaw_pivot_empty', text='', icon='X')
+            row.operator('expresso.remove_jaw_pivot_empty', text='', icon='X')
             row = col.row(align=True)
             sub = row.split(factor=0.4)
             sub.separator()
@@ -320,14 +320,14 @@ class FACEIT_PT_PivotSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
             sub = row.split(factor=0.4)
             sub.separator()
             sub.alignment = 'RIGHT'
-            sub.operator('faceit.reset_jaw_pivot_empty', text='Reset', icon='LOOP_BACK')
+            sub.operator('expresso.reset_jaw_pivot_empty', text='Reset', icon='LOOP_BACK')
 
 
-class FACEIT_PT_LandmarkHelpers(FACEIT_PT_BaseSub, bpy.types.Panel):
+class EXPRESSO_PT_LandmarkHelpers(EXPRESSO_PT_BaseSub, bpy.types.Panel):
     bl_label = 'Landmark Helpers'
     bl_options = set()
-    bl_parent_id = 'FACEIT_PT_Landmarks'
-    bl_idname = 'FACEIT_PT_LandmarkHelpers'
+    bl_parent_id = 'EXPRESSO_PT_Landmarks'
+    bl_idname = 'EXPRESSO_PT_LandmarkHelpers'
 
     @classmethod
     def poll(cls, context):
@@ -344,23 +344,23 @@ class FACEIT_PT_LandmarkHelpers(FACEIT_PT_BaseSub, bpy.types.Panel):
         col = layout.column(align=True)
         lm_obj = futils.get_object('facial_landmarks')
         adaption_state = lm_obj["state"]
-        if scene.faceit_asymmetric and not futils.get_hide_obj(lm_obj):
+        if scene.expresso_asymmetric and not futils.get_hide_obj(lm_obj):
             row = col.row(align=True)
             row.label(text="Asymmetry")
             row = col.row(align=True)
             row.prop(lm_obj.data, 'use_mirror_x', text='', icon='MOD_MIRROR')
             row.separator()
-            row.operator('faceit.mirror_selected_verts', icon='ARROW_LEFTRIGHT')
+            row.operator('expresso.mirror_selected_verts', icon='ARROW_LEFTRIGHT')
             if context.mode != 'EDIT_MESH':
                 row.enabled = False
-        main_obj = futils.get_main_faceit_object()
+        main_obj = futils.get_main_expresso_object()
         if main_obj:
             row = col.row(align=True)
             mod = main_obj.modifiers.get("Main Mask")
             if mod:
-                row.operator('faceit.unmask_main', icon='X')
+                row.operator('expresso.unmask_main', icon='X')
             else:
-                row.operator('faceit.mask_main', icon='MOD_MASK')
+                row.operator('expresso.mask_main', icon='MOD_MASK')
         row = col.row(align=True)
         row.label(text="Settings")
         if adaption_state in range(0, 4):
@@ -369,23 +369,23 @@ class FACEIT_PT_LandmarkHelpers(FACEIT_PT_BaseSub, bpy.types.Panel):
             row.prop(prefs, "auto_lock_3d_view", icon='RESTRICT_VIEW_ON')
             if futils.get_any_view_locked():
                 row = col.row(align=True)
-                row.operator("faceit.unlock_3d_view", icon='LOCKED', depress=True)
+                row.operator("expresso.unlock_3d_view", icon='LOCKED', depress=True)
             else:
                 row = col.row(align=True)
-                row.operator("faceit.lock_3d_view_front", icon='UNLOCKED')
+                row.operator("expresso.lock_3d_view_front", icon='UNLOCKED')
 
         if adaption_state == 4:
             if context.view_layer.objects.active == lm_obj and context.mode == 'EDIT_MESH':
                 row = col.row(align=True)
                 row.prop(scene.tool_settings, "use_snap", icon='SNAP_OFF')
-                row.operator("faceit.reset_snap_settings", text="", icon='LOOP_BACK')
+                row.operator("expresso.reset_snap_settings", text="", icon='LOOP_BACK')
         row = col.row(align=True)
-        row.operator("faceit.landmark_vertex_size", text="Vertex Size Settings")
+        row.operator("expresso.landmark_vertex_size", text="Vertex Size Settings")
 
 
-class FACEIT_OT_LandmarkVertexSize(bpy.types.Operator):
+class EXPRESSO_OT_LandmarkVertexSize(bpy.types.Operator):
     bl_label = 'Landmark Vertex Size'
-    bl_idname = 'faceit.landmark_vertex_size'
+    bl_idname = 'expresso.landmark_vertex_size'
     bl_options = {'UNDO', 'INTERNAL'}
 
     def invoke(self, context, event):
@@ -415,19 +415,19 @@ class FACEIT_OT_LandmarkVertexSize(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_PT_Rigging(FACEIT_PT_BaseRig, bpy.types.Panel):
+class EXPRESSO_PT_Rigging(EXPRESSO_PT_BaseRig, bpy.types.Panel):
     bl_label = 'Rig & Bind'
     bl_options = set()
-    bl_idname = 'FACEIT_PT_Rigging'
+    bl_idname = 'EXPRESSO_PT_Rigging'
 
-    faceit_predecessor = 'FACEIT_PT_Landmarks'
-    weblink = "https://faceit-doc.readthedocs.io/en/latest/rigging/"
+    expresso_predecessor = 'EXPRESSO_PT_Landmarks'
+    weblink = "https://expresso-doc.readthedocs.io/en/latest/rigging/"
 
     @classmethod
     def poll(cls, context):
         if super().poll(context):
             lm_obj = futils.get_object('facial_landmarks')
-            rig = futils.get_faceit_armature(force_original=True)
+            rig = futils.get_expresso_armature(force_original=True)
             if lm_obj:
                 if lm_obj.get("state") == 4 or futils.get_hide_obj(lm_obj):
                     return True
@@ -437,54 +437,54 @@ class FACEIT_PT_Rigging(FACEIT_PT_BaseRig, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        if scene.faceit_shapes_generated:
+        if scene.expresso_shapes_generated:
             col_reset = layout.column(align=True)
             row = col_reset.row()
-            row.operator('faceit.back_to_rigging', icon='BACK')
+            row.operator('expresso.back_to_rigging', icon='BACK')
             col_reset.separator(factor=2)
         col = layout.column(align=True)
-        col.enabled = not scene.faceit_shapes_generated or scene.faceit_armature_missing
+        col.enabled = not scene.expresso_shapes_generated or scene.expresso_armature_missing
 
-        if futils.get_faceit_armature(force_original=True):
+        if futils.get_expresso_armature(force_original=True):
 
             row = col.row()
             row.label(text='Return')
 
-            # draw_utils.draw_web_link(row, 'https://faceit-doc.readthedocs.io/en/latest/rigging/#1-generate-rig')
+            # draw_utils.draw_web_link(row, 'https://expresso-doc.readthedocs.io/en/latest/rigging/#1-generate-rig')
 
             # else:
             row = col.row(align=True)
-            row.operator('faceit.reset_to_landmarks', icon='BACK')
+            row.operator('expresso.reset_to_landmarks', icon='BACK')
             row = col.row()
             row.label(text='Bind')
 
-            draw_utils.draw_web_link(row, 'https://faceit-doc.readthedocs.io/en/latest/rigging/#2-bind-weights')
+            draw_utils.draw_web_link(row, 'https://expresso-doc.readthedocs.io/en/latest/rigging/#2-bind-weights')
 
             row = col.row(align=True)
-            row.operator('faceit.smart_bind', text='Bind', icon='OUTLINER_OB_ARMATURE')
+            row.operator('expresso.smart_bind', text='Bind', icon='OUTLINER_OB_ARMATURE')
 
         else:
             row = col.row()
             row.label(text='Generate')
 
-            # draw_utils.draw_web_link(row, 'https://faceit-doc.readthedocs.io/en/latest/rigging/')
+            # draw_utils.draw_web_link(row, 'https://expresso-doc.readthedocs.io/en/latest/rigging/')
 
             row = col.row()
-            col.operator('faceit.generate_rig', text='Generate Faceit Rig', icon='ARMATURE_DATA')
+            col.operator('expresso.generate_rig', text='Generate Expresso Rig', icon='ARMATURE_DATA')
             row = col.row()
             row.label(text='Experimental')
             row = col.row()
-            row.operator('faceit.generate_new_rigify_rig', text='Generate Rigify Rig', icon='ARMATURE_DATA')
+            row.operator('expresso.generate_new_rigify_rig', text='Generate Rigify Rig', icon='ARMATURE_DATA')
             if is_metarig(context.object):
                 row = col.row()
-                row.operator('faceit.generate_rig_from_meta_rig',
+                row.operator('expresso.generate_rig_from_meta_rig',
                              text='Generate Rig From Meta Rig', icon='ARMATURE_DATA')
 
 
-class FACEIT_PT_ModifierOptions(FACEIT_PT_BaseSub, bpy.types.Panel):
+class EXPRESSO_PT_ModifierOptions(EXPRESSO_PT_BaseSub, bpy.types.Panel):
     bl_label = 'Other Modifiers'
-    bl_parent_id = 'FACEIT_PT_Rigging'
-    bl_idname = 'FACEIT_PT_ModifierOptions'
+    bl_parent_id = 'EXPRESSO_PT_Rigging'
+    bl_idname = 'EXPRESSO_PT_ModifierOptions'
 
     @classmethod
     def poll(cls, context):
@@ -492,8 +492,8 @@ class FACEIT_PT_ModifierOptions(FACEIT_PT_BaseSub, bpy.types.Panel):
             lm_obj = futils.get_object('facial_landmarks')
             if lm_obj:
                 if lm_obj["state"] >= 4:
-                    return futils.get_faceit_armature(force_original=True)
+                    return futils.get_expresso_armature(force_original=True)
 
     def draw(self, context):
         col = self.layout.column()
-        col.operator("faceit.smooth_correct", icon='MOD_SMOOTH')
+        col.operator("expresso.smooth_correct", icon='MOD_SMOOTH')

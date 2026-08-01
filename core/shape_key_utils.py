@@ -4,7 +4,7 @@ import re
 import bpy
 import numpy as np
 from mathutils import Matrix
-from . import faceit_utils as futils
+from . import expresso_utils as futils
 from . import fc_dr_utils
 
 
@@ -57,7 +57,7 @@ def set_rest_position_shape_keys(objects=None, expressions_filter=None) -> None:
     bpy.context.scene.tool_settings.use_keyframe_insert_auto = False
 
     if objects is None:
-        objects = futils.get_faceit_objects_list()
+        objects = futils.get_expresso_objects_list()
     for obj in objects:
         if has_shape_keys(obj):
             if expressions_filter:
@@ -99,7 +99,7 @@ def get_shape_keys_from_objects(objects=None) -> list:
     '''Get a list that holds all shape keys from the given objects'''
     shape_keys = []
     if not objects:
-        objects = futils.get_faceit_objects_list()
+        objects = futils.get_expresso_objects_list()
     for obj in objects:
         if has_shape_keys(obj):
             shape_keys.extend(obj.data.shape_keys.key_blocks)
@@ -110,7 +110,7 @@ def get_shape_key_names_from_objects(objects=None) -> list:
     '''Get a list that holds all shape key names from the given objects'''
     shape_key_names = []
     if not objects:
-        objects = futils.get_faceit_objects_list()
+        objects = futils.get_expresso_objects_list()
     shape_keys = get_shape_keys_from_objects(objects)
     shape_key_names.extend([sk.name for sk in shape_keys if sk.name != 'Basis'])
     return list(set(shape_key_names))
@@ -133,19 +133,19 @@ def get_shape_key_names_from_action(action):
     return shape_key_names
 
 
-def get_shape_keys_from_faceit_objects_enum(self, context):
+def get_shape_keys_from_expresso_objects_enum(self, context):
     '''Returns a items list to be used in EnumProperties'''
     # blender is prone to crash without making shapes global
     global shapes
     shapes = []
 
     if context is None:
-        print('get_shape_keys_from_faceit_objects_enum --> Context is None')
+        print('get_shape_keys_from_expresso_objects_enum --> Context is None')
         return shapes
-    faceit_objects = futils.get_faceit_objects_list()
+    expresso_objects = futils.get_expresso_objects_list()
 
-    if faceit_objects:
-        shape_key_names = get_shape_key_names_from_objects(faceit_objects)
+    if expresso_objects:
+        shape_key_names = get_shape_key_names_from_objects(expresso_objects)
 
         for i, name in enumerate(shape_key_names):
 

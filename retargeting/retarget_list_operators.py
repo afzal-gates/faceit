@@ -5,8 +5,8 @@ import os
 import bpy
 from bpy.props import BoolProperty, FloatProperty, StringProperty, EnumProperty
 
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils as sk_utils
 from ..core.detection_manager import detect_shape
 from ..core.retarget_list_base import (ClearTargetShapeBase, EditTargetShapeBase,
@@ -21,9 +21,9 @@ from ..core.retarget_list_utils import (get_all_set_target_shapes,
 def get_active_retarget_list():
     '''Return the active/displayed retarget list collection property.'''
     scene = bpy.context.scene
-    if scene.faceit_display_retarget_list == 'ARKIT':
-        return scene.faceit_arkit_retarget_shapes
-    return scene.faceit_a2f_retarget_shapes
+    if scene.expresso_display_retarget_list == 'ARKIT':
+        return scene.expresso_arkit_retarget_shapes
+    return scene.expresso_a2f_retarget_shapes
 
 
 class RetargetListBase(RetargetingBase):
@@ -37,31 +37,31 @@ class RetargetListBase(RetargetingBase):
         return get_active_retarget_list()
 
 
-class FACEIT_OT_ResetRegions(ResetRegionsOperatorBase, bpy.types.Operator):
-    bl_idname = 'faceit.reset_regions'
+class EXPRESSO_OT_ResetRegions(ResetRegionsOperatorBase, bpy.types.Operator):
+    bl_idname = 'expresso.reset_regions'
 
     @classmethod
     def poll(cls, context):
         return super().poll(context)
 
 
-class FACEIT_OT_EditTargetShape(EditTargetShapeBase, RetargetListBase, bpy.types.Operator):
-    bl_idname = 'faceit.edit_target_shape'
+class EXPRESSO_OT_EditTargetShape(EditTargetShapeBase, RetargetListBase, bpy.types.Operator):
+    bl_idname = 'expresso.edit_target_shape'
     bl_property = 'new_target_shape'
 
 
-class FACEIT_OT_RemoveTargetShape(RemoveTargetShapeBase, RetargetListBase, bpy.types.Operator):
-    bl_idname = 'faceit.remove_target_shape'
+class EXPRESSO_OT_RemoveTargetShape(RemoveTargetShapeBase, RetargetListBase, bpy.types.Operator):
+    bl_idname = 'expresso.remove_target_shape'
 
 
-class FACEIT_OT_ClearTargetShapes(ClearTargetShapeBase, RetargetListBase, bpy.types.Operator):
+class EXPRESSO_OT_ClearTargetShapes(ClearTargetShapeBase, RetargetListBase, bpy.types.Operator):
     bl_label = 'Clear Target Shape'
-    bl_idname = 'faceit.clear_target_shapes'
+    bl_idname = 'expresso.clear_target_shapes'
 
 
-class FACEIT_OT_SetDefaultRegions(SetDefaultRegionsBase, bpy.types.Operator):
+class EXPRESSO_OT_SetDefaultRegions(SetDefaultRegionsBase, bpy.types.Operator):
     ''' Try to set the correct regions for the source/target shapes'''
-    bl_idname = 'faceit.set_default_regions'
+    bl_idname = 'expresso.set_default_regions'
 
     @staticmethod
     def get_retarget_shapes():
@@ -73,9 +73,9 @@ class FACEIT_OT_SetDefaultRegions(SetDefaultRegionsBase, bpy.types.Operator):
         return super().poll(context)
 
 
-class FACEIT_OT_InitRetargeting(bpy.types.Operator):
+class EXPRESSO_OT_InitRetargeting(bpy.types.Operator):
     '''Initialize the retargeting list and try to match shapes automatically'''
-    bl_idname = 'faceit.init_retargeting'
+    bl_idname = 'expresso.init_retargeting'
     bl_label = 'Smart Match'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -162,7 +162,7 @@ class FACEIT_OT_InitRetargeting(bpy.types.Operator):
 
         expression_sets_dict = {}
         if self.expression_sets in ('ALL', 'ARKIT'):
-            name_scheme = scene.faceit_retargeting_naming_scheme
+            name_scheme = scene.expresso_retargeting_naming_scheme
             if name_scheme == 'ARKIT':
                 expression_sets_dict['ARKIT'] = fdata.get_arkit_shape_data()
             elif name_scheme == 'FACECAP':
@@ -170,8 +170,8 @@ class FACEIT_OT_InitRetargeting(bpy.types.Operator):
         if self.expression_sets in ('ALL', 'A2F'):
             expression_sets_dict['A2F'] = fdata.get_a2f_shape_data()
 
-        faceit_objects = futils.get_faceit_objects_list()
-        shape_key_names = sk_utils.get_shape_key_names_from_objects(faceit_objects)
+        expresso_objects = futils.get_expresso_objects_list()
+        shape_key_names = sk_utils.get_shape_key_names_from_objects(expresso_objects)
 
         if not shape_key_names:
             self.report({'WARNING'}, 'The registered object have no shape keys.')
@@ -195,9 +195,9 @@ class FACEIT_OT_InitRetargeting(bpy.types.Operator):
 
         for expression_set, shape_dict in expression_sets_dict.items():
             if expression_set == 'ARKIT':
-                retarget_list = scene.faceit_arkit_retarget_shapes
+                retarget_list = scene.expresso_arkit_retarget_shapes
             else:
-                retarget_list = scene.faceit_a2f_retarget_shapes
+                retarget_list = scene.expresso_a2f_retarget_shapes
 
             retarget_list.clear()
             missing_shapes = []
@@ -263,9 +263,9 @@ class FACEIT_OT_InitRetargeting(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ResetRetargetShapes(bpy.types.Operator):
+class EXPRESSO_OT_ResetRetargetShapes(bpy.types.Operator):
     '''Clear the retarget shapes list'''
-    bl_idname = 'faceit.reset_retarget_shapes'
+    bl_idname = 'expresso.reset_retarget_shapes'
     bl_label = 'Reset'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -288,18 +288,18 @@ class FACEIT_OT_ResetRetargetShapes(bpy.types.Operator):
         scene = context.scene
 
         if self.expression_sets == 'ARKIT':
-            retarget_list = scene.faceit_arkit_retarget_shapes
+            retarget_list = scene.expresso_arkit_retarget_shapes
         else:
-            retarget_list = scene.faceit_a2f_retarget_shapes
+            retarget_list = scene.expresso_a2f_retarget_shapes
 
         retarget_list.clear()
 
         return {'FINISHED'}
 
 
-class FACEIT_OT_ImportRetargetMap(bpy.types.Operator):
+class EXPRESSO_OT_ImportRetargetMap(bpy.types.Operator):
     '''Import a Retargeting Map from file. JSON file containing source and target shapes'''
-    bl_idname = "faceit.import_retargeting_map"
+    bl_idname = "expresso.import_retargeting_map"
     bl_label = 'Load Capture Profile'
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH", default='capture_profile.json')
@@ -327,7 +327,7 @@ class FACEIT_OT_ImportRetargetMap(bpy.types.Operator):
     )
     # @classmethod
     # def poll(cls, context):
-    #     obj = futils.get_main_faceit_object()
+    #     obj = futils.get_main_expresso_object()
     #     if obj:
     #         return sk_utils.has_shape_keys(obj)
 
@@ -364,14 +364,14 @@ class FACEIT_OT_ImportRetargetMap(bpy.types.Operator):
                     if not any(x in fdata.get_arkit_shape_data().keys() for x in data.keys()):
                         self.report({'WARNING'}, 'The specified list seems to be an Audio2Face list')
                         return {'CANCELLED'}
-                    retarget_list = scene.faceit_arkit_retarget_shapes
+                    retarget_list = scene.expresso_arkit_retarget_shapes
                 elif self.expression_sets == 'A2F':
                     if not any(x in fdata.get_a2f_shape_data().keys() for x in data.keys()):
                         self.report({'WARNING'}, 'The specified list seems to be an ARKit list')
                         return {'CANCELLED'}
-                    retarget_list = scene.faceit_a2f_retarget_shapes
+                    retarget_list = scene.expresso_a2f_retarget_shapes
 
-                bpy.ops.faceit.init_retargeting('EXEC_DEFAULT', expression_sets=self.expression_sets, empty=True)
+                bpy.ops.expresso.init_retargeting('EXEC_DEFAULT', expression_sets=self.expression_sets, empty=True)
                 default_region_dict = fdata.get_regions_dict()
                 for arkit_name, target_dict in data.items():
 
@@ -414,9 +414,9 @@ class FACEIT_OT_ImportRetargetMap(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ExportRetargetMap(bpy.types.Operator):
+class EXPRESSO_OT_ExportRetargetMap(bpy.types.Operator):
     '''Export mapping to JSON file, containing source and target shapes'''
-    bl_idname = "faceit.export_retargeting_map"
+    bl_idname = "expresso.export_retargeting_map"
     bl_label = 'Save Capture Profile'
     bl_options = {'UNDO'}
 
@@ -490,9 +490,9 @@ class FACEIT_OT_ExportRetargetMap(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_SetDefaultAmplifyValues(bpy.types.Operator):
+class EXPRESSO_OT_SetDefaultAmplifyValues(bpy.types.Operator):
     '''Set default amplify values for all items'''
-    bl_idname = 'faceit.set_default_amplify_values'
+    bl_idname = 'expresso.set_default_amplify_values'
     bl_label = 'Set Default Amplify Values'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -503,9 +503,9 @@ class FACEIT_OT_SetDefaultAmplifyValues(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_SetActiveShapeKeyIndex(bpy.types.Operator):
+class EXPRESSO_OT_SetActiveShapeKeyIndex(bpy.types.Operator):
     '''Set target shape as active shape key index on all registered objects. Set to 1 if Show Only Active is true'''
-    bl_idname = 'faceit.set_active_shape_key_index'
+    bl_idname = 'expresso.set_active_shape_key_index'
     bl_label = 'Set Active Shape Key'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -531,7 +531,7 @@ class FACEIT_OT_SetActiveShapeKeyIndex(bpy.types.Operator):
 
     @ classmethod
     def poll(cls, context):
-        return True  # context.scene.faceit_arkit_retarget_shapes
+        return True  # context.scene.expresso_arkit_retarget_shapes
 
     def execute(self, context):
 
@@ -539,21 +539,21 @@ class FACEIT_OT_SetActiveShapeKeyIndex(bpy.types.Operator):
         store_auto_kf = scene.tool_settings.use_keyframe_insert_auto
         scene.tool_settings.use_keyframe_insert_auto = False
 
-        faceit_objects = futils.get_faceit_objects_list()
+        expresso_objects = futils.get_expresso_objects_list()
         # Get all possible target shapes
-        all_expression_names = get_all_set_target_shapes(scene.faceit_arkit_retarget_shapes)
-        all_expression_names.extend(get_all_set_target_shapes(scene.faceit_a2f_retarget_shapes))
-        all_expression_names.extend([ex.name for ex in scene.faceit_expression_list])
+        all_expression_names = get_all_set_target_shapes(scene.expresso_arkit_retarget_shapes)
+        all_expression_names.extend(get_all_set_target_shapes(scene.expresso_a2f_retarget_shapes))
+        all_expression_names.extend([ex.name for ex in scene.expresso_expression_list])
         # Get the jawOpen shape for mouthClose evaluation
         jawOpen_item = None
         if self.get_active_target_shapes:
 
-            if scene.faceit_display_retarget_list == 'ARKIT':
-                retarget_list = scene.faceit_arkit_retarget_shapes
-                retarget_list_index = scene.faceit_arkit_retarget_shapes_index
+            if scene.expresso_display_retarget_list == 'ARKIT':
+                retarget_list = scene.expresso_arkit_retarget_shapes
+                retarget_list_index = scene.expresso_arkit_retarget_shapes_index
             else:
-                retarget_list = scene.faceit_a2f_retarget_shapes
-                retarget_list_index = scene.faceit_a2f_retarget_shapes_index
+                retarget_list = scene.expresso_a2f_retarget_shapes
+                retarget_list_index = scene.expresso_a2f_retarget_shapes_index
             if self.shape_name:
                 active_shape_item = retarget_list.get(self.shape_name)
                 if self.shape_name == 'mouthClose':
@@ -569,7 +569,7 @@ class FACEIT_OT_SetActiveShapeKeyIndex(bpy.types.Operator):
             # self.report({'ERROR'}, 'Did not find the Shape Key(s) {}'.format(target_shapes))
             return {'CANCELLED'}
 
-        for obj in faceit_objects:
+        for obj in expresso_objects:
             if not sk_utils.has_shape_keys(obj):
                 continue
             shapekeys = obj.data.shape_keys.key_blocks

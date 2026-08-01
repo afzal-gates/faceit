@@ -5,22 +5,22 @@ from mathutils import Vector
 
 
 from ..core.pose_utils import copy_pose_bone_constraints, copy_pose_bone_data, remove_all_pose_bone_constraints, reset_pose
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils
-from ..core.faceit_data import get_control_rig_file
+from ..core.expresso_data import get_control_rig_file
 from . import control_rig_data as ctrl_data
 from . import control_rig_utils as ctrl_utils
 
 
-class FACEIT_OT_UpdateControlRig(bpy.types.Operator):
-    '''Update the active Faceit control rig object'''
-    bl_idname = 'faceit.update_control_rig'
+class EXPRESSO_OT_UpdateControlRig(bpy.types.Operator):
+    '''Update the active Expresso control rig object'''
+    bl_idname = 'expresso.update_control_rig'
     bl_label = 'Update Control Rig'
     bl_options = {'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
         if ctrl_rig:
             if ctrl_rig.library or ctrl_rig.override_library:
                 return False
@@ -31,24 +31,24 @@ class FACEIT_OT_UpdateControlRig(bpy.types.Operator):
         if futils.get_object_mode_from_context_mode(context.mode) != 'OBJECT' and context.object is not None:
             bpy.ops.object.mode_set()
 
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         futils.set_hide_obj(c_rig, False)
 
         crig_version = c_rig.get('ctrl_rig_version', 1.0)
 
         if crig_version == 1.0:
-            if 'FaceitControlRig' in c_rig.name:
+            if 'ExpressoControlRig' in c_rig.name:
                 if 'ctrl_rig_id' not in c_rig:
                     c_rig['ctrl_rig_id'] = ctrl_data.get_random_rig_id()
 
         if crig_version < 1.2:
-            if not context.scene.faceit_face_objects:
+            if not context.scene.expresso_face_objects:
                 self.report(
                     {'WARNING'},
                     'Cannot populate the control rig objects. Please load them manually or register them in setup panel first.')
             ctrl_utils.populate_control_rig_target_shapes_from_scene(
                 c_rig, update=True)
-            if not context.scene.faceit_arkit_retarget_shapes:
+            if not context.scene.expresso_arkit_retarget_shapes:
                 self.report(
                     {'WARNING'},
                     'Cannot populate the control rig target shapes.')
@@ -175,10 +175,10 @@ class FACEIT_OT_UpdateControlRig(bpy.types.Operator):
                 c_rig, save_target_objects=True)
             apply_scale = c_rig.scale == Vector((1, 1, 1))
             old_armature = c_rig.data
-            old_armature.name = 'FaceitControlRigArmatureOld'
+            old_armature.name = 'ExpressoControlRigArmatureOld'
             # Load the new control rig.
             c_rig_filepath = get_control_rig_file()
-            faceit_collection = futils.get_faceit_collection(
+            expresso_collection = futils.get_expresso_collection(
                 force_access=True, create=True)
             with bpy.data.libraries.load(c_rig_filepath) as (data_from, data_to):
                 data_to.objects = data_from.objects
@@ -186,23 +186,23 @@ class FACEIT_OT_UpdateControlRig(bpy.types.Operator):
             obj = None
             for obj in data_to.objects:
                 if obj:
-                    if obj.type == 'ARMATURE' and 'FaceitControlRig' in obj.name:
-                        faceit_collection.objects.link(obj)
+                    if obj.type == 'ARMATURE' and 'ExpressoControlRig' in obj.name:
+                        expresso_collection.objects.link(obj)
                         obj['ctrl_rig_id'] = ctrl_data.get_random_rig_id()
                         break
             print('linking', obj.name)
             futils.clear_object_selection()
             futils.set_active_object(obj.name)
-            context.scene.faceit_control_armature = obj
+            context.scene.expresso_control_armature = obj
             # Generate the collections in 4.0
             if bpy.app.version >= (4, 0, 0):
-                bpy.ops.faceit.update_bone_collections()
-            bpy.ops.faceit.match_control_rig(
+                bpy.ops.expresso.update_bone_collections()
+            bpy.ops.expresso.match_control_rig(
                 'EXEC_DEFAULT', apply_scale=apply_scale)
-            # obj.data.name = 'FaceitControlRigArmature'
+            # obj.data.name = 'ExpressoControlRigArmature'
             c_rig.data = obj.data
             bpy.data.armatures.remove(old_armature, do_unlink=True)
-            context.scene.faceit_control_armature = c_rig
+            context.scene.expresso_control_armature = c_rig
             futils.set_active_object(c_rig)
             # Copy the custom bone shapes from the new rig to the old rig
             # Copy the custom bone groups from the new rig to the old rig
@@ -258,29 +258,29 @@ class FACEIT_OT_UpdateControlRig(bpy.types.Operator):
             #     c_rig.animation_data.action = action
         if crig_version < 1.7:
             ctrl_utils.create_eye_lookat_driver_mechanics(c_rig)
-        bpy.ops.faceit.rearrange_custom_controllers()
+        bpy.ops.expresso.rearrange_custom_controllers()
         c_rig['ctrl_rig_version'] = ctrl_data.CNTRL_RIG_VERSION
         try:
-            bpy.ops.faceit.setup_control_drivers()
+            bpy.ops.expresso.setup_control_drivers()
         except RuntimeError:
             print('Wasn\'t able to connect the drivers.')
 
         return {'FINISHED'}
 
 
-class FACEIT_OT_UpdateBoneCollections(bpy.types.Operator):
+class EXPRESSO_OT_UpdateBoneCollections(bpy.types.Operator):
     '''Updates control rigs to Blender 4.0'''
-    bl_idname = 'faceit.update_bone_collections'
+    bl_idname = 'expresso.update_bone_collections'
     bl_label = 'Update to Blender 4+'
     bl_options = {'UNDO'}
 
     @classmethod
     def poll(cls, context):
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
         return ctrl_rig is not None and bpy.app.version >= (4, 0, 0)
 
     def execute(self, context):
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
         # control rig is loaded from a 3.6 blend file
         # Create new collections and assign the bones
         collections = ctrl_rig.data.collections
@@ -322,9 +322,9 @@ class FACEIT_OT_UpdateBoneCollections(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_LoadCrigSettingsFromScene(bpy.types.Operator):
+class EXPRESSO_OT_LoadCrigSettingsFromScene(bpy.types.Operator):
     ''' Populates the Crig Objects and Target Shapes based on the active scene settings. '''
-    bl_idname = 'faceit.load_crig_settings_from_scene'
+    bl_idname = 'expresso.load_crig_settings_from_scene'
     bl_label = 'Load to Control Rig'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -342,7 +342,7 @@ class FACEIT_OT_LoadCrigSettingsFromScene(bpy.types.Operator):
     @ classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            ctrl_rig = futils.get_faceit_control_armature()
+            ctrl_rig = futils.get_expresso_control_armature()
             if ctrl_rig:
                 if ctrl_rig.library or ctrl_rig.override_library:
                     return False
@@ -357,7 +357,7 @@ class FACEIT_OT_LoadCrigSettingsFromScene(bpy.types.Operator):
 
         layout = self.layout
 
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
 
         row = layout.row()
         row.label(
@@ -370,18 +370,18 @@ class FACEIT_OT_LoadCrigSettingsFromScene(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
 
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         futils.set_hide_obj(c_rig, False)
 
         if self.load_target_objects:
-            if scene.faceit_face_objects:
+            if scene.expresso_face_objects:
                 ctrl_utils.populate_control_rig_target_objects_from_scene(
                     c_rig)
             else:
                 self.report(
                     {'WARNING'}, 'Didn\'t find any registered objects to load as control rig target objects.')
         if self.load_arkit_target_shapes:
-            if scene.faceit_arkit_retarget_shapes:
+            if scene.expresso_arkit_retarget_shapes:
                 ctrl_utils.populate_control_rig_target_shapes_from_scene(
                     c_rig, populate_amplify_values=True)
             else:
@@ -391,9 +391,9 @@ class FACEIT_OT_LoadCrigSettingsFromScene(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_LoadFaceitSettingsFromCRig(bpy.types.Operator):
-    ''' Populates the Faceit Objects and ARKit Target Shapes based on objects driven by active control rig. '''
-    bl_idname = 'faceit.load_faceit_settings_from_crig'
+class EXPRESSO_OT_LoadExpressoSettingsFromCRig(bpy.types.Operator):
+    ''' Populates the Expresso Objects and ARKit Target Shapes based on objects driven by active control rig. '''
+    bl_idname = 'expresso.load_expresso_settings_from_crig'
     bl_label = 'Load to Scene'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -416,10 +416,10 @@ class FACEIT_OT_LoadFaceitSettingsFromCRig(bpy.types.Operator):
     @ classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            ctrl_rig = futils.get_faceit_control_armature()
+            ctrl_rig = futils.get_expresso_control_armature()
             if ctrl_rig:
                 return True
-                # return (ctrl_rig.faceit_crig_objects or ctrl_rig.faceit_crig_targets)
+                # return (ctrl_rig.expresso_crig_objects or ctrl_rig.expresso_crig_targets)
 
     def invoke(self, context, event):
 
@@ -430,7 +430,7 @@ class FACEIT_OT_LoadFaceitSettingsFromCRig(bpy.types.Operator):
 
         layout = self.layout
 
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
 
         row = layout.row()
         row.label(
@@ -444,7 +444,7 @@ class FACEIT_OT_LoadFaceitSettingsFromCRig(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
 
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         futils.set_hide_obj(c_rig, False)
 
         arkit_target_shapes = {}
@@ -453,12 +453,12 @@ class FACEIT_OT_LoadFaceitSettingsFromCRig(bpy.types.Operator):
 
         # Find the driven objects from stored settings
         target_objects = ctrl_utils.get_crig_objects_list(c_rig)
-        # No objects found? Exit operator, reset faceit rig
+        # No objects found? Exit operator, reset expresso rig
         if self.load_target_objects:
             if target_objects:
-                scene.faceit_face_objects.clear()
+                scene.expresso_face_objects.clear()
                 for obj in target_objects:
-                    item = scene.faceit_face_objects.add()
+                    item = scene.expresso_face_objects.add()
                     item.name = obj.name
                     item.obj_pointer = obj
                 self.report({'INFO'}, 'Loading Objects to Setup List')
@@ -468,15 +468,15 @@ class FACEIT_OT_LoadFaceitSettingsFromCRig(bpy.types.Operator):
                     'Can\'t find target objects. Please update the Control Rig first.')
                 return {'CANCELLED'}
         if self.load_arkit_target_shapes:
-            if any([shape_item.target_shapes for shape_item in c_rig.faceit_crig_targets]):
-                scene.faceit_arkit_retarget_shapes.clear()
+            if any([shape_item.target_shapes for shape_item in c_rig.expresso_crig_targets]):
+                scene.expresso_arkit_retarget_shapes.clear()
                 # Initialize standart values
-                bpy.ops.faceit.init_retargeting('EXEC_DEFAULT')
-                retarget_list = scene.faceit_arkit_retarget_shapes
+                bpy.ops.expresso.init_retargeting('EXEC_DEFAULT')
+                retarget_list = scene.expresso_arkit_retarget_shapes
 
                 for item in retarget_list:
                     item.target_shapes.clear()
-                    ctrl_rig_shape_item = c_rig.faceit_crig_targets[item.name]
+                    ctrl_rig_shape_item = c_rig.expresso_crig_targets[item.name]
                     item.amplify = ctrl_rig_shape_item.amplify
                     for ts in ctrl_rig_shape_item.target_shapes:
                         target_item = item.target_shapes.add()
@@ -496,9 +496,9 @@ class FACEIT_OT_LoadFaceitSettingsFromCRig(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_SetAmplify(bpy.types.Operator):
+class EXPRESSO_OT_SetAmplify(bpy.types.Operator):
     ''' Set an amplify value for all target shapes '''
-    bl_idname = 'faceit.set_amplify_values'
+    bl_idname = 'expresso.set_amplify_values'
     bl_label = 'Set Amplify Value'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -519,7 +519,7 @@ class FACEIT_OT_SetAmplify(bpy.types.Operator):
 
     @ classmethod
     def poll(cls, context):
-        return context.scene.faceit_arkit_retarget_shapes and context.scene.faceit_control_armature
+        return context.scene.expresso_arkit_retarget_shapes and context.scene.expresso_control_armature
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -534,12 +534,12 @@ class FACEIT_OT_SetAmplify(bpy.types.Operator):
 
     def execute(self, context):
 
-        c_rig = futils.get_faceit_control_armature()
-        target_list = c_rig.faceit_crig_targets
+        c_rig = futils.get_expresso_control_armature()
+        target_list = c_rig.expresso_crig_targets
 
         for item in target_list:
             if self.regions == 'VISIBLE':
-                active_region_dict = c_rig.faceit_crig_face_regions.get_active_regions()
+                active_region_dict = c_rig.expresso_crig_face_regions.get_active_regions()
 
                 if not active_region_dict.get(item.region.lower(), False):
                     continue
@@ -551,9 +551,9 @@ class FACEIT_OT_SetAmplify(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_SelectBoneFromSourceShape(bpy.types.Operator):
+class EXPRESSO_OT_SelectBoneFromSourceShape(bpy.types.Operator):
     ''' Select the bone that drives the target shapes for this ARKit source shape '''
-    bl_idname = 'faceit.select_bone_from_source_shape'
+    bl_idname = 'expresso.select_bone_from_source_shape'
     bl_label = 'Select Bone (Pose Mode Only)'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -566,13 +566,13 @@ class FACEIT_OT_SelectBoneFromSourceShape(bpy.types.Operator):
     @ classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            crig = futils.get_faceit_control_armature()
+            crig = futils.get_expresso_control_armature()
             if crig is not None and crig == context.object and not futils.get_hide_obj(crig):
                 return True
 
     def execute(self, context):
 
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if not c_rig:
             self.report({'ERROR'}, 'Control Rig not found in scene')
         bone_name = ''
@@ -582,7 +582,7 @@ class FACEIT_OT_SelectBoneFromSourceShape(bpy.types.Operator):
             bone_name, _, _ = ctrl_data.get_bone_settings_from_driver_dict(
                 dr_dict)
         except KeyError:
-            for obj in futils.get_faceit_objects_list():
+            for obj in futils.get_expresso_objects_list():
                 if shape_key_utils.has_shape_keys(obj):
                     if obj.data.shape_keys.animation_data:
                         dr = obj.data.shape_keys.animation_data.drivers.find(
@@ -609,9 +609,9 @@ class FACEIT_OT_SelectBoneFromSourceShape(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ControlRigSetSliderRanges(bpy.types.Operator):
+class EXPRESSO_OT_ControlRigSetSliderRanges(bpy.types.Operator):
     '''Set the slider ranges on all controllers. Value in [Full range (-1,1), Positive range (0,1)]'''
-    bl_idname = 'faceit.control_rig_set_slider_ranges'
+    bl_idname = 'expresso.control_rig_set_slider_ranges'
     bl_label = 'Set Ranges for Control Rig'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -630,8 +630,8 @@ class FACEIT_OT_ControlRigSetSliderRanges(bpy.types.Operator):
     @ classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            ctrl_rig = futils.get_faceit_control_armature()
-            if ctrl_rig and context.scene.faceit_face_objects:
+            ctrl_rig = futils.get_expresso_control_armature()
+            if ctrl_rig and context.scene.expresso_face_objects:
                 if ctrl_rig.library or ctrl_rig.override_library:
                     return False
                 return True
@@ -650,15 +650,15 @@ class FACEIT_OT_ControlRigSetSliderRanges(bpy.types.Operator):
         row.prop(self, 'reconnect', expand=True)
 
     def execute(self, context):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if not c_rig:
             self.report(
                 {'WARNING'}, 'The control rig has to be generated first.')
             return {'CANCELLED'}
         else:
-            bpy.ops.faceit.remove_control_drivers(
+            bpy.ops.expresso.remove_control_drivers(
                 'EXEC_DEFAULT', remove_all=False)
-        retarget_list = context.scene.faceit_arkit_retarget_shapes
+        retarget_list = context.scene.expresso_arkit_retarget_shapes
         for shape_item in retarget_list:
             arkit_name = shape_item.name
             driver_dict = ctrl_data.get_control_rig_driver_dict(c_rig)
@@ -719,13 +719,13 @@ class FACEIT_OT_ControlRigSetSliderRanges(bpy.types.Operator):
             self.report(
                 {'INFO'}, 'New Range applied. Only positive Shape Key values utilized.')
         if self.reconnect:
-            bpy.ops.faceit.setup_control_drivers()
+            bpy.ops.expresso.setup_control_drivers()
         return {'FINISHED'}
 
 
-class FACEIT_OT_SetCustomControllerSliderRange(bpy.types.Operator):
+class EXPRESSO_OT_SetCustomControllerSliderRange(bpy.types.Operator):
     '''Set the slider ranges on all controllers. Value in [Full range (-1,1), Positive range (0,1)]'''
-    bl_idname = 'faceit.set_custom_controller_slider_range'
+    bl_idname = 'expresso.set_custom_controller_slider_range'
     bl_label = 'Set Range for Custom Controllers'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -751,8 +751,8 @@ class FACEIT_OT_SetCustomControllerSliderRange(bpy.types.Operator):
     @ classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            ctrl_rig = futils.get_faceit_control_armature()
-            if ctrl_rig and context.scene.faceit_face_objects:
+            ctrl_rig = futils.get_expresso_control_armature()
+            if ctrl_rig and context.scene.expresso_face_objects:
                 if ctrl_rig.library or ctrl_rig.override_library:
                     return False
                 return True
@@ -771,18 +771,18 @@ class FACEIT_OT_SetCustomControllerSliderRange(bpy.types.Operator):
         row.prop(self, 'reconnect', expand=True)
 
     def execute(self, context):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if not c_rig:
             self.report(
                 {'WARNING'}, 'The control rig has to be generated first.')
             return {'CANCELLED'}
         else:
-            bpy.ops.faceit.remove_control_drivers(
+            bpy.ops.expresso.remove_control_drivers(
                 'EXEC_DEFAULT', remove_all=False)
 
-        retarget_list = context.scene.faceit_arkit_retarget_shapes
+        retarget_list = context.scene.expresso_arkit_retarget_shapes
         custom_shape_names = [
-            t.name for t in c_rig.faceit_crig_targets if t.name not in retarget_list]
+            t.name for t in c_rig.expresso_crig_targets if t.name not in retarget_list]
         if self.affect_controllers == 'SELECTED':
             selected_bones = [b for b in c_rig.pose.bones if b.bone.select]
         else:
@@ -846,13 +846,13 @@ class FACEIT_OT_SetCustomControllerSliderRange(bpy.types.Operator):
             self.report(
                 {'INFO'}, 'New Range applied. Only positive Shape Key values utilized.')
         if self.reconnect:
-            bpy.ops.faceit.setup_control_drivers()
+            bpy.ops.expresso.setup_control_drivers()
         return {'FINISHED'}
 
 
-class FACEIT_OT_ConstrainToBodyRig(bpy.types.Operator):
+class EXPRESSO_OT_ConstrainToBodyRig(bpy.types.Operator):
     '''Set child of constraint for the active bone in a selected armature'''
-    bl_idname = 'faceit.constrain_to_body_rig'
+    bl_idname = 'expresso.constrain_to_body_rig'
     bl_label = 'Set Child Of'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -867,12 +867,12 @@ class FACEIT_OT_ConstrainToBodyRig(bpy.types.Operator):
 
     @ classmethod
     def poll(cls, context):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if c_rig is not None:
             return True
 
     def execute(self, context):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         bone = None
         if self.target_bone == 'ACTIVE':
             rig = context.active_object
@@ -885,9 +885,9 @@ class FACEIT_OT_ConstrainToBodyRig(bpy.types.Operator):
                     {'ERROR'}, 'A bone needs to be selected as target!')
                 return {'CANCELLED'}
         else:
-            rig = context.scene.faceit_head_target_object
+            rig = context.scene.expresso_head_target_object
             if rig and rig.type == 'ARMATURE':
-                bone = rig.pose.bones.get(context.scene.faceit_head_sub_target)
+                bone = rig.pose.bones.get(context.scene.expresso_head_sub_target)
             if bone is None:
                 self.report({'WARNING'}, 'No Head bone specified.')
                 return {'CANCELLED'}

@@ -6,7 +6,7 @@ from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 
 
 from ..animate.anim_utils import find_slot_by_handle, get_fcurves_from_slot
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import retarget_list_utils, shape_key_utils
 from ..panels.draw_utils import (draw_ctrl_rig_action_layout,
                                  draw_shapes_action_layout)
@@ -27,9 +27,9 @@ def update_new_action_name(self, context):
     self.new_action_exists = bool(bpy.data.actions.get(self.new_action_name))
 
 
-class FACEIT_OT_BakeShapeKeysToControlRig(bpy.types.Operator):
+class EXPRESSO_OT_BakeShapeKeysToControlRig(bpy.types.Operator):
     '''Bake a Shape Key Action to the Control Rig'''
-    bl_idname = 'faceit.bake_shape_keys_to_control_rig'
+    bl_idname = 'expresso.bake_shape_keys_to_control_rig'
     bl_label = 'Bake Shape Key Action to Control Rig'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -87,30 +87,30 @@ class FACEIT_OT_BakeShapeKeysToControlRig(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            c_rig = futils.get_faceit_control_armature()
+            c_rig = futils.get_expresso_control_armature()
             if c_rig:
-                return c_rig.faceit_crig_objects
+                return c_rig.expresso_crig_objects
 
     def invoke(self, context, event):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if not c_rig.animation_data:
             c_rig.animation_data_create()
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         layout = self.layout
         col = layout.column(align=True)
         col.use_property_split = True
         col.use_property_decorate = False
 
         # row = col.row(align=True)
-        # row.prop(context.scene, "faceit_mocap_action", icon='ACTION')
+        # row.prop(context.scene, "expresso_mocap_action", icon='ACTION')
         draw_shapes_action_layout(col, context)
         col.separator()
         # row = col.row(align=True)
-        source_action = context.scene.faceit_mocap_action
+        source_action = context.scene.expresso_mocap_action
         if source_action:
             self.new_action_name = source_action.name + CRIG_ACTION_SUFFIX
         draw_ctrl_rig_action_layout(col, c_rig)
@@ -134,7 +134,7 @@ class FACEIT_OT_BakeShapeKeysToControlRig(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         futils.set_hide_obj(c_rig, False)
         target_objects = control_rig_utils.get_crig_objects_list(c_rig)
         all_shapes_on_target_objects = shape_key_utils.get_shape_key_names_from_objects(target_objects)
@@ -142,10 +142,10 @@ class FACEIT_OT_BakeShapeKeysToControlRig(bpy.types.Operator):
             self.report({'ERROR'}, 'The target objects have no shape keys. Did you register the correct object(s)?')
             return {'CANCELLED'}
         # The shape key action
-        source_action = scene.faceit_mocap_action
+        source_action = scene.expresso_mocap_action
         source_slot = None
         if bpy.app.version >= (4, 4, 0):
-            source_slot = find_slot_by_handle(source_action, scene.faceit_mocap_slot_handle)
+            source_slot = find_slot_by_handle(source_action, scene.expresso_mocap_slot_handle)
             if not source_slot:
                 self.report({'ERROR'}, 'No source action slot specified. Cancelled')
                 return {'CANCELLED'}
@@ -234,9 +234,9 @@ def after_bake_crig_operation(op, c_rig):
         pass
 
 
-class FACEIT_OT_BakeControlRigToShapeKeys(bpy.types.Operator):
+class EXPRESSO_OT_BakeControlRigToShapeKeys(bpy.types.Operator):
     '''Bake the animation from the control rig to the target shapes'''
-    bl_idname = 'faceit.bake_control_rig_to_shape_keys'
+    bl_idname = 'expresso.bake_control_rig_to_shape_keys'
     bl_label = 'Bake Control Rig Action to Shape Keys'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -347,14 +347,14 @@ class FACEIT_OT_BakeControlRigToShapeKeys(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            c_rig = futils.get_faceit_control_armature()
+            c_rig = futils.get_expresso_control_armature()
             if c_rig:
-                return c_rig.faceit_crig_objects
+                return c_rig.expresso_crig_objects
 
     def invoke(self, context, event):
 
         # Get current Control Rig action
-        rig = futils.get_faceit_control_armature()
+        rig = futils.get_expresso_control_armature()
         if not rig.animation_data:
             rig.animation_data_create()
 
@@ -364,7 +364,7 @@ class FACEIT_OT_BakeControlRigToShapeKeys(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         col = layout.column(align=True)
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         col.use_property_split = True
         col.use_property_decorate = False
 
@@ -388,15 +388,15 @@ class FACEIT_OT_BakeControlRigToShapeKeys(bpy.types.Operator):
 
         scene = context.scene
 
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
 
         target_objects = control_rig_utils.get_crig_objects_list(ctrl_rig)
         if not target_objects:
-            target_objects = futils.get_faceit_objects_list()
+            target_objects = futils.get_expresso_objects_list()
 
-        crig_targets = ctrl_rig.faceit_crig_targets
+        crig_targets = ctrl_rig.expresso_crig_targets
         if not crig_targets:
-            crig_targets = scene.faceit_arkit_retarget_shapes
+            crig_targets = scene.expresso_arkit_retarget_shapes
 
         all_shapes_on_target_objects = shape_key_utils.get_shape_key_names_from_objects(target_objects)
         if not all_shapes_on_target_objects:
@@ -427,7 +427,7 @@ class FACEIT_OT_BakeControlRigToShapeKeys(bpy.types.Operator):
         if not target_shapes_dict:
             self.report({'ERROR'}, 'No retarget shapes found. Initialize in Shapes panel.')
             return {'CANCELLED'}
-        target_action = scene.faceit_mocap_action
+        target_action = scene.expresso_mocap_action
         target_slot = None
         if not target_action:
             # Get target action
@@ -436,8 +436,8 @@ class FACEIT_OT_BakeControlRigToShapeKeys(bpy.types.Operator):
             # Get target objects and shapes
         if bpy.app.version >= (4, 4, 0):
             # get the mocap slot
-            if target_action is scene.faceit_mocap_action:
-                slot_handle = scene.faceit_mocap_slot_handle
+            if target_action is scene.expresso_mocap_action:
+                slot_handle = scene.expresso_mocap_slot_handle
                 if slot_handle:
                     for slot in target_action.slots:
                         if slot.handle == slot_handle:
@@ -447,8 +447,8 @@ class FACEIT_OT_BakeControlRigToShapeKeys(bpy.types.Operator):
                 target_slot = target_action.slots.get("KEShapeKeys")
                 if target_slot is None:
                     target_slot = target_action.slots.new(id_type='KEY', name="ShapeKeys")
-            scene.faceit_mocap_slot_handle = target_slot.handle
-        scene.faceit_mocap_action = target_action
+            scene.expresso_mocap_slot_handle = target_slot.handle
+        scene.expresso_mocap_action = target_action
 
         bake_ctrl_rig_animation_to_shape_keys(
             context=context,
@@ -461,7 +461,7 @@ class FACEIT_OT_BakeControlRigToShapeKeys(bpy.types.Operator):
             mix_method=self.overwrite_method,
             start_frame=self.frame_start,
         )
-        bpy.ops.faceit.remove_control_drivers()
+        bpy.ops.expresso.remove_control_drivers()
         after_bake_crig_operation(self.c_rig_operation, ctrl_rig)
 
         self.report({'INFO'}, 'Animation baked to Shape Keys. Removed the drivers.')

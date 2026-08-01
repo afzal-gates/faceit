@@ -4,7 +4,7 @@ from bpy.props import BoolProperty, EnumProperty, FloatProperty, StringProperty
 from bpy.types import Action, Object
 
 from ..animate.anim_utils import find_slot_by_handle
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import fc_dr_utils
 from ..core import shape_key_utils as sk_utils
 from ..ctrl_rig import control_rig_utils as ctrl_utils
@@ -24,9 +24,9 @@ def update_action_name(self, context):
     self.new_name = self.retarget_action + self.suffix
 
 
-class FACEIT_OT_RetargetFBXAction(bpy.types.Operator):
+class EXPRESSO_OT_RetargetFBXAction(bpy.types.Operator):
     '''Retarget the Source Action to the populated target Shapes '''
-    bl_idname = 'faceit.retarget_fbx_action'
+    bl_idname = 'expresso.retarget_fbx_action'
     bl_label = 'Initialize Retargeting'
     bl_options = {'UNDO', 'INTERNAL', 'REGISTER'}
 
@@ -45,9 +45,9 @@ class FACEIT_OT_RetargetFBXAction(bpy.types.Operator):
         name='New Action Name',
         description='Specify Name of the New Action'
     )
-    populate_faceit: BoolProperty(
-        name='Populate to all Faceit Objects',
-        description='Activate the retargeted Action on all Faceit Objects.',
+    populate_expresso: BoolProperty(
+        name='Populate to all Expresso Objects',
+        description='Activate the retargeted Action on all Expresso Objects.',
         default=True,
     )
     keep_undetected_shapes: BoolProperty(
@@ -72,12 +72,12 @@ class FACEIT_OT_RetargetFBXAction(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
 
-        retarget_fbx_props = context.scene.faceit_retarget_fbx_mapping
+        retarget_fbx_props = context.scene.expresso_retarget_fbx_mapping
 
         return retarget_fbx_props.mapping_list
 
     def invoke(self, context, event):
-        retarget_fbx_props = context.scene.faceit_retarget_fbx_mapping
+        retarget_fbx_props = context.scene.expresso_retarget_fbx_mapping
         source_action = None
         if retarget_fbx_props.mapping_source == 'OBJECT':
             source_obj = retarget_fbx_props.source_obj
@@ -99,7 +99,7 @@ class FACEIT_OT_RetargetFBXAction(bpy.types.Operator):
             self.report({f'The source action {source_action.name} contains no shape key data.'})
             return {'CANCELLED'}
         if retarget_fbx_props.mapping_target == 'CRIG':
-            self.can_bake_to_control_rig = bool(futils.get_faceit_control_armature())
+            self.can_bake_to_control_rig = bool(futils.get_expresso_control_armature())
             if self.can_bake_to_control_rig:
                 self.bake_to_control_rig = True
 
@@ -133,7 +133,7 @@ class FACEIT_OT_RetargetFBXAction(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        retarget_fbx_props = scene.faceit_retarget_fbx_mapping
+        retarget_fbx_props = scene.expresso_retarget_fbx_mapping
         retarget_list = retarget_fbx_props.mapping_list
         source_action = None
         source_action = bpy.data.actions.get(self.retarget_action)
@@ -144,7 +144,7 @@ class FACEIT_OT_RetargetFBXAction(bpy.types.Operator):
             return {'CANCELLED'}
 
         if self.bake_to_control_rig:
-            c_rig = futils.get_faceit_control_armature()
+            c_rig = futils.get_expresso_control_armature()
             if not c_rig:
                 self.report(
                     {'ERROR'},
@@ -213,13 +213,13 @@ class FACEIT_OT_RetargetFBXAction(bpy.types.Operator):
 
         if self.bake_to_control_rig:
             if target_action.fcurves:
-                current_shape_action: Action = scene.faceit_mocap_action
+                current_shape_action: Action = scene.expresso_mocap_action
                 current_shape_slot = None
                 if bpy.app.version >= (4, 4, 0):
-                    current_shape_slot = find_slot_by_handle(target_action, scene.faceit_mocap_slot_handle)
-                scene.faceit_mocap_action = target_action
+                    current_shape_slot = find_slot_by_handle(target_action, scene.expresso_mocap_slot_handle)
+                scene.expresso_mocap_action = target_action
                 try:
-                    bpy.ops.faceit.bake_shape_keys_to_control_rig(
+                    bpy.ops.expresso.bake_shape_keys_to_control_rig(
                         'EXEC_DEFAULT',
                         use_mocap_action=False,
                         overwrite_method='REPLACE',
@@ -230,8 +230,8 @@ class FACEIT_OT_RetargetFBXAction(bpy.types.Operator):
                     self.report({'ERROR'}, "Failed to bake shape keys to control rig.")
                 if current_shape_action:
                     if current_shape_slot:
-                        scene.faceit_mocap_slot_handle = current_shape_slot.handle
-                    scene.faceit_mocap_action = current_shape_action
+                        scene.expresso_mocap_slot_handle = current_shape_slot.handle
+                    scene.expresso_mocap_action = current_shape_action
                 bpy.data.actions.remove(target_action, do_unlink=True)
         else:
             if mapping_target == 'TARGET':
@@ -243,7 +243,7 @@ class FACEIT_OT_RetargetFBXAction(bpy.types.Operator):
                 if adt.action_suitable_slots:
                     adt.action_slot = adt.action_suitable_slots[0]
             else:
-                scene.faceit_mocap_action = target_action
+                scene.expresso_mocap_action = target_action
         self.report({'INFO'}, "Succesfully retargeted the animation data.")
         for region in context.area.regions:
             region.tag_redraw()

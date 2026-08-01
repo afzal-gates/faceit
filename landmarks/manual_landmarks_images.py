@@ -52,7 +52,7 @@ def load_reference_image(category_name):
         return None
 
     # Check if image is already loaded
-    image_name = f"faceit_landmark_ref_{category_name.lower().replace(' ', '_')}"
+    image_name = f"expresso_landmark_ref_{category_name.lower().replace(' ', '_')}"
 
     if image_name in bpy.data.images:
         # Reload in case file changed
@@ -74,7 +74,7 @@ def unload_all_reference_images():
     """Remove all loaded landmark reference images from Blender data."""
     images_to_remove = [
         img for img in bpy.data.images
-        if img.name.startswith("faceit_landmark_ref_")
+        if img.name.startswith("expresso_landmark_ref_")
     ]
     for img in images_to_remove:
         bpy.data.images.remove(img)

@@ -4,8 +4,8 @@ from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 
 from ..core import shape_key_utils as sk_utils
 from ..core.detection_manager import detect_shape
-from ..core.faceit_utils import (get_faceit_control_armature,
-                                 get_faceit_objects_list)
+from ..core.expresso_utils import (get_expresso_control_armature,
+                                 get_expresso_objects_list)
 from ..core.retarget_list_base import (ClearTargetShapeBase, EditTargetShapeBase,
                                        RemoveTargetShapeBase, RetargetingBase)
 from ..ctrl_rig.control_rig_utils import get_crig_objects_list
@@ -20,25 +20,25 @@ class FBXRetargetBase(RetargetingBase):
     @staticmethod
     def get_retarget_shapes():
         ''' Get the retarget_list property group '''
-        return bpy.context.scene.faceit_retarget_fbx_mapping.mapping_list
+        return bpy.context.scene.expresso_retarget_fbx_mapping.mapping_list
 
 
-class FACEIT_OT_EditFBXTargetShape(EditTargetShapeBase, FBXRetargetBase, bpy.types.Operator):
-    bl_idname = 'faceit.edit_fbx_target_shape'
+class EXPRESSO_OT_EditFBXTargetShape(EditTargetShapeBase, FBXRetargetBase, bpy.types.Operator):
+    bl_idname = 'expresso.edit_fbx_target_shape'
     bl_property = 'new_target_shape'
 
 
-class FACEIT_OT_RemoveFBXTargetShape(RemoveTargetShapeBase, FBXRetargetBase, bpy.types.Operator):
-    bl_idname = 'faceit.remove_fbx_target_shape'
+class EXPRESSO_OT_RemoveFBXTargetShape(RemoveTargetShapeBase, FBXRetargetBase, bpy.types.Operator):
+    bl_idname = 'expresso.remove_fbx_target_shape'
 
 
-class FACEIT_OT_ClearFBXTargetShapes(ClearTargetShapeBase, FBXRetargetBase, bpy.types.Operator):
-    bl_idname = 'faceit.clear_fbx_target_shapes'
+class EXPRESSO_OT_ClearFBXTargetShapes(ClearTargetShapeBase, FBXRetargetBase, bpy.types.Operator):
+    bl_idname = 'expresso.clear_fbx_target_shapes'
 
 
-class FACEIT_OT_InitFBXRetargeting(bpy.types.Operator):
+class EXPRESSO_OT_InitFBXRetargeting(bpy.types.Operator):
     '''Initialize the retargeting list and try to match shapes automatically'''
-    bl_idname = 'faceit.init_fbx_retargeting'
+    bl_idname = 'expresso.init_fbx_retargeting'
     bl_label = 'Initialize Retargeting'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -75,7 +75,7 @@ class FACEIT_OT_InitFBXRetargeting(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
 
-        retarget_fbx_props = context.scene.faceit_retarget_fbx_mapping
+        retarget_fbx_props = context.scene.expresso_retarget_fbx_mapping
 
         mapping_source = retarget_fbx_props.mapping_source
 
@@ -99,7 +99,7 @@ class FACEIT_OT_InitFBXRetargeting(bpy.types.Operator):
 
         scene = context.scene
 
-        retarget_fbx_props = scene.faceit_retarget_fbx_mapping
+        retarget_fbx_props = scene.expresso_retarget_fbx_mapping
         retarget_list = retarget_fbx_props.mapping_list
 
         # | ------------------- MAPPING SOURCE ------------------------
@@ -159,8 +159,8 @@ class FACEIT_OT_InitFBXRetargeting(bpy.types.Operator):
             target_objects = [target_obj, ]
             # shape_key_names_target = sk_utils.get_shape_key_names_from_objects([target_obj])
 
-        elif mapping_target == 'FACEIT':
-            target_objects = get_faceit_objects_list()
+        elif mapping_target == 'EXPRESSO':
+            target_objects = get_expresso_objects_list()
             if not target_objects:
                 self.report(
                     {'ERROR'},
@@ -168,7 +168,7 @@ class FACEIT_OT_InitFBXRetargeting(bpy.types.Operator):
                 return{'CANCELLED'}
 
         elif mapping_target == 'CRIG':
-            c_rig = get_faceit_control_armature()
+            c_rig = get_expresso_control_armature()
             if c_rig:
                 target_objects = get_crig_objects_list(c_rig)
             if not target_objects:

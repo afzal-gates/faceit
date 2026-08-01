@@ -567,7 +567,7 @@ def create_overwrite_animation(rig_obj: Object) -> Action:
     adds an action to the rig objects stack
     @rig_obj : the rig, that holds the shape animations.
     '''
-    original_action = bpy.data.actions.get('faceit_shape_action')
+    original_action = bpy.data.actions.get('expresso_shape_action')
     ow_action = bpy.data.actions.get('overwrite_shape_action')
     if ow_action:
         bpy.data.actions.remove(ow_action)

@@ -29,7 +29,7 @@ workspace_tab_dict = {
 
 def _get_tab_items_from_workspace(self, context):
     workspaces = workspace_tab_dict[self.workspace]
-    if context.scene.faceit_use_existing_armature:
+    if context.scene.expresso_use_existing_armature:
         # remove the create tab
         workspaces = [w for w in workspaces if w[0] != 'CREATE']
     return workspaces
@@ -57,45 +57,45 @@ def update_workspace(self, context):
 
 class PinPanels(PropertyGroup):
     # Setup
-    FACEIT_PT_SetupRegister: BoolProperty()
-    FACEIT_PT_SetupVertexGroups: BoolProperty()
-    FACEIT_PT_BodyRigSetup: BoolProperty()
+    EXPRESSO_PT_SetupRegister: BoolProperty()
+    EXPRESSO_PT_SetupVertexGroups: BoolProperty()
+    EXPRESSO_PT_BodyRigSetup: BoolProperty()
     # Rigging
-    FACEIT_PT_Rigging: BoolProperty()
-    FACEIT_PT_Landmarks: BoolProperty()
+    EXPRESSO_PT_Rigging: BoolProperty()
+    EXPRESSO_PT_Landmarks: BoolProperty()
     # Expressoins
-    FACEIT_PT_Expressions: BoolProperty()
-    FACEIT_PT_ExpressionOptions: BoolProperty()
+    EXPRESSO_PT_Expressions: BoolProperty()
+    EXPRESSO_PT_ExpressionOptions: BoolProperty()
     # Bake Panel (Utils)
-    FACEIT_PT_BakeExpressions: BoolProperty()
-    FACEIT_PT_ShapeKeyUtils: BoolProperty()
-    FACEIT_PT_RigUtils: BoolProperty()
-    FACEIT_PT_Other: BoolProperty()
+    EXPRESSO_PT_BakeExpressions: BoolProperty()
+    EXPRESSO_PT_ShapeKeyUtils: BoolProperty()
+    EXPRESSO_PT_RigUtils: BoolProperty()
+    EXPRESSO_PT_Other: BoolProperty()
     # ARKit Shapes
-    FACEIT_PT_TargetShapeLists: BoolProperty()
-    FACEIT_PT_RetargetShapesSetup: BoolProperty()
+    EXPRESSO_PT_TargetShapeLists: BoolProperty()
+    EXPRESSO_PT_RetargetShapesSetup: BoolProperty()
     # Control Rig
-    FACEIT_PT_ControlRig: BoolProperty()
-    FACEIT_PT_ControlRigSettings: BoolProperty()
-    FACEIT_PT_ControlRigAnimation: BoolProperty()
-    FACEIT_PT_ControlRigUtils: BoolProperty()
-    FACEIT_PT_ControlRigTargetShapes: BoolProperty()
-    FACEIT_PT_ControlRigTargetObjects: BoolProperty()
+    EXPRESSO_PT_ControlRig: BoolProperty()
+    EXPRESSO_PT_ControlRigSettings: BoolProperty()
+    EXPRESSO_PT_ControlRigAnimation: BoolProperty()
+    EXPRESSO_PT_ControlRigUtils: BoolProperty()
+    EXPRESSO_PT_ControlRigTargetShapes: BoolProperty()
+    EXPRESSO_PT_ControlRigTargetObjects: BoolProperty()
     # Mocap
-    FACEIT_PT_MocapUtils: BoolProperty()
-    FACEIT_PT_MocapImporters: BoolProperty()
-    FACEIT_PT_MocapLive: BoolProperty()
-    FACEIT_PT_MocapSetup: BoolProperty()
-    FACEIT_PT_RetargetFBX: BoolProperty()
+    EXPRESSO_PT_MocapUtils: BoolProperty()
+    EXPRESSO_PT_MocapImporters: BoolProperty()
+    EXPRESSO_PT_MocapLive: BoolProperty()
+    EXPRESSO_PT_MocapSetup: BoolProperty()
+    EXPRESSO_PT_RetargetFBX: BoolProperty()
 
     def get_pin(self, panel_idname):
         return getattr(self, panel_idname, 0)
 
 
-class FaceitWorkspace(PropertyGroup):
+class ExpressoWorkspace(PropertyGroup):
     name: StringProperty()
     workspace: EnumProperty(
-        name='The Active Faceit Workspace',
+        name='The Active Expresso Workspace',
         items=(
             ('ALL', 'All', 'Choose this option if you want to have all functionality available.'),
             ('RIG', 'Rig', 'Chosse this option if you only want to create blendshapes. Motion Capture Utils are hidden.'),
@@ -130,20 +130,20 @@ class FaceitWorkspace(PropertyGroup):
 
 def register():
 
-    Scene.faceit_workspace = PointerProperty(
-        type=FaceitWorkspace,
+    Scene.expresso_workspace = PointerProperty(
+        type=ExpressoWorkspace,
     )
-    Scene.faceit_expression_init_expand_ui = BoolProperty(
+    Scene.expresso_expression_init_expand_ui = BoolProperty(
         name='Initialize',
         default=True
     )
-    Scene.faceit_pin_panels = PointerProperty(
+    Scene.expresso_pin_panels = PointerProperty(
         name='Pin Props',
         type=PinPanels,
     )
 
 
 def unregister():
-    del Scene.faceit_workspace
-    del Scene.faceit_expression_init_expand_ui
-    del Scene.faceit_pin_panels
+    del Scene.expresso_workspace
+    del Scene.expresso_expression_init_expand_ui
+    del Scene.expresso_pin_panels

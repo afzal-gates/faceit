@@ -22,8 +22,8 @@ from ..properties.expression_scene_properties import PROCEDURAL_EXPRESSION_ITEMS
 
 from ..core.pose_utils import reset_pb, reset_pose
 from ..core.retarget_list_utils import get_all_set_target_shapes
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core import fc_dr_utils
 from ..core import shape_key_utils as sk_utils
 from ..core.detection_manager import get_expression_name_double_entries
@@ -105,7 +105,7 @@ def get_mirror_name(side, expression_name):
 def check_expression_name_valid(self, context) -> None:
     '''Update function that checks for a mirror key.'''
     self.expression_sk_exists = self.expression_name in sk_utils.get_shape_key_names_from_objects()
-    self.expression_item_exists = self.expression_name in context.scene.faceit_expression_list
+    self.expression_item_exists = self.expression_name in context.scene.expresso_expression_list
     if self.custom_shape:
         self.side = get_side(self.expression_name)
         if poll_side_in_expression_name(self.side, self.expression_name):
@@ -116,7 +116,7 @@ def check_expression_name_valid(self, context) -> None:
 def check_expression_valid(self, context) -> None:
     '''Update function that checks for a mirror key.'''
     self.expression_sk_exists = self.expression_name in sk_utils.get_shape_key_names_from_objects()
-    self.expression_item_exists = self.expression_name in context.scene.faceit_expression_list
+    self.expression_item_exists = self.expression_name in context.scene.expresso_expression_list
 
     # if poll_side_in_expression_name(self.side, self.expression_name):
     if self.custom_shape:
@@ -128,9 +128,9 @@ def update_procedural_eyeblinks(self, context) -> None:
     self.procedural = 'EYEBLINKS' if self.procedural_eyeblinks else 'NONE'
 
 
-class FACEIT_OT_AddExpressionItem(bpy.types.Operator):
+class EXPRESSO_OT_AddExpressionItem(bpy.types.Operator):
     '''Add a new Expression to the expression list and action'''
-    bl_idname = "faceit.add_expression_item"
+    bl_idname = "expresso.add_expression_item"
     bl_label = "Add Expression"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -220,10 +220,10 @@ class FACEIT_OT_AddExpressionItem(bpy.types.Operator):
 
     def invoke(self, context, event):
 
-        self.expression_item_exists = self.expression_name in context.scene.faceit_expression_list
+        self.expression_item_exists = self.expression_name in context.scene.expresso_expression_list
         self.expression_sk_exists = self.expression_name in sk_utils.get_shape_key_names_from_objects()
-        rig = futils.get_faceit_armature()
-        if not futils.is_faceit_original_armature(rig):
+        rig = futils.get_expresso_armature()
+        if not futils.is_expresso_original_armature(rig):
             if "lip_end.L.001" in rig.pose.bones:
                 self.is_new_rigify_rig = True
         wm = context.window_manager
@@ -269,9 +269,9 @@ class FACEIT_OT_AddExpressionItem(bpy.types.Operator):
         auto_key = scene.tool_settings.use_keyframe_insert_auto
         scene.tool_settings.use_keyframe_insert_auto = False
 
-        expression_list = scene.faceit_expression_list
+        expression_list = scene.expresso_expression_list
 
-        shape_action = bpy.data.actions.get("faceit_shape_action")
+        shape_action = bpy.data.actions.get("expresso_shape_action")
         ow_action = bpy.data.actions.get("overwrite_shape_action")
 
         if self.new_exp_index == -1:
@@ -298,13 +298,13 @@ class FACEIT_OT_AddExpressionItem(bpy.types.Operator):
             if not item.mirror_name:
                 item.mirror_name = get_mirror_name(self.side, expression_name_final)
 
-            rig = futils.get_faceit_armature()
+            rig = futils.get_expresso_armature()
             anim_data = rig.animation_data
             if not anim_data:
                 anim_data = rig.animation_data_create()
 
             if not shape_action:
-                shape_action = bpy.data.actions.new("faceit_shape_action")
+                shape_action = bpy.data.actions.new("expresso_shape_action")
                 if bpy.app.version >= (4, 4, 0):
                     shape_action.slots.new(id_type='OBJECT', name=rig.name)
             if bpy.app.version >= (4, 4, 0):
@@ -322,7 +322,7 @@ class FACEIT_OT_AddExpressionItem(bpy.types.Operator):
                     ow_action = bpy.data.actions.new("overwrite_shape_action")
                 fcurves = ow_action.fcurves
             # Add the default fcurves for the control bones
-            for b_item in rig.data.faceit_control_bones:
+            for b_item in rig.data.expresso_control_bones:
                 b_name = b_item.name
                 pb = rig.pose.bones.get(b_name)
                 if pb is None:
@@ -347,7 +347,7 @@ class FACEIT_OT_AddExpressionItem(bpy.types.Operator):
             # Add procedural expression
             try:
                 if self.procedural != 'NONE':
-                    bpy.ops.faceit.procedural_eye_blinks(
+                    bpy.ops.expresso.procedural_eye_blinks(
                         side=self.side,
                         anim_mode='ADD' if self.side == 'N' else 'REPLACE',
                         is_new_rigify_rig=self.is_new_rigify_rig
@@ -357,7 +357,7 @@ class FACEIT_OT_AddExpressionItem(bpy.types.Operator):
 
             if self.auto_mirror and self.side != 'N':
                 mirror_side = 'R' if self.side == 'L' else 'L'
-                bpy.ops.faceit.add_expression_item(
+                bpy.ops.expresso.add_expression_item(
                     'EXEC_DEFAULT',
                     expression_name=item.mirror_name,
                     custom_shape=True,
@@ -366,12 +366,12 @@ class FACEIT_OT_AddExpressionItem(bpy.types.Operator):
                     is_new_rigify_rig=self.is_new_rigify_rig,
                 )
 
-            scene.faceit_expression_list_index = index
+            scene.expresso_expression_list_index = index
 
         else:
             try:
                 if self.procedural == 'EYEBLINKS':
-                    bpy.ops.faceit.procedural_eye_blinks(
+                    bpy.ops.expresso.procedural_eye_blinks(
                         side=self.side,
                         anim_mode='ADD' if self.side == 'N' else 'REPLACE',
                         is_new_rigify_rig=self.is_new_rigify_rig
@@ -386,23 +386,23 @@ class FACEIT_OT_AddExpressionItem(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ChangeExpressionSide(bpy.types.Operator):
+class EXPRESSO_OT_ChangeExpressionSide(bpy.types.Operator):
     '''Change the expressions side variable. '''
-    bl_idname = "faceit.change_expression_side"
+    bl_idname = "expresso.change_expression_side"
     bl_label = "Edit Side"
     bl_options = {'UNDO', 'INTERNAL'}
 
 
-class FACEIT_OT_MirrorCopy(bpy.types.Operator):
+class EXPRESSO_OT_MirrorCopy(bpy.types.Operator):
     '''Copy an expression and make them mirrored expressions. Only works for expressions assigned to L/R'''
-    bl_idname = "faceit.mirror_copy_expression"
+    bl_idname = "expresso.mirror_copy_expression"
     bl_label = "Mirror Copy Expression"
     bl_options = {'UNDO', 'INTERNAL'}
 
 
-class FACEIT_OT_EmptyExpressionsFromShapeKeys(bpy.types.Operator):
+class EXPRESSO_OT_EmptyExpressionsFromShapeKeys(bpy.types.Operator):
     '''Copy an expression and make them mirrored expressions. Only works for expressions assigned to L/R'''
-    bl_idname = "faceit.empty_expressions_from_shape_keys"
+    bl_idname = "expresso.empty_expressions_from_shape_keys"
     bl_label = "Copy Empty Expression"
     bl_options = {'UNDO'}
 
@@ -425,7 +425,7 @@ class FACEIT_OT_EmptyExpressionsFromShapeKeys(bpy.types.Operator):
                 continue
             expression_name = sk.name  # [len('m_head_mid_'):]
             side = get_side(expression_name)
-            bpy.ops.faceit.add_expression_item(
+            bpy.ops.expresso.add_expression_item(
                 'EXEC_DEFAULT',
                 expression_name=expression_name,
                 custom_shape=True,
@@ -434,9 +434,9 @@ class FACEIT_OT_EmptyExpressionsFromShapeKeys(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_MoveExpressionItem(bpy.types.Operator):
+class EXPRESSO_OT_MoveExpressionItem(bpy.types.Operator):
     '''Move a specific Expression Item index in the list. Also effects the expression actions '''
-    bl_idname = "faceit.move_expression_item"
+    bl_idname = "expresso.move_expression_item"
     bl_label = "Move"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -451,10 +451,10 @@ class FACEIT_OT_MoveExpressionItem(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        idx = context.scene.faceit_expression_list_index
-        expression_list = context.scene.faceit_expression_list
+        idx = context.scene.expresso_expression_list_index
+        expression_list = context.scene.expresso_expression_list
 
-        # if idx > 0 and idx <= len(context.scene.faceit_expression_list):
+        # if idx > 0 and idx <= len(context.scene.expresso_expression_list):
         #     return True
         return expression_list and idx >= 0 and idx < len(expression_list)
 
@@ -462,12 +462,12 @@ class FACEIT_OT_MoveExpressionItem(bpy.types.Operator):
         '''Move the item at index'''
         list_length = len(flist) - 1
         new_index = index + (-1 if self.direction == 'UP' else 1)
-        context.scene.faceit_expression_list_index = max(0, min(new_index, list_length))
+        context.scene.expresso_expression_list_index = max(0, min(new_index, list_length))
 
     def execute(self, context):
         scene = context.scene
-        index = scene.faceit_expression_list_index
-        expression_list = scene.faceit_expression_list
+        index = scene.expresso_expression_list_index
+        expression_list = scene.expresso_expression_list
         expression_item = expression_list[index]
 
         add_index = -1 if self.direction == 'UP' else 1
@@ -481,7 +481,7 @@ class FACEIT_OT_MoveExpressionItem(bpy.types.Operator):
         new_index_item = expression_list[new_index]
 
         ow_action = bpy.data.actions.get("overwrite_shape_action")
-        sh_action = bpy.data.actions.get("faceit_shape_action")
+        sh_action = bpy.data.actions.get("expresso_shape_action")
         cc_action = bpy.data.actions.get(CORRECTIVE_SK_ACTION_NAME)
 
         # original frame
@@ -506,13 +506,13 @@ class FACEIT_OT_MoveExpressionItem(bpy.types.Operator):
                 for curve in action.fcurves:
                     curve.update()
         if cc_action:
-            exp_fc = cc_action.fcurves.find(f"key_blocks[\"faceit_cc_{expression_item.name}\"].value")
+            exp_fc = cc_action.fcurves.find(f"key_blocks[\"expresso_cc_{expression_item.name}\"].value")
             if exp_fc:
                 for key in exp_fc.keyframe_points:
                     key.co[0] += add_frame
                 exp_fc.update()
 
-            new_index_fc = cc_action.fcurves.find(f"key_blocks[\"faceit_cc_{new_index_item.name}\"].value")
+            new_index_fc = cc_action.fcurves.find(f"key_blocks[\"expresso_cc_{new_index_item.name}\"].value")
             if new_index_fc:
                 for key in new_index_fc.keyframe_points:
                     key.co[0] -= add_frame
@@ -526,15 +526,15 @@ class FACEIT_OT_MoveExpressionItem(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_RegisterControlBones(bpy.types.Operator):
-    '''Register Control Bones for the faceit expressions. The bones are mainly used to determine which bones should be keyframed when creating expressions. (zero keyframes inbetween expressions are important for correct bake results)'''
-    bl_idname = "faceit.register_control_bones"
+class EXPRESSO_OT_RegisterControlBones(bpy.types.Operator):
+    '''Register Control Bones for the expresso expressions. The bones are mainly used to determine which bones should be keyframed when creating expressions. (zero keyframes inbetween expressions are important for correct bake results)'''
+    bl_idname = "expresso.register_control_bones"
     bl_label = "Register Control Bones"
     bl_options = {'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
-        if futils.get_faceit_armature() and context.scene.faceit_armature_type == 'ANY':
+        if futils.get_expresso_armature() and context.scene.expresso_armature_type == 'ANY':
             obj = context.object
             if obj and obj.type == 'ARMATURE':
                 if context.mode == 'POSE' and context.selected_pose_bones:
@@ -542,11 +542,11 @@ class FACEIT_OT_RegisterControlBones(bpy.types.Operator):
 
     def execute(self, context):
         added_any = False
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         for pb in context.selected_pose_bones:
-            item = rig.data.faceit_control_bones.get(pb.name)
+            item = rig.data.expresso_control_bones.get(pb.name)
             if item is None:
-                item = rig.data.faceit_control_bones.add()
+                item = rig.data.expresso_control_bones.add()
                 item.name = pb.name
             added_any = True
         if added_any:
@@ -554,66 +554,66 @@ class FACEIT_OT_RegisterControlBones(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ClearControlBones(bpy.types.Operator):
-    '''Clear the list of control bones on the active faceit rig'''
-    bl_idname = "faceit.clear_control_bones"
+class EXPRESSO_OT_ClearControlBones(bpy.types.Operator):
+    '''Clear the list of control bones on the active expresso rig'''
+    bl_idname = "expresso.clear_control_bones"
     bl_label = "Clear Control Bones"
     bl_options = {'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
-        rig = futils.get_faceit_armature()
-        if rig and context.scene.faceit_armature_type == 'ANY':
-            if rig.data.faceit_control_bones:
+        rig = futils.get_expresso_armature()
+        if rig and context.scene.expresso_armature_type == 'ANY':
+            if rig.data.expresso_control_bones:
                 return True
 
     def execute(self, context):
-        rig = futils.get_faceit_armature()
-        rig.data.faceit_control_bones.clear()
+        rig = futils.get_expresso_armature()
+        rig.data.expresso_control_bones.clear()
         self.report({'INFO'}, "Cleared control bones.")
         return {'FINISHED'}
 
 
-class FACEIT_OT_SelectControlBones(bpy.types.Operator):
-    bl_idname = "faceit.select_control_bones"
+class EXPRESSO_OT_SelectControlBones(bpy.types.Operator):
+    bl_idname = "expresso.select_control_bones"
     bl_label = "Select Control Bones"
     bl_options = {'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
-        rig = futils.get_faceit_armature()
-        if rig and context.scene.faceit_armature_type == 'ANY':
+        rig = futils.get_expresso_armature()
+        if rig and context.scene.expresso_armature_type == 'ANY':
             if rig != context.object:
                 return False
             if futils.get_hide_obj(rig):
                 return False
-            if rig.data.faceit_control_bones:
+            if rig.data.expresso_control_bones:
                 return True
 
     def execute(self, context):
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         if rig.mode != 'POSE':
             bpy.ops.object.mode_set(mode='POSE')
         bpy.ops.pose.select_all(action='DESELECT')
-        for item in rig.data.faceit_control_bones:
+        for item in rig.data.expresso_control_bones:
             pb = rig.pose.bones.get(item.name)
             if pb:
                 pb.bone.select = True
         return {'FINISHED'}
 
 
-class FACEIT_OT_UpdateControlBones(bpy.types.Operator):
+class EXPRESSO_OT_UpdateControlBones(bpy.types.Operator):
     '''Update the control bone list based on the animated bones.'''
-    bl_idname = "faceit.update_control_bones"
+    bl_idname = "expresso.update_control_bones"
     bl_label = "Update Control Bones From Action"
     bl_options = {'UNDO', 'REGISTER'}
 
     @classmethod
     def poll(cls, context):
-        return context.scene.faceit_expression_list
+        return context.scene.expresso_expression_list
 
     def execute(self, context):
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         ow_action = bpy.data.actions.get('overwrite_shape_action')
         if not ow_action:
             self.report({'WARNING', "Can't find the epxression action."})
@@ -624,16 +624,16 @@ class FACEIT_OT_UpdateControlBones(bpy.types.Operator):
             bone_name = fc.data_path.split('"')[1]
             bone_names.add(bone_name)
         for bone_name in bone_names:
-            if bone_name not in rig.data.faceit_control_bones:
-                item = rig.data.faceit_control_bones.add()
+            if bone_name not in rig.data.expresso_control_bones:
+                item = rig.data.expresso_control_bones.add()
                 item.name = bone_name
         return {'FINISHED'}
 
 
-class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
-    ''' Load a compatible Faceit Expression Action to the Faceit Armature Object. Creates two actions (faceit_shape_action, overwrite_shape_action) '''
-    bl_idname = "faceit.append_action_to_faceit_rig"
-    bl_label = "Load Faceit Expressions"
+class EXPRESSO_OT_AppendActionToExpressoRig(bpy.types.Operator):
+    ''' Load a compatible Expresso Expression Action to the Expresso Armature Object. Creates two actions (expresso_shape_action, overwrite_shape_action) '''
+    bl_idname = "expresso.append_action_to_expresso_rig"
+    bl_label = "Load Expresso Expressions"
     bl_options = {'UNDO', 'INTERNAL'}
 
     expressions_type: EnumProperty(
@@ -714,7 +714,7 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
     custom_expressions_rig_type: EnumProperty(
         name='Rig Type',
         items=(
-            ('RIGIFY', "Rigify", "Faceit default Rig (Rigify old)"),
+            ('RIGIFY', "Rigify", "Expresso default Rig (Rigify old)"),
             ('RIGIFY_NEW', "New Rigify", "The new Rigify Face Rig"),
         ),
         default='RIGIFY',
@@ -738,7 +738,7 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
         self.corr_sk = False
         self.first_expression_set = False
         self.is_new_rigify_rig = False
-        self.rig_type = 'FACEIT'
+        self.rig_type = 'EXPRESSO'
         self.rig_contains_lid_bones = False
         self.load_empty_expressions = False
 
@@ -746,38 +746,38 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
     def poll(cls, context):
         if context.mode not in ['POSE', 'OBJECT']:
             return False
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         if rig:
             if rig.hide_viewport is False:
                 return True
 
     def invoke(self, context, event):
-        self.filepath = "faceit_expressions.face"
-        self.corr_sk = any([sk_name.startswith("faceit_cc_")
+        self.filepath = "expresso_expressions.face"
+        self.corr_sk = any([sk_name.startswith("expresso_cc_")
                             for sk_name in sk_utils.get_shape_key_names_from_objects()])
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         self.rig_type = futils.get_rig_type(rig)
         if self.rig_type == 'RIGIFY_NEW':
             self.is_new_rigify_rig = True
         elif self.rig_type == 'ANY':
             if not self.load_custom_path:
                 self.load_empty_expressions = True
-                if not rig.data.faceit_control_bones:
+                if not rig.data.expresso_control_bones:
                     self.report(
                         {'ERROR'},
                         "You need to register the facial control bones that should be used for the animation of expressions.")
                     return {'CANCELLED'}
-        self.first_expression_set = (len(context.scene.faceit_expression_list) <= 0)
+        self.first_expression_set = (len(context.scene.expresso_expression_list) <= 0)
         # check if the rig contains eyelid bones
         self.rig_contains_lid_bones = any(['lid.' in bone.name for bone in rig.pose.bones])
-        self.auto_scale_anime_eyes = context.scene.faceit_eye_geometry_type == 'FLAT'
+        self.auto_scale_anime_eyes = context.scene.expresso_eye_geometry_type == 'FLAT'
 
         if self.load_custom_path:
             context.window_manager.fileselect_add(self)
             return {'RUNNING_MODAL'}
         else:
             # if self.rig_type == 'ANY':
-            #     self.report({'ERROR'}, "The Faceit expressions can only be loaded to Rigify face rigs.")
+            #     self.report({'ERROR'}, "The Expresso expressions can only be loaded to Rigify face rigs.")
             #     return {'CANCELLED'}
             wm = context.window_manager
             return wm.invoke_props_dialog(self)
@@ -820,8 +820,8 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
         if self.corr_sk:
             row = layout.row()
             row.prop(self, "apply_existing_corrective_shape_keys")
-        # if context.scene.faceit_eye_pivot_options == 'COPY_PIVOT':
-        if context.scene.faceit_eye_geometry_type == 'FLAT':
+        # if context.scene.expresso_eye_pivot_options == 'COPY_PIVOT':
+        if context.scene.expresso_eye_geometry_type == 'FLAT':
             row = layout.row()
             row.label(text="Flat Eyes")
             row = layout.row()
@@ -848,16 +848,16 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
             expressions_type = None
         else:
             expressions_type = self.expressions_type
-        expression_list = scene.faceit_expression_list
+        expression_list = scene.expresso_expression_list
         warnings = False
         if futils.get_object_mode_from_context_mode(context.mode) != 'OBJECT' and context.object is not None:
             bpy.ops.object.mode_set()
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         anim_data = rig.animation_data
         if not anim_data:
             anim_data = rig.animation_data_create()
         ow_action = bpy.data.actions.get("overwrite_shape_action")
-        shape_action = bpy.data.actions.get("faceit_shape_action")
+        shape_action = bpy.data.actions.get("expresso_shape_action")
         if self.load_method == 'APPEND':
             if not expression_list:
                 self.report(
@@ -904,7 +904,7 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
             return {'CANCELLED'}
         action_dict = {}
         eye_dimensions = []
-        loaded_rig_type = 'FACEIT'
+        loaded_rig_type = 'EXPRESSO'
         with open(self.filepath, "r") as f:
             data = json.load(f)
             if isinstance(data, dict):
@@ -913,9 +913,9 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
                 rest_pose = data["rest_pose"]
                 action_dict = data["action"]
                 eye_dimensions = data.get("eye_dimensions")
-                loaded_rig_type = data.get("rig_type", 'FACEIT')
-        if loaded_rig_type == 'FACEIT' and self.is_new_rigify_rig:
-            print("Converting old FaceIt Rig to new Rigify Rig")
+                loaded_rig_type = data.get("rig_type", 'EXPRESSO')
+        if loaded_rig_type == 'EXPRESSO' and self.is_new_rigify_rig:
+            print("Converting old Expresso Rig to new Rigify Rig")
             self.convert_animation_to_new_rigify = True
         new_shape_action = bpy.data.actions.new(name="temp")
         # slot = new_shape_action.slots.new(id_type='OBJECT', name="Expressions")
@@ -931,11 +931,11 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
             if self.load_method == 'OVERWRITE':
                 anim_data.action = new_shape_action
                 # anim_data.action_slot = slot
-                new_shape_action.name = "faceit_shape_action"
+                new_shape_action.name = "expresso_shape_action"
             for expression_name, expression_data in expression_data_loaded.items():
                 mirror_name = expression_data.get("mirror_name", "")
                 side = expression_data.get("side") or "N"
-                bpy.ops.faceit.add_expression_item(
+                bpy.ops.expresso.add_expression_item(
                     'EXEC_DEFAULT',
                     expression_name=expression_name,
                     side=side,
@@ -949,7 +949,7 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
                 ow_action.use_fake_user = True
                 new_shape_action.use_fake_user = True
             # Create the zero frames
-            bone_filter = [b.name for b in rig.data.faceit_control_bones]
+            bone_filter = [b.name for b in rig.data.expresso_control_bones]
             a_utils.create_default_zero_frames(
                 zero_frames=zero_frames,
                 action=ow_action,
@@ -1123,7 +1123,7 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
                     skip_scale_bones.update(skip_lid_bones)
                 # get control bones on the face only (no eye target controllers)
                 skip_dimension_check = {"eye.L", "eye.R", "eyes", "eye_common"}
-                facial_control_bones = {pb.name for pb in rig.pose.bones if pb.name in fdata.FACEIT_CTRL_BONES}
+                facial_control_bones = {pb.name for pb in rig.pose.bones if pb.name in fdata.EXPRESSO_CTRL_BONES}
             else:
                 skip_scale_bones = set()
                 skip_dimension_check = set()
@@ -1150,7 +1150,7 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
                 return [dim_x, dim_y, dim_z]
 
             def get_rig_dimensions(pose_bones):
-                '''Get the dimensions for all faceit control bones'''
+                '''Get the dimensions for all expresso control bones'''
                 x_values = []
                 y_values = []
                 z_values = []
@@ -1211,7 +1211,7 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
                         active_action=new_shape_action,
                         frames=new_frames
                     )
-            if self.rig_type in ('RIGIFY', 'RIGIFY_NEW', 'FACEIT'):
+            if self.rig_type in ('RIGIFY', 'RIGIFY_NEW', 'EXPRESSO'):
                 # Scale eyelid expressions to new dimensions!
                 if self.rig_contains_lid_bones and eye_dimensions and self.auto_scale_eyes:
                     a_utils.scale_eye_animation(rig, *eye_dimensions, action=new_shape_action)
@@ -1227,7 +1227,7 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
             # -------------------------------------------------------------------------
             if self.load_method == 'OVERWRITE':
                 shape_action = new_shape_action
-                shape_action.name = "faceit_shape_action"
+                shape_action.name = "expresso_shape_action"
             else:
                 # Apply frame offset to the fcurve data and apply to existing shape action
                 frame_offset = int(futils.get_action_frame_range(ow_action)[1] - 1)
@@ -1240,13 +1240,13 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
                         fc = fc_dr_utils.get_fcurve_from_bpy_struct(shape_action.fcurves, dp=dp, array_index=a_index)
                         fc_dr_utils.populate_keyframe_points_from_np_array(fc, kf_data, add=True)
                     else:
-                        self.report({'WARNING'}, "Could not find the Faceit Shape Action. Failed to append")
+                        self.report({'WARNING'}, "Could not find the Expresso Shape Action. Failed to append")
                         warnings = True
                     if ow_action:
                         fc = fc_dr_utils.get_fcurve_from_bpy_struct(ow_action.fcurves, dp=dp, array_index=a_index)
                         fc_dr_utils.populate_keyframe_points_from_np_array(fc, kf_data, add=True)
                     else:
-                        self.report({'WARNING'}, "Could not find the Faceit Overwrite Action. Failed to append")
+                        self.report({'WARNING'}, "Could not find the Expresso Overwrite Action. Failed to append")
                         warnings = True
                 bpy.data.actions.remove(new_shape_action)
             if self.load_method == 'OVERWRITE':
@@ -1263,7 +1263,7 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
                 mirror_name = expression_data.get("mirror_name", "")
                 side = expression_data.get("side") or "N"
                 procedural = expression_data.get("procedural", 'NONE')
-                bpy.ops.faceit.add_expression_item(
+                bpy.ops.expresso.add_expression_item(
                     'EXEC_DEFAULT',
                     expression_name=expression_name,
                     side=side,
@@ -1272,17 +1272,17 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
                     is_new_rigify_rig=self.is_new_rigify_rig
                 )
 
-            if self.rig_type in ('RIGIFY', 'RIGIFY_NEW', 'FACEIT'):
+            if self.rig_type in ('RIGIFY', 'RIGIFY_NEW', 'EXPRESSO'):
                 try:
                     if expressions_type == 'ARKIT':  # and not self.load_custom_path:
-                        bpy.ops.faceit.procedural_mouth_close(
+                        bpy.ops.expresso.procedural_mouth_close(
                             'INVOKE_DEFAULT',
                             jaw_open_expression="jawOpen",
                             mouth_close_expression="mouthClose",
                             is_new_rigify_rig=self.is_new_rigify_rig
                         )
                     if expressions_type == 'A2F':  # and not self.load_custom_path:
-                        bpy.ops.faceit.procedural_mouth_close(
+                        bpy.ops.expresso.procedural_mouth_close(
                             'INVOKE_DEFAULT',
                             jaw_open_expression="jawDrop",
                             mouth_close_expression="jawDropLipTowards",
@@ -1291,8 +1291,8 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
                 except RuntimeError:
                     pass
         if self.load_arkit_reference:
-            bpy.ops.faceit.load_arkit_refernce()
-        # bpy.ops.faceit.force_zero_frames('EXEC_DEFAULT')
+            bpy.ops.expresso.load_arkit_refernce()
+        # bpy.ops.expresso.force_zero_frames('EXEC_DEFAULT')
         if bpy.app.version < (4, 0, 0):
             rig.data.layers = layer_state[:]
         else:
@@ -1306,9 +1306,9 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
             self.report({'INFO'}, "New Expressions.")
         if self.apply_existing_corrective_shape_keys and not (
                 self.load_method == 'OVERWRITE' and self.load_empty_expressions):
-            reevaluate_corrective_shape_keys(expression_list, futils.get_faceit_objects_list())
+            reevaluate_corrective_shape_keys(expression_list, futils.get_expresso_objects_list())
         else:
-            clear_all_corrective_shape_keys(futils.get_faceit_objects_list(), expression_list=expression_list)
+            clear_all_corrective_shape_keys(futils.get_expresso_objects_list(), expression_list=expression_list)
         scene.frame_start, scene.frame_end = (int(x) for x in futils.get_action_frame_range(ow_action))
         futils.restore_scene_state(context, state_dict)
         if self.first_expression_set:
@@ -1318,31 +1318,31 @@ class FACEIT_OT_AppendActionToFaceitRig(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ForceZeroFrames(bpy.types.Operator):
+class EXPRESSO_OT_ForceZeroFrames(bpy.types.Operator):
     ''' Adds Zero Keyframes (default values) between the animated expressions! Effects only pose bone properties with default values'''
-    bl_idname = "faceit.force_zero_frames"
+    bl_idname = "expresso.force_zero_frames"
     bl_label = "Update Zero Frames"
     bl_options = {'UNDO', 'REGISTER'}
 
     @classmethod
     def poll(cls, context):
         scene = context.scene
-        rig = futils.get_faceit_armature()
-        if rig and scene.faceit_expression_list and context.mode in ['OBJECT', 'POSE']:
+        rig = futils.get_expresso_armature()
+        if rig and scene.expresso_expression_list and context.mode in ['OBJECT', 'POSE']:
             if rig.animation_data:
                 if rig.animation_data.action:
                     return True
         return False
 
     def execute(self, context):
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         zero_frames = set()
         new_frames = []
-        for i in range(len(context.scene.faceit_expression_list)):
+        for i in range(len(context.scene.expresso_expression_list)):
             frame = (i + 1) * 10
             new_frames.append(frame)
             zero_frames.update((frame + 1, frame - 9))
-        # bone_filter = [b.name for b in rig.data.faceit_control_bones]
+        # bone_filter = [b.name for b in rig.data.expresso_control_bones]
         a_utils.update_zero_frames(
             zero_frames=zero_frames,
             action=rig.animation_data.action,
@@ -1352,24 +1352,24 @@ class FACEIT_OT_ForceZeroFrames(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_CleanupUnusedFCurves(bpy.types.Operator):
+class EXPRESSO_OT_CleanupUnusedFCurves(bpy.types.Operator):
     '''Removes Fcurves that contain no keyframes or only default values.'''
-    bl_idname = "faceit.cleanup_unused_fcurves"
+    bl_idname = "expresso.cleanup_unused_fcurves"
     bl_label = "Cleanup Unsused Fcurves"
     bl_options = {'UNDO', 'REGISTER'}
 
     @classmethod
     def poll(cls, context):
         scene = context.scene
-        rig = futils.get_faceit_armature()
-        if rig and scene.faceit_expression_list and context.mode in ['OBJECT', 'POSE']:
+        rig = futils.get_expresso_armature()
+        if rig and scene.expresso_expression_list and context.mode in ['OBJECT', 'POSE']:
             if rig.animation_data:
                 if rig.animation_data.action:
                     return True
         return False
 
     def execute(self, context):
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         n_removed = a_utils.cleanup_unused_fcurves(rig, rig.animation_data.action)
         self.report({'INFO'}, f"Removed {n_removed} fcurves from the action {rig.animation_data.action.name}")
         return {'FINISHED'}
@@ -1377,15 +1377,15 @@ class FACEIT_OT_CleanupUnusedFCurves(bpy.types.Operator):
 # START ####################### VERSION 2 ONLY #######################
 
 
-class FACEIT_OT_ExportExpressionsToJson(bpy.types.Operator, ExportHelper):
+class EXPRESSO_OT_ExportExpressionsToJson(bpy.types.Operator, ExportHelper):
     ''' Export the current Expression file to json format '''
-    bl_idname = "faceit.export_expressions"
+    bl_idname = "expresso.export_expressions"
     bl_label = "Export Expressions"
     bl_options = {'UNDO', 'INTERNAL', 'REGISTER'}
 
     filepath: StringProperty(
         subtype="FILE_PATH",
-        default="faceit_expressions"
+        default="expresso_expressions"
     )
     filter_glob: StringProperty(
         default="*.face;",
@@ -1401,27 +1401,27 @@ class FACEIT_OT_ExportExpressionsToJson(bpy.types.Operator, ExportHelper):
     # )
     filename_ext = ".face"
     adjust_scale = True
-    # rig_type = 'FACEIT'
+    # rig_type = 'EXPRESSO'
 
     @classmethod
     def poll(cls, context):
         scene = context.scene
-        rig = futils.get_faceit_armature()
-        if rig and scene.faceit_expression_list:
+        rig = futils.get_expresso_armature()
+        if rig and scene.expresso_expression_list:
             if rig.animation_data:
                 if rig.animation_data.action:
                     return True
 
     def execute(self, context):
         scene = context.scene
-        rig = futils.get_faceit_armature()
-        # value in 'FACEIT', 'RIGIFY', 'RIGIFY_NEW'
+        rig = futils.get_expresso_armature()
+        # value in 'EXPRESSO', 'RIGIFY', 'RIGIFY_NEW'
         rig_type = futils.get_rig_type(rig)
         scene = context.scene
         save_frame = scene.frame_current
         auto_key = scene.tool_settings.use_keyframe_insert_auto
         scene.tool_settings.use_keyframe_insert_auto = False
-        expression_list = scene.faceit_expression_list
+        expression_list = scene.expresso_expression_list
         reset_pose(rig)
         action_scale = list(rig.dimensions.copy())
         data = {}
@@ -1430,10 +1430,10 @@ class FACEIT_OT_ExportExpressionsToJson(bpy.types.Operator, ExportHelper):
         if rig_type in ('RIGIFY', 'RIGIFY_NEW'):
             eye_dim_L, eye_dim_R = a_utils.get_eye_dimensions(rig)
             data["eye_dimensions"] = [eye_dim_L, eye_dim_R]
-            control_bones = fdata.FACEIT_CTRL_BONES
+            control_bones = fdata.EXPRESSO_CTRL_BONES
 
         else:
-            control_bones = [b.name for b in rig.data.faceit_control_bones]
+            control_bones = [b.name for b in rig.data.expresso_control_bones]
             if not control_bones:
                 self.report({'WARNING'}, "Control Bones are not registered. The export results might have the wrong scale.")
         # Store the rest pose for the relevant control bones. Important for matching the scale on import.
@@ -1442,7 +1442,7 @@ class FACEIT_OT_ExportExpressionsToJson(bpy.types.Operator, ExportHelper):
             if b.name in control_bones:
                 rest_pose_dict[b.name] = list(b.matrix_local.translation)
         expression_list_data = {}
-        expression_list = scene.faceit_expression_list
+        expression_list = scene.expresso_expression_list
         for exp in expression_list:
             expression_options = {
                 'mirror_name': exp.mirror_name,
@@ -1505,9 +1505,9 @@ class FACEIT_OT_ExportExpressionsToJson(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ClearFaceitExpressions(bpy.types.Operator):
-    '''Clear all Faceit Expressions'''
-    bl_idname = "faceit.clear_faceit_expressions"
+class EXPRESSO_OT_ClearExpressoExpressions(bpy.types.Operator):
+    '''Clear all Expresso Expressions'''
+    bl_idname = "expresso.clear_expresso_expressions"
     bl_label = "Clear Expressions"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -1524,7 +1524,7 @@ class FACEIT_OT_ClearFaceitExpressions(bpy.types.Operator):
         return True
 
     def invoke(self, context, event):
-        self.corr_sk = any([sk_name.startswith("faceit_cc_")
+        self.corr_sk = any([sk_name.startswith("expresso_cc_")
                            for sk_name in sk_utils.get_shape_key_names_from_objects()])
 
         if self.corr_sk:
@@ -1535,16 +1535,16 @@ class FACEIT_OT_ClearFaceitExpressions(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        scene.faceit_expression_list.clear()
-        scene.faceit_expression_list_index = -1
-        shape_action = bpy.data.actions.get("faceit_shape_action")
+        scene.expresso_expression_list.clear()
+        scene.expresso_expression_list_index = -1
+        shape_action = bpy.data.actions.get("expresso_shape_action")
         ow_action = bpy.data.actions.get("overwrite_shape_action")
         if shape_action:
             bpy.data.actions.remove(shape_action)
         if ow_action:
             bpy.data.actions.remove(ow_action)
 
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
 
         if rig:
             if rig.animation_data:
@@ -1553,20 +1553,20 @@ class FACEIT_OT_ClearFaceitExpressions(bpy.types.Operator):
             for b in rig.pose.bones:
                 reset_pb(b)
         if self.corr_sk:
-            faceit_objects = futils.get_faceit_objects_list()
+            expresso_objects = futils.get_expresso_objects_list()
 
-            for obj in faceit_objects:
+            for obj in expresso_objects:
 
                 if sk_utils.has_shape_keys(obj):
                     for sk in obj.data.shape_keys.key_blocks:
-                        if sk.name.startswith("faceit_cc_"):
+                        if sk.name.startswith("expresso_cc_"):
                             # mute corrective shapes!
                             if self.keep_corrective_shape_keys:
                                 sk.mute = True
-                                scene.faceit_corrective_sk_restorable = True
+                                scene.expresso_corrective_sk_restorable = True
                             else:
                                 obj.shape_key_remove(sk)
-                                scene.faceit_corrective_sk_restorable = False
+                                scene.expresso_corrective_sk_restorable = False
 
                     if obj.data.shape_keys.animation_data:
                         a = obj.data.shape_keys.animation_data.action
@@ -1579,9 +1579,9 @@ class FACEIT_OT_ClearFaceitExpressions(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_RemoveExpressionItem(bpy.types.Operator):
+class EXPRESSO_OT_RemoveExpressionItem(bpy.types.Operator):
     '''Remove the selected Character Geometry from Registration.'''
-    bl_idname = "faceit.remove_expression_item"
+    bl_idname = "expresso.remove_expression_item"
     bl_label = "Remove Expression"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -1592,9 +1592,9 @@ class FACEIT_OT_RemoveExpressionItem(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        idx = context.scene.faceit_expression_list_index
+        idx = context.scene.expresso_expression_list_index
 
-        if idx >= 0 and idx < len(context.scene.faceit_expression_list):
+        if idx >= 0 and idx < len(context.scene.expresso_expression_list):
             return True
 
     def execute(self, context):
@@ -1603,18 +1603,18 @@ class FACEIT_OT_RemoveExpressionItem(bpy.types.Operator):
         auto_key = scene.tool_settings.use_keyframe_insert_auto
         scene.tool_settings.use_keyframe_insert_auto = False
 
-        expression_list = scene.faceit_expression_list
-        expression_list_index = scene.faceit_expression_list_index
+        expression_list = scene.expresso_expression_list
+        expression_list_index = scene.expresso_expression_list_index
 
         ow_action = bpy.data.actions.get("overwrite_shape_action")
-        sh_action = bpy.data.actions.get("faceit_shape_action")
+        sh_action = bpy.data.actions.get("expresso_shape_action")
 
         if len(expression_list) <= 1:
-            bpy.ops.faceit.clear_faceit_expressions()
+            bpy.ops.expresso.clear_expresso_expressions()
             scene.frame_start, scene.frame_end = 1, 250
             return {'FINISHED'}
 
-        def _remove_faceit_item(item):
+        def _remove_expresso_item(item):
 
             item_index = expression_list.find(item.name)
 
@@ -1654,12 +1654,12 @@ class FACEIT_OT_RemoveExpressionItem(bpy.types.Operator):
                 item = expression_list[self.remove_item]
             else:
                 item = expression_list[expression_list_index]
-            _remove_faceit_item(item)
+            _remove_expresso_item(item)
 
         expression_count = len(expression_list)
 
         if expression_list_index >= expression_count:
-            scene.faceit_expression_list_index = expression_count - 1
+            scene.expresso_expression_list_index = expression_count - 1
 
         scene.tool_settings.use_keyframe_insert_auto = auto_key
         if ow_action:
@@ -1671,9 +1671,9 @@ class FACEIT_OT_RemoveExpressionItem(bpy.types.Operator):
 # END ######################### VERSION 2 ONLY #######################
 
 
-class FACEIT_OT_PoseAmplify(bpy.types.Operator):
+class EXPRESSO_OT_PoseAmplify(bpy.types.Operator):
     '''Relax Pose of active Expression'''
-    bl_idname = "faceit.pose_amplify"
+    bl_idname = "expresso.pose_amplify"
     bl_label = "Amplify Pose"
     bl_options = {'UNDO', 'INTERNAL', 'REGISTER'}
 
@@ -1700,8 +1700,8 @@ class FACEIT_OT_PoseAmplify(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         scene = context.scene
-        rig = futils.get_faceit_armature()
-        if rig and scene.faceit_expression_list:
+        rig = futils.get_expresso_armature()
+        if rig and scene.expresso_expression_list:
             if rig.animation_data:
                 if rig.animation_data.action:
                     return True
@@ -1716,15 +1716,15 @@ class FACEIT_OT_PoseAmplify(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         action = rig.animation_data.action
 
         # effect all expressions if frame -1
         frame = -1
         # Effect specific expression:
         if self.expression_index != -1:
-            scene.faceit_expression_list_index = self.expression_index
-            expression_list = scene.faceit_expression_list
+            scene.expresso_expression_list_index = self.expression_index
+            expression_list = scene.expresso_expression_list
             expression = expression_list[self.expression_index]
             frame = expression.frame
 
@@ -1743,9 +1743,9 @@ class FACEIT_OT_PoseAmplify(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ResetExpression(bpy.types.Operator):
+class EXPRESSO_OT_ResetExpression(bpy.types.Operator):
     '''Reset Pose to the originally generated Pose'''
-    bl_idname = "faceit.reset_expression"
+    bl_idname = "expresso.reset_expression"
     bl_label = "Reset Expression"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -1768,7 +1768,7 @@ class FACEIT_OT_ResetExpression(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         if rig:
             return rig.hide_viewport is False
 
@@ -1779,20 +1779,20 @@ class FACEIT_OT_ResetExpression(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-        if context.scene.faceit_use_corrective_shapes:
+        if context.scene.expresso_use_corrective_shapes:
             if self.expression_to_reset == "ALL":
                 row.prop(self, "remove_corrective_shape_keys", text="Remove all Corrective Shape Keys", icon='TRASH')
-            elif any(["faceit_cc_" + self.expression_to_reset in sk_utils.get_shape_key_names_from_objects()]):
+            elif any(["expresso_cc_" + self.expression_to_reset in sk_utils.get_shape_key_names_from_objects()]):
                 row.prop(self, "remove_corrective_shape_keys", text="Remove Corrective Shape Key?", icon='TRASH')
         row = layout.row()
         row.prop(self, "selected_bones_only", text="Selected Bones only", icon='BONE_DATA')
 
     def execute(self, context):
         state_dict = futils.save_scene_state(context)
-        shape_action = bpy.data.actions.get("faceit_shape_action")
+        shape_action = bpy.data.actions.get("expresso_shape_action")
         ow_action = bpy.data.actions.get("overwrite_shape_action")
         scene = context.scene
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         if not rig:
             self.report({'WARNING'}, "The Armature could not be found. Cancelled")
             return {'CANCELLED'}
@@ -1801,20 +1801,20 @@ class FACEIT_OT_ResetExpression(bpy.types.Operator):
                 bpy.ops.object.mode_set()
             futils.clear_object_selection()
             futils.set_active_object(rig.name)
-        expression_list = scene.faceit_expression_list
-        curr_expression = scene.faceit_expression_list_index
+        expression_list = scene.expresso_expression_list
+        curr_expression = scene.expresso_expression_list_index
         if self.expression_to_reset == "ALL":
             expressions_operate = expression_list
             if self.remove_corrective_shape_keys:
                 clear_all_corrective_shape_keys(
-                    futils.get_faceit_objects_list(),
+                    futils.get_expresso_objects_list(),
                     expression_list=expression_list,
                 )
         else:
             expressions_operate = [expression_list[self.expression_to_reset]]
             if self.remove_corrective_shape_keys:
                 remove_corrective_shape_key(
-                    expression_list, futils.get_faceit_objects_list(),
+                    expression_list, futils.get_expresso_objects_list(),
                     expression_name=self.expression_to_reset
                 )
         selected_pbones = []
@@ -1826,14 +1826,14 @@ class FACEIT_OT_ResetExpression(bpy.types.Operator):
             frame = exp.frame
             a_utils.reset_key_frame(action=ow_action, filter_pose_bone_names=selected_pbones,
                                     backup_action=shape_action, frame=frame)
-        scene.faceit_expression_list_index = curr_expression
+        scene.expresso_expression_list_index = curr_expression
         futils.restore_scene_state(context, state_dict)
         return {'FINISHED'}
 
 
-class FACEIT_OT_MirrorOverwriteAnimation(bpy.types.Operator):
+class EXPRESSO_OT_MirrorOverwriteAnimation(bpy.types.Operator):
     '''Mirror the selected Expression to the opposite side (onyl L and R expressions)'''
-    bl_idname = "faceit.mirror_overwrite"
+    bl_idname = "expresso.mirror_overwrite"
     bl_label = "Mirror Expression"
     bl_options = {'UNDO', 'INTERNAL', 'REGISTER'}
 
@@ -1844,7 +1844,7 @@ class FACEIT_OT_MirrorOverwriteAnimation(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         if rig is not None:
             if rig.hide_viewport is False:
                 return True
@@ -1854,19 +1854,19 @@ class FACEIT_OT_MirrorOverwriteAnimation(bpy.types.Operator):
         scene = context.scene
         state_dict = futils.save_scene_state(context)
 
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         futils.set_hidden_state_object(rig, False, False)
 
-        mirror_corrective_sk = scene.faceit_try_mirror_corrective_shapes
+        mirror_corrective_sk = scene.expresso_try_mirror_corrective_shapes
         if mirror_corrective_sk:
-            faceit_objects = futils.get_faceit_objects_list()
-            if scene.faceit_corrective_sk_mirror_affect_only_selected_objects:
+            expresso_objects = futils.get_expresso_objects_list()
+            if scene.expresso_corrective_sk_mirror_affect_only_selected_objects:
                 mirror_objects = context.selected_objects
                 if not mirror_objects:
                     mirror_corrective_sk = False
-                mirror_objects = (obj for obj in mirror_objects if obj in faceit_objects)
+                mirror_objects = (obj for obj in mirror_objects if obj in expresso_objects)
             else:
-                mirror_objects = faceit_objects
+                mirror_objects = expresso_objects
 
         if context.object != rig:
             if context.mode != 'OBJECT':
@@ -1877,7 +1877,7 @@ class FACEIT_OT_MirrorOverwriteAnimation(bpy.types.Operator):
         if context.mode != 'POSE':
             bpy.ops.object.mode_set(mode='POSE')
 
-        expression_list = scene.faceit_expression_list
+        expression_list = scene.expresso_expression_list
 
         if self.expression_to_mirror == "ALL":
             expressions_to_mirror = expression_list
@@ -1919,7 +1919,7 @@ class FACEIT_OT_MirrorOverwriteAnimation(bpy.types.Operator):
 
                 bpy.ops.pose.select_all(action='DESELECT')
 
-                scene.faceit_expression_list_index = mirror_expression_idx
+                scene.expresso_expression_list_index = mirror_expression_idx
         if bpy.app.version < (4, 0, 0):
             rig.data.layers = layer_state[:]
         else:
@@ -1946,7 +1946,7 @@ class FACEIT_OT_MirrorOverwriteAnimation(bpy.types.Operator):
                         continue
 
                     if action:
-                        mirror_method = scene.faceit_corrective_sk_mirror_method
+                        mirror_method = scene.expresso_corrective_sk_mirror_method
 
                         for obj in mirror_objects:
 
@@ -1961,12 +1961,12 @@ class FACEIT_OT_MirrorOverwriteAnimation(bpy.types.Operator):
 
                                 for ob_exp in expressions_to_mirror:
 
-                                    sk_name = "faceit_cc_" + ob_exp.name
+                                    sk_name = "expresso_cc_" + ob_exp.name
 
                                     sk = obj.data.shape_keys.key_blocks.get(sk_name)
 
                                     if sk:
-                                        sk_mirror_name = "faceit_cc_" + mirror_expression.name
+                                        sk_mirror_name = "expresso_cc_" + mirror_expression.name
                                         sk_mirror = shape_keys.get(sk_mirror_name)
                                         if sk_mirror:
                                             obj.shape_key_remove(sk_mirror)
@@ -1996,7 +1996,7 @@ class FACEIT_OT_MirrorOverwriteAnimation(bpy.types.Operator):
 
                                             with redirect_stdout(stdout):
 
-                                                if scene.faceit_corrective_sk_mirror_method == 'NORMAL':
+                                                if scene.expresso_corrective_sk_mirror_method == 'NORMAL':
                                                     bpy.ops.object.shape_key_mirror(
                                                         use_topology=False)
                                                 else:
@@ -2051,15 +2051,15 @@ def mirror_shape_key(obj, axis, mirror_from_shape, mirror_to_shape, force=False)
         mirror_to_shape.data[i].co = co
 
 
-class FACEIT_OT_LoadARKitReference(bpy.types.Operator):
+class EXPRESSO_OT_LoadARKitReference(bpy.types.Operator):
     '''Loads the ARKit reference model and keyframes'''
-    bl_idname = "faceit.load_arkit_refernce"
+    bl_idname = "expresso.load_arkit_refernce"
     bl_label = "Load ARKit Reference"
     bl_options = {'UNDO', 'INTERNAL'}
 
     def execute(self, context):
         arkit_ref_blend_file = fdata.get_arkit_reference()
-        faceit_collection = futils.get_faceit_collection()
+        expresso_collection = futils.get_expresso_collection()
         # load the objects data in the rig file
         obj_old = bpy.data.objects.get('ARKit Reference Model')
         if obj_old is not None:
@@ -2070,7 +2070,7 @@ class FACEIT_OT_LoadARKitReference(bpy.types.Operator):
         ref_obj = None
         for obj in data_to.objects:
             if obj.type == 'MESH' and 'ARKit Reference Model' in obj.name:
-                faceit_collection.objects.link(obj)
+                expresso_collection.objects.link(obj)
                 ref_obj = obj
                 break
         # Match the scale and position
@@ -2082,11 +2082,11 @@ class FACEIT_OT_LoadARKitReference(bpy.types.Operator):
             ref_loc = lm_obj.location.copy()
             ref_loc.x -= lm_obj.dimensions.x * 2
         else:
-            rig = futils.get_faceit_armature()
-            if context.scene.faceit_use_existing_armature:
-                if rig.data.faceit_control_bones:
+            rig = futils.get_expresso_armature()
+            if context.scene.expresso_use_existing_armature:
+                if rig.data.expresso_control_bones:
                     ctrl_bones = []
-                    for b in rig.data.faceit_control_bones:
+                    for b in rig.data.expresso_control_bones:
                         pb = rig.pose.bones.get(b.name)
                         if pb:
                             ctrl_bones.append(pb)
@@ -2135,7 +2135,7 @@ class FACEIT_OT_LoadARKitReference(bpy.types.Operator):
                 adt.action_slot = adt.action_suitable_slots[0]
         shape_keys = shape_keys.key_blocks
         found_any = False
-        for item in context.scene.faceit_expression_list:
+        for item in context.scene.expresso_expression_list:
             if item.name in arkit_expressions:
                 frame = item.frame
                 sk = shape_keys.get(item.name)
@@ -2169,9 +2169,9 @@ class FACEIT_OT_LoadARKitReference(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ProceduralEyeBlinks(bpy.types.Operator):
+class EXPRESSO_OT_ProceduralEyeBlinks(bpy.types.Operator):
     '''Procedural eye blinking expressions'''
-    bl_idname = "faceit.procedural_eye_blinks"
+    bl_idname = "expresso.procedural_eye_blinks"
     bl_label = "Procedural Eye Blinks"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -2209,7 +2209,7 @@ class FACEIT_OT_ProceduralEyeBlinks(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if futils.get_faceit_armature():
+        if futils.get_expresso_armature():
             return True
 
     def execute(self, context):
@@ -2217,19 +2217,19 @@ class FACEIT_OT_ProceduralEyeBlinks(bpy.types.Operator):
         scene = context.scene
         state_dict = futils.save_scene_state(context)
 
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         if not rig:
-            self.report({'ERROR'}, "Can't find the faceit rig. Cancelling procedural eyeblinks")
+            self.report({'ERROR'}, "Can't find the expresso rig. Cancelling procedural eyeblinks")
             return {'CANCELLED'}
         contains_lid_bones = any([b.name.startswith('lid.') for b in rig.pose.bones])
         if not contains_lid_bones:
             self.report({'ERROR'}, "Can't find the lid bones. Cancelling procedural eyeblinks")
             return {'CANCELLED'}
-        backup_action = bpy.data.actions.get("faceit_shape_action")
+        backup_action = bpy.data.actions.get("expresso_shape_action")
         action = bpy.data.actions.get("overwrite_shape_action")
 
         if not backup_action:
-            backup_action = bpy.data.actions.new("faceit_shape_action")
+            backup_action = bpy.data.actions.new("expresso_shape_action")
         if not action:
             action = bpy.data.actions.new("overwrite_shape_action")
 
@@ -2250,7 +2250,7 @@ class FACEIT_OT_ProceduralEyeBlinks(bpy.types.Operator):
         if scene.is_nla_tweakmode:
             a_utils.exit_nla_tweak_mode(context)
 
-        expression_item = scene.faceit_expression_list[self.expression_index]
+        expression_item = scene.expresso_expression_list[self.expression_index]
         frame = expression_item.frame
 
         # Remove keyframes and reset pose
@@ -2316,7 +2316,7 @@ class FACEIT_OT_ProceduralEyeBlinks(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ProceduralMouthClose(bpy.types.Operator):
+class EXPRESSO_OT_ProceduralMouthClose(bpy.types.Operator):
     # tooltip
     """
     Procedurally create the animations that need to be adapted to character style
@@ -2324,7 +2324,7 @@ class FACEIT_OT_ProceduralMouthClose(bpy.types.Operator):
     - eye blink is the blinking animation that needs to adapted to eye shape
     """
 
-    bl_idname = "faceit.procedural_mouth_close"
+    bl_idname = "expresso.procedural_mouth_close"
     bl_label = "Procedural MouthClose expression"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -2343,22 +2343,22 @@ class FACEIT_OT_ProceduralMouthClose(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if futils.get_faceit_armature():
+        if futils.get_expresso_armature():
             return True
 
     def execute(self, context):
 
         state_dict = futils.save_scene_state(context)
         scene = context.scene
-        rig = futils.get_faceit_armature()
-        backup_action = bpy.data.actions.get("faceit_shape_action")
+        rig = futils.get_expresso_armature()
+        backup_action = bpy.data.actions.get("expresso_shape_action")
         action = bpy.data.actions.get("overwrite_shape_action")
         contains_lip_bones = any([bone.name.startswith("lip.") for bone in rig.pose.bones])
         if not contains_lip_bones:
             self.report({'ERROR'}, "No lip bones found! Can't create mouth close expression.")
             return {'CANCELLED'}
         if not backup_action:
-            backup_action = bpy.data.actions.new("faceit_shape_action")
+            backup_action = bpy.data.actions.new("expresso_shape_action")
         if not action:
             action = bpy.data.actions.new("overwrite_shape_action")
 
@@ -2375,7 +2375,7 @@ class FACEIT_OT_ProceduralMouthClose(bpy.types.Operator):
         if scene.is_nla_tweakmode:
             a_utils.exit_nla_tweak_mode(context)
 
-        expression_list = scene.faceit_expression_list
+        expression_list = scene.expresso_expression_list
 
         jaw_open_shape = expression_list.get(self.jaw_open_expression)
         mouth_close_shape = expression_list.get(self.mouth_close_expression)
@@ -2508,7 +2508,7 @@ class NewActionBase():
 
     def get_action_name(self):
         action_name = ""
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
         if not self.action_name:
             action_name = ctrl_rig.name + "Action"
         return action_name
@@ -2536,7 +2536,7 @@ class NewActionBase():
 
     def populate_action(self, context, action: Action):
         # Assign the action to the target id(s) here.
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
         anim_data = ctrl_rig.animation_data
         if not anim_data:
             anim_data = ctrl_rig.animation_data_create()
@@ -2561,9 +2561,9 @@ class NewActionBase():
         return {'FINISHED'}
 
 
-class FACEIT_OT_NewAction(NewActionBase, bpy.types.Operator):
-    '''Creates a new Action and OPTIONALLY activates it for all Objects registered in Faceit'''
-    bl_idname = "faceit.new_action"
+class EXPRESSO_OT_NewAction(NewActionBase, bpy.types.Operator):
+    '''Creates a new Action and OPTIONALLY activates it for all Objects registered in Expresso'''
+    bl_idname = "expresso.new_action"
     bl_label = "New Shape Key Action"
 
     @classmethod
@@ -2574,68 +2574,68 @@ class FACEIT_OT_NewAction(NewActionBase, bpy.types.Operator):
         return "MocapAction"
 
     def populate_action(self, context, action):
-        bpy.ops.faceit.populate_action(action_name=action.name)
+        bpy.ops.expresso.populate_action(action_name=action.name)
 
 
-class FACEIT_OT_NewHeadAction(NewActionBase, bpy.types.Operator):
-    '''Creates a new Action and OPTIONALLY activates it for all Objects registered in Faceit'''
-    bl_idname = "faceit.new_head_action"
+class EXPRESSO_OT_NewHeadAction(NewActionBase, bpy.types.Operator):
+    '''Creates a new Action and OPTIONALLY activates it for all Objects registered in Expresso'''
+    bl_idname = "expresso.new_head_action"
     bl_label = "New Head Action"
 
     @classmethod
     def poll(cls, context):
-        return super().poll(context) and bpy.context.scene.faceit_head_target_object is not None
+        return super().poll(context) and bpy.context.scene.expresso_head_target_object is not None
 
     def get_action_name(self):
         action_name = ""
-        head_obj = bpy.context.scene.faceit_head_target_object
+        head_obj = bpy.context.scene.expresso_head_target_object
         if head_obj:
             action_name = head_obj.name + "Action"
         return action_name
 
     def populate_action(self, context, action):
-        bpy.ops.faceit.populate_head_action(action_name=action.name)
+        bpy.ops.expresso.populate_head_action(action_name=action.name)
 
 
-class FACEIT_OT_NewEyeAction(NewActionBase, bpy.types.Operator):
-    '''Creates a new Action and OPTIONALLY activates it for all Objects registered in Faceit'''
-    bl_idname = "faceit.new_eye_action"
+class EXPRESSO_OT_NewEyeAction(NewActionBase, bpy.types.Operator):
+    '''Creates a new Action and OPTIONALLY activates it for all Objects registered in Expresso'''
+    bl_idname = "expresso.new_eye_action"
     bl_label = "New Eye Action"
 
     @classmethod
     def poll(cls, context):
-        return super().poll(context) and bpy.context.scene.faceit_eye_target_rig is not None
+        return super().poll(context) and bpy.context.scene.expresso_eye_target_rig is not None
 
     def get_action_name(self):
         action_name = ""
-        eye_rig = bpy.context.scene.faceit_eye_target_rig
+        eye_rig = bpy.context.scene.expresso_eye_target_rig
         if eye_rig:
             action_name = eye_rig.name + "Action"
         return action_name
 
     def populate_action(self, context, action):
-        bpy.ops.faceit.populate_eye_action(action_name=action.name)
+        bpy.ops.expresso.populate_eye_action(action_name=action.name)
 
 
-class FACEIT_OT_NewCtrlRigAction(NewActionBase, bpy.types.Operator):
+class EXPRESSO_OT_NewCtrlRigAction(NewActionBase, bpy.types.Operator):
     '''Creates a new Ctrl Rig Action.'''
-    bl_idname = "faceit.new_ctrl_rig_action"
+    bl_idname = "expresso.new_ctrl_rig_action"
     bl_label = "New Ctrl Rig Action"
 
     @classmethod
     def poll(cls, context):
-        return super().poll(context) and futils.get_faceit_control_armature()
+        return super().poll(context) and futils.get_expresso_control_armature()
 
     def get_action_name(self):
         action_name = ""
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
         if not self.action_name:
             action_name = ctrl_rig.name + "Action"
         return action_name
 
     def populate_action(self, context, action):
         # Assign the action to the target id(s) here.
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
         anim_data = ctrl_rig.animation_data
         if not anim_data:
             anim_data = ctrl_rig.animation_data_create()
@@ -2646,9 +2646,9 @@ class FACEIT_OT_NewCtrlRigAction(NewActionBase, bpy.types.Operator):
         # anim_data.action_slot = anim_data.action_suitable_slots[0]
 
 
-class FACEIT_OT_UnlinkAction(bpy.types.Operator):
+class EXPRESSO_OT_UnlinkAction(bpy.types.Operator):
     '''Unlinks the Action'''
-    bl_idname = "faceit.unlink_action"
+    bl_idname = "expresso.unlink_action"
     bl_label = "Unlink Action"
 
     @classmethod
@@ -2665,9 +2665,9 @@ class FACEIT_OT_UnlinkAction(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_PopulateAction(bpy.types.Operator):
-    '''Populates the selected Action to all Objects registered with Faceit'''
-    bl_idname = "faceit.populate_action"
+class EXPRESSO_OT_PopulateAction(bpy.types.Operator):
+    '''Populates the selected Action to all Objects registered with Expresso'''
+    bl_idname = "expresso.populate_action"
     bl_label = "Activate Action"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -2702,7 +2702,7 @@ class FACEIT_OT_PopulateAction(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-        faceit_objects = futils.get_faceit_objects_list()
+        expresso_objects = futils.get_expresso_objects_list()
 
         new_slot = None
         if self.remove_action:
@@ -2711,7 +2711,7 @@ class FACEIT_OT_PopulateAction(bpy.types.Operator):
             if self.action_name:
                 new_action = bpy.data.actions.get(self.action_name)
             else:
-                new_action = scene.faceit_mocap_action
+                new_action = scene.expresso_mocap_action
 
             if not new_action:
                 self.report({'WARNING'}, "It seems the Action you want to pass does not exist")
@@ -2720,16 +2720,16 @@ class FACEIT_OT_PopulateAction(bpy.types.Operator):
         if bpy.app.version >= (4, 4, 0):
             if self.activate_slot:
                 if new_action is not None:
-                    slot_handle = scene.faceit_mocap_slot_handle
+                    slot_handle = scene.expresso_mocap_slot_handle
                     if slot_handle != 0:
                         for slot in new_action.slots:
                             if slot.handle == slot_handle:
                                 new_slot = slot
                                 break
 
-        all_target_shapes = get_all_set_target_shapes(scene.faceit_arkit_retarget_shapes)
-        all_target_shapes.extend(get_all_set_target_shapes(scene.faceit_a2f_retarget_shapes))
-        for obj in faceit_objects:
+        all_target_shapes = get_all_set_target_shapes(scene.expresso_arkit_retarget_shapes)
+        all_target_shapes.extend(get_all_set_target_shapes(scene.expresso_a2f_retarget_shapes))
+        for obj in expresso_objects:
             shape_keys = obj.data.shape_keys
             if not shape_keys:
                 continue
@@ -2744,11 +2744,11 @@ class FACEIT_OT_PopulateAction(bpy.types.Operator):
                     if new_slot is None:
                         if len(anim_data.action_suitable_slots) > 0:
                             new_slot = anim_data.action_suitable_slots[0]
-                            scene.faceit_mocap_slot_handle = new_slot.handle
+                            scene.expresso_mocap_slot_handle = new_slot.handle
                     anim_data.action_slot = new_slot
 
         if self.set_mocap_action:
-            scene.faceit_mocap_action = new_action
+            scene.expresso_mocap_action = new_action
             frame_range = futils.get_action_frame_range(new_action)
             if frame_range[1] - frame_range[0] > 1:
                 scene.frame_start = int(frame_range[0])
@@ -2759,9 +2759,9 @@ class FACEIT_OT_PopulateAction(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_NewMocapActionSlot(bpy.types.Operator):
+class EXPRESSO_OT_NewMocapActionSlot(bpy.types.Operator):
     '''Creates a new Action Slot for the Mocap Action'''
-    bl_idname = "faceit.new_mocap_action_slot"
+    bl_idname = "expresso.new_mocap_action_slot"
     bl_label = "New Mocap Action Slot"
     bl_options = {'UNDO'}
 
@@ -2772,18 +2772,18 @@ class FACEIT_OT_NewMocapActionSlot(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.faceit_mocap_action
+        return context.scene.expresso_mocap_action
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
         scene = context.scene
-        action: Action = scene.faceit_mocap_action
+        action: Action = scene.expresso_mocap_action
         slot = action.slots.new(id_type='KEY', name=self.slot_name)
-        scene.faceit_mocap_slot_handle = slot.handle
+        scene.expresso_mocap_slot_handle = slot.handle
         # assign the new slot
-        bpy.ops.faceit.populate_action(
+        bpy.ops.expresso.populate_action(
             action_name=action.name,
             set_mocap_action=False,
             activate_slot=True,
@@ -2791,32 +2791,32 @@ class FACEIT_OT_NewMocapActionSlot(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_UnlinkActiveShapesSlot(bpy.types.Operator):
+class EXPRESSO_OT_UnlinkActiveShapesSlot(bpy.types.Operator):
     '''Unlink the shape key action slot'''
-    bl_idname = "faceit.unlink_active_shapes_slot"
+    bl_idname = "expresso.unlink_active_shapes_slot"
     bl_label = "Unlink Shapes Slot"
     bl_options = {'UNDO'}
 
     @classmethod
     def poll(cls, context):
-        return context.scene.faceit_mocap_action
+        return context.scene.expresso_mocap_action
 
     def execute(self, context):
-        action: Action = context.scene.faceit_mocap_action
-        action_slot = find_slot_by_handle(action, context.scene.faceit_mocap_slot_handle)
+        action: Action = context.scene.expresso_mocap_action
+        action_slot = find_slot_by_handle(action, context.scene.expresso_mocap_slot_handle)
         if action_slot:
-            faceit_objects = futils.get_faceit_objects_list()
-            shape_key_ids = [obj.data.shape_keys for obj in faceit_objects if hasattr(obj.data, "shape_keys")]
+            expresso_objects = futils.get_expresso_objects_list()
+            shape_key_ids = [obj.data.shape_keys for obj in expresso_objects if hasattr(obj.data, "shape_keys")]
             for usr in action_slot.users():
                 if usr in shape_key_ids:
                     usr.animation_data.action_slot = None
-        context.scene.faceit_mocap_slot_handle = 0
+        context.scene.expresso_mocap_slot_handle = 0
         return {'FINISHED'}
 
 
-class FACEIT_OT_PopulateHeadAction(bpy.types.Operator):
+class EXPRESSO_OT_PopulateHeadAction(bpy.types.Operator):
     '''Populates the selected Action to the registered head object'''
-    bl_idname = "faceit.populate_head_action"
+    bl_idname = "expresso.populate_head_action"
     bl_label = "Activate Head Action"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -2845,7 +2845,7 @@ class FACEIT_OT_PopulateHeadAction(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-        head_obj = scene.faceit_head_target_object
+        head_obj = scene.expresso_head_target_object
 
         if self.remove_action:
             head_obj.animation_data.action = None
@@ -2869,7 +2869,7 @@ class FACEIT_OT_PopulateHeadAction(bpy.types.Operator):
                     slot = new_action.slots.new(id_type='OBJECT', name=head_obj.name)
                     anim_data.action_slot = slot
         # Reset Animation values
-        bpy.ops.faceit.reset_head_pose('EXEC_DEFAULT')
+        bpy.ops.expresso.reset_head_pose('EXEC_DEFAULT')
 
         if self.set_mocap_action:
             frame_range = futils.get_action_frame_range(new_action)
@@ -2881,9 +2881,9 @@ class FACEIT_OT_PopulateHeadAction(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_PopulateEyeAction(bpy.types.Operator):
+class EXPRESSO_OT_PopulateEyeAction(bpy.types.Operator):
     '''Populates the selected Action to the registered eye target rig'''
-    bl_idname = "faceit.populate_eye_action"
+    bl_idname = "expresso.populate_eye_action"
     bl_label = "Activate Eye Action"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -2912,7 +2912,7 @@ class FACEIT_OT_PopulateEyeAction(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-        eye_rig = scene.faceit_eye_target_rig
+        eye_rig = scene.expresso_eye_target_rig
 
         if self.remove_action:
             eye_rig.animation_data.action = None
@@ -2920,7 +2920,7 @@ class FACEIT_OT_PopulateEyeAction(bpy.types.Operator):
             if self.action_name:
                 new_action = bpy.data.actions.get(self.action_name)
             else:
-                new_action = scene.faceit_eye_action
+                new_action = scene.expresso_eye_action
 
             if not new_action:
                 self.report({'WARNING'}, "It seems the Action you want to pass does not exist")
@@ -2939,10 +2939,10 @@ class FACEIT_OT_PopulateEyeAction(bpy.types.Operator):
                     slot = new_action.slots.new(id_type='OBJECT', name=eye_rig.name)
                     anim_data.action_slot = slot
         # Reset Animation values
-        bpy.ops.faceit.reset_eye_pose('EXEC_DEFAULT')
+        bpy.ops.expresso.reset_eye_pose('EXEC_DEFAULT')
 
         if self.set_mocap_action:
-            scene.faceit_eye_action = new_action
+            scene.expresso_eye_action = new_action
             frame_range = futils.get_action_frame_range(new_action)
             if frame_range[1] - frame_range[0] > 1:
                 scene.frame_start = int(frame_range[0])
@@ -2954,7 +2954,7 @@ class FACEIT_OT_PopulateEyeAction(bpy.types.Operator):
 
 def head_action_poll(head_obj, action):
     '''Check if the action is suitable for bone animation'''
-    if action.name in ("faceit_shape_action", "faceit_shape_action"):
+    if action.name in ("expresso_shape_action", "expresso_shape_action"):
         return False
     if head_obj:
         if head_obj.type == 'ARMATURE':
@@ -2966,16 +2966,16 @@ def head_action_poll(head_obj, action):
 def get_enum_head_actions(self, context):
     global actions
     actions = []
-    head_obj = context.scene.faceit_head_target_object
+    head_obj = context.scene.expresso_head_target_object
     for action in bpy.data.actions:
         if head_action_poll(head_obj, action):
             actions.append((action.name,) * 3+(106,))
     return actions
 
 
-class FACEIT_OT_ChooseHeadAction(bpy.types.Operator):
+class EXPRESSO_OT_ChooseHeadAction(bpy.types.Operator):
     '''Choose an Action'''
-    bl_idname = "faceit.choose_head_action"
+    bl_idname = "expresso.choose_head_action"
     bl_label = "Choose Head Action"
     bl_property = "action_enum"
     bl_options = {'UNDO'}
@@ -2987,7 +2987,7 @@ class FACEIT_OT_ChooseHeadAction(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.faceit_head_target_object is not None
+        return context.scene.expresso_head_target_object is not None
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -2995,7 +2995,7 @@ class FACEIT_OT_ChooseHeadAction(bpy.types.Operator):
         return {'FINISHED'}
 
     def execute(self, context):
-        head_obj = context.scene.faceit_head_target_object
+        head_obj = context.scene.expresso_head_target_object
         # action =
         return {'FINISHED'}
 
@@ -3009,9 +3009,9 @@ def get_enum_shapes_actions(self, context):
     return actions
 
 
-class FACEIT_OT_ChooseShapesAction(bpy.types.Operator):
+class EXPRESSO_OT_ChooseShapesAction(bpy.types.Operator):
     '''Choose a shape key action that should be applied to all objects'''
-    bl_idname = "faceit.choose_shapes_action"
+    bl_idname = "expresso.choose_shapes_action"
     bl_label = "Choose Shapes Action"
     bl_property = "action_enum"
     bl_options = {'UNDO'}
@@ -3034,14 +3034,14 @@ class FACEIT_OT_ChooseShapesAction(bpy.types.Operator):
 
         action = bpy.data.actions.get(self.action_enum)
         if action is not None:
-            context.scene.faceit_mocap_action = action
+            context.scene.expresso_mocap_action = action
         for region in context.area.regions:
             region.tag_redraw()
         return {'FINISHED'}
 
 
-class FACEIT_OT_UnlinkShapesAction(bpy.types.Operator):
-    bl_idname = "faceit.unlink_shapes_action"
+class EXPRESSO_OT_UnlinkShapesAction(bpy.types.Operator):
+    bl_idname = "expresso.unlink_shapes_action"
     bl_label = "Unlink Shapes Action"
     bl_options = {'UNDO'}
 
@@ -3050,15 +3050,15 @@ class FACEIT_OT_UnlinkShapesAction(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        context.scene.faceit_mocap_action = None
+        context.scene.expresso_mocap_action = None
         for region in context.area.regions:
             region.tag_redraw()
         return {'FINISHED'}
 
 
-class FACEIT_OT_SetBodyBindPose(bpy.types.Operator):
+class EXPRESSO_OT_SetBodyBindPose(bpy.types.Operator):
     '''Sets the current pose as the bind pose for the body'''
-    bl_idname = "faceit.set_body_bind_pose"
+    bl_idname = "expresso.set_body_bind_pose"
     bl_label = "Reset Pose"
     bl_options = {'UNDO', 'INTERNAL'}
     rig_name: StringProperty(
@@ -3088,5 +3088,5 @@ class FACEIT_OT_SetBodyBindPose(bpy.types.Operator):
         else:
             self.report({'WARNING'}, f"No Rig found with the name {self.rig_name}")
         if self.check_warnings:
-            bpy.ops.faceit.face_object_warning_check('EXEC_DEFAULT', item_name='ALL')
+            bpy.ops.expresso.face_object_warning_check('EXEC_DEFAULT', item_name='ALL')
         return {'FINISHED'}

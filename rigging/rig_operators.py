@@ -8,12 +8,12 @@ import numpy as np
 from mathutils import Color, Matrix, Vector
 from bpy.props import BoolProperty, StringProperty, EnumProperty, IntProperty
 
-from ..core.modifier_utils import add_faceit_armature_modifier, get_faceit_armature_modifier
+from ..core.modifier_utils import add_expresso_armature_modifier, get_expresso_armature_modifier
 from ..animate.animate_utils import exit_nla_tweak_mode
 from ..__init__ import VERSION
 from ..core.pose_utils import reset_pose
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils as sk_utils
 from ..core import vgroup_utils as vg_utils
 from ..ctrl_rig.control_rig_data import get_random_rig_id
@@ -24,9 +24,9 @@ rig_create_warning = False
 pivot_manual_mode = False
 
 
-class FACEIT_OT_GenerateRig(bpy.types.Operator):
+class EXPRESSO_OT_GenerateRig(bpy.types.Operator):
     '''Generates the Rig that holds the shapekey animation'''
-    bl_idname = 'faceit.generate_rig'
+    bl_idname = 'expresso.generate_rig'
     bl_label = 'Generate Rig'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -49,17 +49,17 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.faceit_face_objects
+        return context.scene.expresso_face_objects
 
     def invoke(self, context, event):
-        if context.scene.faceit_armature_missing:
+        if context.scene.expresso_armature_missing:
             self.weights_restorable = True
             self.expressions_restorable = True
             self.use_existing_corr_sk = self.corr_sk_restorable = True
         else:
-            self.weights_restorable = context.scene.faceit_weights_restorable
-            self.expressions_restorable = context.scene.faceit_expressions_restorable
-            self.use_existing_corr_sk = self.corr_sk_restorable = context.scene.faceit_corrective_sk_restorable
+            self.weights_restorable = context.scene.expresso_weights_restorable
+            self.expressions_restorable = context.scene.expresso_expressions_restorable
+            self.use_existing_corr_sk = self.corr_sk_restorable = context.scene.expresso_corrective_sk_restorable
         if self.weights_restorable or self.expressions_restorable:
             wm = context.window_manager
             return wm.invoke_props_dialog(self)
@@ -95,7 +95,7 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
         if not landmarks:
             self.report(
                 {'WARNING'},
-                'You need to setup the Faceit Landmarks for your character in order to fit the Control Rig to your character.')
+                'You need to setup the Expresso Landmarks for your character in order to fit the Control Rig to your character.')
             return {'CANCELLED'}
         # PivotManager.remove_handle()
         if context.object:
@@ -103,12 +103,12 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
                 bpy.ops.object.mode_set(mode='OBJECT')
             except RuntimeError:
                 pass
-        bpy.ops.faceit.unmask_main('EXEC_DEFAULT')
+        bpy.ops.expresso.unmask_main('EXEC_DEFAULT')
         # set_locator_hidden_state(hide=True)
         rig_filepath = fdata.get_rig_file()
-        faceit_collection = futils.get_faceit_collection()
-        # rig = futils.get_faceit_armature(force_original=True)
-        rig = bpy.data.objects.get('FaceitRig')
+        expresso_collection = futils.get_expresso_collection()
+        # rig = futils.get_expresso_armature(force_original=True)
+        rig = bpy.data.objects.get('ExpressoRig')
         if rig:
             bpy.data.objects.remove(rig, do_unlink=True)
             rig = None
@@ -117,17 +117,17 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
             data_to.objects = data_from.objects
         # add only the armature
         for obj in data_to.objects:
-            if obj.type == 'ARMATURE' and obj.name == 'FaceitRig':
-                faceit_collection.objects.link(obj)
+            if obj.type == 'ARMATURE' and obj.name == 'ExpressoRig':
+                expresso_collection.objects.link(obj)
                 rig = obj
                 break
-        rig['faceit_rig_id'] = get_random_rig_id()
+        rig['expresso_rig_id'] = get_random_rig_id()
 
         futils.clear_object_selection()
         futils.set_active_object(rig.name)
 
-        # bpy.ops.faceit.match()
-        scene.faceit_armature = rig
+        # bpy.ops.expresso.match()
+        scene.expresso_armature = rig
         if rig.animation_data:
             rig.animation_data.action = None
 
@@ -193,7 +193,7 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
             bone.head[1], bone.tail[1] = pos
 
         # the dictionary containing
-        if scene.faceit_asymmetric:
+        if scene.expresso_asymmetric:
             vert_dict = rig_data.bone_dict_asymmetric
         else:
             vert_dict = rig_data.bone_dict_symmetric
@@ -216,16 +216,16 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
 
         jaw_pivot_object = context.scene.objects.get('Jaw Pivot')
         if jaw_pivot_object:
-            context.scene.faceit_use_jaw_pivot = True
-            context.scene.faceit_jaw_pivot = jaw_pivot_object.location
+            context.scene.expresso_use_jaw_pivot = True
+            context.scene.expresso_jaw_pivot = jaw_pivot_object.location
         else:
-            context.scene.faceit_use_jaw_pivot = False
+            context.scene.expresso_use_jaw_pivot = False
         for i, bone_dict in vert_dict.items():
             target_point = None
             if i in (101, 111):
                 rig.data.use_mirror_x = False
             else:
-                rig.data.use_mirror_x = not scene.faceit_asymmetric
+                rig.data.use_mirror_x = not scene.expresso_asymmetric
 
             # all vertices in the reference mesh
             if i < 100:
@@ -236,20 +236,20 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
 
             # eyes extra positions
             elif i == 101:
-                if context.scene.faceit_eye_pivot_placement == 'MANUAL':
-                    target_point = context.scene.faceit_eye_manual_pivot_point_L
+                if context.scene.expresso_eye_pivot_placement == 'MANUAL':
+                    target_point = context.scene.expresso_eye_manual_pivot_point_L
                 else:
-                    target_point = context.scene.faceit_eye_pivot_point_L
+                    target_point = context.scene.expresso_eye_pivot_point_L
             elif i == 111:
-                if context.scene.faceit_eye_pivot_placement == 'MANUAL':
-                    target_point = context.scene.faceit_eye_manual_pivot_point_R
+                if context.scene.expresso_eye_pivot_placement == 'MANUAL':
+                    target_point = context.scene.expresso_eye_manual_pivot_point_R
                 else:
-                    target_point = context.scene.faceit_eye_pivot_point_R
+                    target_point = context.scene.expresso_eye_pivot_point_R
             # jaw extra positions
             elif i == 102:
                 empty_locator = jaw_pivot_object
                 if empty_locator:
-                    target_point = context.scene.faceit_jaw_pivot
+                    target_point = context.scene.expresso_jaw_pivot
                 else:
                     jaw_L = edit_bones.get('jaw.L').head
                     jaw_R = edit_bones.get('jaw.R').head
@@ -283,15 +283,15 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
                 if empty_locator:
                     target_point = empty_locator.location
                 else:
-                    upper_teeth_obj = vg_utils.get_objects_with_vertex_group("faceit_upper_teeth")
+                    upper_teeth_obj = vg_utils.get_objects_with_vertex_group("expresso_upper_teeth")
                     if upper_teeth_obj:
                         vertex_locations = rig_utils.get_evaluated_vertex_group_positions(
-                            upper_teeth_obj, "faceit_upper_teeth")
+                            upper_teeth_obj, "expresso_upper_teeth")
                         if vertex_locations:
                             # target_point = max(vertex_locations, key=attrgetter('y'))
                             bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'y')
                             target_point = rig_utils.get_median_pos(bounds)
-                            if scene.faceit_asymmetric:
+                            if scene.expresso_asymmetric:
                                 bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'x')
                                 target_point.x = rig_utils.get_median_pos(bounds).x
                             else:
@@ -310,14 +310,14 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
                 if empty_locator:
                     target_point = empty_locator.location
                 else:
-                    lower_teeth_obj = vg_utils.get_objects_with_vertex_group("faceit_lower_teeth")
+                    lower_teeth_obj = vg_utils.get_objects_with_vertex_group("expresso_lower_teeth")
                     if lower_teeth_obj:
                         vertex_locations = rig_utils.get_evaluated_vertex_group_positions(
-                            lower_teeth_obj, "faceit_lower_teeth")
+                            lower_teeth_obj, "expresso_lower_teeth")
                         if vertex_locations:
                             bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'y')
                             target_point = rig_utils.get_median_pos(bounds)
-                            if scene.faceit_asymmetric:
+                            if scene.expresso_asymmetric:
                                 bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'x')
                                 target_point.x = rig_utils.get_median_pos(bounds).x
                             else:
@@ -351,13 +351,13 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
                     bone.tail = l_mat @ target_point
         # apply same offset to all tongue bones
 
-        tongue_obj = vg_utils.get_objects_with_vertex_group("faceit_tongue")
+        tongue_obj = vg_utils.get_objects_with_vertex_group("expresso_tongue")
         if tongue_obj:
             tongue_bones = [edit_bones[b] for b in vert_dict[108]["all"]]
-            vertex_locations = rig_utils.get_evaluated_vertex_group_positions(tongue_obj, "faceit_tongue")
+            vertex_locations = rig_utils.get_evaluated_vertex_group_positions(tongue_obj, "expresso_tongue")
             if vertex_locations:
                 target_point = min(vertex_locations, key=attrgetter('y'))
-                if scene.faceit_asymmetric:
+                if scene.expresso_asymmetric:
                     bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'x')
                     target_point.x = rig_utils.get_median_pos(bounds).x
                 else:
@@ -463,13 +463,13 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
         if jaw_pivot_object:
             bpy.data.objects.remove(jaw_pivot_object)
         if self.use_existing_weights:
-            bpy.ops.faceit.pair_armature()
+            bpy.ops.expresso.pair_armature()
             self.report({'INFO'}, 'Restored Existing Weights. You can regenerate weights by using the Bind operator')
 
         if self.use_existing_expressions:
-            # sh_action = bpy.data.actions.get('faceit_shape_action')
+            # sh_action = bpy.data.actions.get('expresso_shape_action')
             ow_action = bpy.data.actions.get('overwrite_shape_action')
-            expression_list = scene.faceit_expression_list
+            expression_list = scene.expresso_expression_list
 
             if not expression_list:
                 self.report({'WARNING'}, 'The Expression List could not be found.')
@@ -481,13 +481,13 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
                 self.report({'WARNING'}, 'Could not find expressions action {}'.format('overwrite_shape_action'))
 
             if self.corr_sk_restorable:
-                faceit_objects = futils.get_faceit_objects_list()
-                corrective_sk_action = bpy.data.actions.get('faceit_corrective_shape_keys', None)
-                for obj in faceit_objects:
+                expresso_objects = futils.get_expresso_objects_list()
+                corrective_sk_action = bpy.data.actions.get('expresso_corrective_shape_keys', None)
+                for obj in expresso_objects:
                     if sk_utils.has_shape_keys(obj):
                         has_corrective_shape_keys = False
                         for sk in obj.data.shape_keys.key_blocks:
-                            if sk.name.startswith('faceit_cc_'):
+                            if sk.name.startswith('expresso_cc_'):
                                 if self.use_existing_corr_sk:
                                     has_corrective_shape_keys = True
                                     sk.mute = False
@@ -500,12 +500,12 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
                                 if not obj.data.shape_keys.animation_data:
                                     obj.data.shape_keys.animation_data_create()
                                 obj.data.shape_keys.animation_data.action = corrective_sk_action
-                scene.faceit_corrective_sk_restorable = False
+                scene.expresso_corrective_sk_restorable = False
         else:
-            scene.faceit_expression_list.clear()
+            scene.expresso_expression_list.clear()
             # START ####################### VERSION 1 ONLY #######################
             if VERSION == 1:
-                bpy.ops.faceit.append_action_to_faceit_rig(
+                bpy.ops.expresso.append_action_to_expresso_rig(
                     'EXEC_DEFAULT', expressions_type='ARKIT', load_method='OVERWRITE')
             # END ######################### VERSION 1 ONLY #######################
 
@@ -520,36 +520,36 @@ class FACEIT_OT_GenerateRig(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_UnhideRig(bpy.types.Operator):
-    '''Unhide the Faceit Rig.'''
-    bl_idname = 'faceit.unhide_rig'
+class EXPRESSO_OT_UnhideRig(bpy.types.Operator):
+    '''Unhide the Expresso Rig.'''
+    bl_idname = 'expresso.unhide_rig'
     bl_label = 'Unhide Rig'
     bl_options = {'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
         if context.mode == 'OBJECT':
-            rig = futils.get_faceit_armature()
+            rig = futils.get_expresso_armature()
             if rig:
                 return futils.get_hide_obj(rig)
 
     def execute(self, context):
-        rig = futils.get_faceit_armature()
-        futils.get_faceit_collection(force_access=True)
+        rig = futils.get_expresso_armature()
+        futils.get_expresso_collection(force_access=True)
         futils.set_hide_obj(rig, False)
         return {'FINISHED'}
 
 
-class FACEIT_OT_ReconnectRig(bpy.types.Operator):
-    '''Reconnect the Faceit Rig without removing the shape keys.'''
-    bl_idname = 'faceit.reconnect_rig'
+class EXPRESSO_OT_ReconnectRig(bpy.types.Operator):
+    '''Reconnect the Expresso Rig without removing the shape keys.'''
+    bl_idname = 'expresso.reconnect_rig'
     bl_label = 'Reconnect Rig'
     bl_options = {'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
         if context.mode == 'OBJECT':
-            return futils.get_faceit_objects_list() and futils.get_faceit_armature()
+            return futils.get_expresso_objects_list() and futils.get_expresso_armature()
 
     def execute(self, context):
 
@@ -557,23 +557,23 @@ class FACEIT_OT_ReconnectRig(bpy.types.Operator):
         auto_key = scene.tool_settings.use_keyframe_insert_auto
         scene.tool_settings.use_keyframe_insert_auto = False
 
-        rig = futils.get_faceit_armature()
-        futils.get_faceit_collection(force_access=True)
+        rig = futils.get_expresso_armature()
+        futils.get_expresso_collection(force_access=True)
 
         # restore scene
         if rig:
             futils.set_hide_obj(rig, False)
         else:
-            self.report({'WARNING'}, 'The Faceit Armature can\'t be found.')
+            self.report({'WARNING'}, 'The Expresso Armature can\'t be found.')
 
-        faceit_objects = futils.get_faceit_objects_list()
+        expresso_objects = futils.get_expresso_objects_list()
 
         reset_pose(rig)
 
         _reconnected_rig = False
-        for obj in faceit_objects:
+        for obj in expresso_objects:
 
-            mod = get_faceit_armature_modifier(obj, force_original=False)
+            mod = get_expresso_armature_modifier(obj, force_original=False)
             if mod:
                 _reconnected_rig = True
                 mod.show_viewport = True
@@ -583,7 +583,7 @@ class FACEIT_OT_ReconnectRig(bpy.types.Operator):
                 # Check if the required vertex groups exist.
                 if len([True for grp in all_registered_objects_vgroups if grp in deform_groups]) > 10:
                     _reconnected_rig = True
-                    add_faceit_armature_modifier(obj, rig, force_original=False)
+                    add_expresso_armature_modifier(obj, rig, force_original=False)
                 else:
                     self.report(
                         {'WARNING'},
@@ -602,9 +602,9 @@ class FACEIT_OT_ReconnectRig(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
-    '''Generate the new rigify rig based on the faceit landmarks.'''
-    bl_idname = 'faceit.generate_new_rigify_rig'
+class EXPRESSO_OT_GenerateNewRigifyRig(bpy.types.Operator):
+    '''Generate the new rigify rig based on the expresso landmarks.'''
+    bl_idname = 'expresso.generate_new_rigify_rig'
     bl_label = 'Generate New Rigify Rig'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -641,15 +641,15 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
     color_style: EnumProperty(
         name="Colours",
         items=(
-            ('FACEIT', 'Faceit', 'The default Faceit bone colours. Can be changed in armature/bone settings.'),
+            ('EXPRESSO', 'Expresso', 'The default Expresso bone colours. Can be changed in armature/bone settings.'),
             ('RIGIFY', 'Rigify', 'The default Rigify bone colours. Can be changed in armature/bone settings.')
         ),
-        default='FACEIT'
+        default='EXPRESSO'
     )
 
     @ classmethod
     def poll(cls, context):
-        return context.scene.faceit_face_objects
+        return context.scene.expresso_face_objects
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -685,7 +685,7 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
         if not landmarks:
             self.report(
                 {'WARNING'},
-                'You need to setup the Faceit Landmarks for your character in order to fit the Control Rig to your character.')
+                'You need to setup the Expresso Landmarks for your character in order to fit the Control Rig to your character.')
             return {'CANCELLED'}
         if not addon_utils.check('rigify'):
             self.report({'WARNING'}, 'The Rigify addon is not enabled.')
@@ -701,9 +701,9 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
                 bpy.ops.object.mode_set(mode='OBJECT')
             except RuntimeError:
                 pass
-        bpy.ops.faceit.unmask_main('EXEC_DEFAULT')
-        faceit_collection = futils.get_faceit_collection()
-        rig = futils.get_faceit_armature(force_original=True)
+        bpy.ops.expresso.unmask_main('EXEC_DEFAULT')
+        expresso_collection = futils.get_expresso_collection()
+        rig = futils.get_expresso_armature(force_original=True)
         if rig:
             bpy.data.objects.remove(rig)
         # Generate an empty armature for the rigify meta rig
@@ -722,7 +722,7 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
         # check if the rigify addon is enabled
         scene.tool_settings.use_keyframe_insert_auto = auto_key
         # the BONE VERTEX MAPPING
-        if scene.faceit_asymmetric:
+        if scene.expresso_asymmetric:
             pass
             # vert_dict = rig_data.bone_dict_asymmetric
         else:
@@ -747,16 +747,16 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
         # Get the jaw pivot
         jaw_pivot_object = context.scene.objects.get('Jaw Pivot')
         if jaw_pivot_object:
-            context.scene.faceit_use_jaw_pivot = True
-            context.scene.faceit_jaw_pivot = jaw_pivot_object.location
+            context.scene.expresso_use_jaw_pivot = True
+            context.scene.expresso_jaw_pivot = jaw_pivot_object.location
         else:
-            context.scene.faceit_use_jaw_pivot = False
+            context.scene.expresso_use_jaw_pivot = False
         for i, bone_dict in vert_dict.items():
             target_point = None
             if i in (101, 111):
                 meta_rig.data.use_mirror_x = False
             else:
-                meta_rig.data.use_mirror_x = not scene.faceit_asymmetric
+                meta_rig.data.use_mirror_x = not scene.expresso_asymmetric
 
             # all vertices in the reference mesh
             if i < 100:
@@ -767,20 +767,20 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
 
             # eyes extra positions
             elif i == 101:
-                if context.scene.faceit_eye_pivot_placement == 'MANUAL':
-                    target_point = context.scene.faceit_eye_manual_pivot_point_L
+                if context.scene.expresso_eye_pivot_placement == 'MANUAL':
+                    target_point = context.scene.expresso_eye_manual_pivot_point_L
                 else:
-                    target_point = context.scene.faceit_eye_pivot_point_L
+                    target_point = context.scene.expresso_eye_pivot_point_L
             elif i == 111:
-                if context.scene.faceit_eye_pivot_placement == 'MANUAL':
-                    target_point = context.scene.faceit_eye_manual_pivot_point_R
+                if context.scene.expresso_eye_pivot_placement == 'MANUAL':
+                    target_point = context.scene.expresso_eye_manual_pivot_point_R
                 else:
-                    target_point = context.scene.faceit_eye_pivot_point_R
+                    target_point = context.scene.expresso_eye_pivot_point_R
             # jaw extra positions
             elif i == 102:
                 empty_locator = jaw_pivot_object
                 if empty_locator:
-                    target_point = context.scene.faceit_jaw_pivot
+                    target_point = context.scene.expresso_jaw_pivot
                 else:
                     jaw_L = edit_bones.get('jaw.L').head
                     jaw_R = edit_bones.get('jaw.R').head
@@ -814,15 +814,15 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
                 if empty_locator:
                     target_point = empty_locator.location
                 else:
-                    upper_teeth_obj = vg_utils.get_objects_with_vertex_group("faceit_upper_teeth")
+                    upper_teeth_obj = vg_utils.get_objects_with_vertex_group("expresso_upper_teeth")
                     if upper_teeth_obj:
                         vertex_locations = rig_utils.get_evaluated_vertex_group_positions(
-                            upper_teeth_obj, "faceit_upper_teeth")
+                            upper_teeth_obj, "expresso_upper_teeth")
                         if vertex_locations:
                             # target_point = max(vertex_locations, key=attrgetter('y'))
                             bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'y')
                             target_point = rig_utils.get_median_pos(bounds)
-                            if scene.faceit_asymmetric:
+                            if scene.expresso_asymmetric:
                                 bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'x')
                                 target_point.x = rig_utils.get_median_pos(bounds).x
                             else:
@@ -841,14 +841,14 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
                 if empty_locator:
                     target_point = empty_locator.location
                 else:
-                    lower_teeth_obj = vg_utils.get_objects_with_vertex_group("faceit_lower_teeth")
+                    lower_teeth_obj = vg_utils.get_objects_with_vertex_group("expresso_lower_teeth")
                     if lower_teeth_obj:
                         vertex_locations = rig_utils.get_evaluated_vertex_group_positions(
-                            lower_teeth_obj, "faceit_lower_teeth")
+                            lower_teeth_obj, "expresso_lower_teeth")
                         if vertex_locations:
                             bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'y')
                             target_point = rig_utils.get_median_pos(bounds)
-                            if scene.faceit_asymmetric:
+                            if scene.expresso_asymmetric:
                                 bounds = rig_utils.get_bounds_from_locations(vertex_locations, 'x')
                                 target_point.x = rig_utils.get_median_pos(bounds).x
                             else:
@@ -919,10 +919,10 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
             return curve_points
 
         # Distribute the tongue bones along the tongue vertex group
-        tongue_obj = vg_utils.get_objects_with_vertex_group("faceit_tongue")
+        tongue_obj = vg_utils.get_objects_with_vertex_group("expresso_tongue")
         if tongue_obj:
             tongue_bones = [edit_bones[b] for b in vert_dict[108]["all"]]
-            vertex_locations = rig_utils.get_evaluated_vertex_group_positions(tongue_obj, "faceit_tongue")
+            vertex_locations = rig_utils.get_evaluated_vertex_group_positions(tongue_obj, "expresso_tongue")
             if vertex_locations:
                 # Sort vertices based on Y axis
                 vertex_locations.sort(key=lambda v: v[1])
@@ -1155,21 +1155,21 @@ class FACEIT_OT_GenerateNewRigifyRig(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='OBJECT')
         # Generate the rigify rig.
         if not self.edit_meta_rig:
-            bpy.ops.faceit.generate_rig_from_meta_rig('EXEC_DEFAULT', rigify_type=self.rigify_type)
+            bpy.ops.expresso.generate_rig_from_meta_rig('EXEC_DEFAULT', rigify_type=self.rigify_type)
             bpy.data.objects.remove(meta_rig)
         else:
-            if meta_rig.name not in faceit_collection.objects:
-                faceit_collection.objects.link(meta_rig)
-            meta_rig.name = 'FaceitMetaRig'
+            if meta_rig.name not in expresso_collection.objects:
+                expresso_collection.objects.link(meta_rig)
+            meta_rig.name = 'ExpressoMetaRig'
 
         scene.tool_settings.use_keyframe_insert_auto = auto_key
         scene.tool_settings.use_snap = False
         return {'FINISHED'}
 
 
-class FACEIT_OT_GenerateRigFromMetaRig(bpy.types.Operator):
+class EXPRESSO_OT_GenerateRigFromMetaRig(bpy.types.Operator):
     '''Generate the rigify rig based on the active meta rig.'''
-    bl_idname = 'faceit.generate_rig_from_meta_rig'
+    bl_idname = 'expresso.generate_rig_from_meta_rig'
     bl_label = 'Generate Rig From Meta Rig'
     bl_options = {'UNDO'}
 
@@ -1188,14 +1188,14 @@ class FACEIT_OT_GenerateRigFromMetaRig(bpy.types.Operator):
 
     def execute(self, context):
         bone_collections = ('Face', 'Face(Primary)', 'Face(Secondary)')
-        faceit_collection = futils.get_faceit_collection()
+        expresso_collection = futils.get_expresso_collection()
         meta_rig = context.object
         bpy.ops.pose.rigify_generate()
         rig = context.object
         rig.show_in_front = True
-        faceit_collection.objects.link(rig)
-        rig.name = 'FaceitRig'
-        rig['faceit_rig_id'] = get_random_rig_id()
+        expresso_collection.objects.link(rig)
+        rig.name = 'ExpressoRig'
+        rig['expresso_rig_id'] = get_random_rig_id()
         # Move the eye target bones further away from the face
         bpy.ops.object.mode_set(mode='EDIT')
         edit_bones = rig.data.edit_bones
@@ -1220,7 +1220,7 @@ class FACEIT_OT_GenerateRigFromMetaRig(bpy.types.Operator):
                 layers[29] = True
                 def_face_bone.layers = layers
         bpy.ops.object.mode_set(mode='OBJECT')
-        context.scene.faceit_armature = rig
+        context.scene.expresso_armature = rig
         rig.pose.use_mirror_x = True
         rig.data.display_type = 'BBONE'
         # for bcoll_name in bone_collections:

@@ -4,11 +4,11 @@ from math import pi as PI
 from bpy.app.handlers import persistent
 
 from ..properties.mocap_scene_properties import Mocap_Engine_Properties
-from ..core.faceit_data import get_engine_settings, get_shape_data_for_mocap_engine
+from ..core.expresso_data import get_engine_settings, get_shape_data_for_mocap_engine
 from .mocap_base import MocapImporterBase
 from .mocap_importers import LiveAnimator
 from .osc_receiver import QueueManager, Receiver, osc_queue
-from ..core.faceit_utils import get_faceit_objects_list, restore_scene_state, save_scene_state, ui_refresh_all, get_faceit_control_armature, set_active_object, get_object_mode_from_context_mode, clear_active_object, set_hide_obj
+from ..core.expresso_utils import get_expresso_objects_list, restore_scene_state, save_scene_state, ui_refresh_all, get_expresso_control_armature, set_active_object, get_object_mode_from_context_mode, clear_active_object, set_hide_obj
 from ..core.pose_utils import get_edit_bone_roll, reset_pb, reset_pose, restore_saved_pose, save_pose
 from ..ctrl_rig.control_rig_utils import get_crig_objects_list, is_control_rig_connected
 
@@ -43,9 +43,9 @@ def get_head_base_transform():
     return head_base_rotation, head_base_location
 
 
-class FACEIT_OT_ReceiverStart(bpy.types.Operator):
+class EXPRESSO_OT_ReceiverStart(bpy.types.Operator):
     '''Start receiving animation data from the given connection. Enable the recorder in order to import recorded data'''
-    bl_idname = "faceit.receiver_start"
+    bl_idname = "expresso.receiver_start"
     bl_label = "Start Receiver"
     bl_options = {'INTERNAL'}
 
@@ -55,7 +55,7 @@ class FACEIT_OT_ReceiverStart(bpy.types.Operator):
         state_dict = save_scene_state(context)
         live_animator.clear_animation_targets()
         scene = context.scene
-        engine_settings: Mocap_Engine_Properties = get_engine_settings(scene.faceit_live_source)
+        engine_settings: Mocap_Engine_Properties = get_engine_settings(scene.expresso_live_source)
         animate_loc = engine_settings.animate_head_location
         animate_rot = engine_settings.animate_head_rotation
         animate_eye_bones = engine_settings.animate_eye_rotation_bones
@@ -89,21 +89,21 @@ class FACEIT_OT_ReceiverStart(bpy.types.Operator):
                 smooth_window=engine_settings.smooth_window_face,
             )
             live_animator.set_face_regions_dict(engine_settings.region_filter.get_active_regions())
-            source_shape_ref = list(get_shape_data_for_mocap_engine(scene.faceit_live_source))
+            source_shape_ref = list(get_shape_data_for_mocap_engine(scene.expresso_live_source))
             live_animator.set_source_shape_reference(source_shape_ref)
             # Get objects and target shapes
-            ctrl_rig = scene.faceit_control_armature
+            ctrl_rig = scene.expresso_control_armature
             reconnect_ctrl_rig = False
             if ctrl_rig:
                 if is_control_rig_connected(ctrl_rig):
-                    if scene.faceit_auto_disconnect_ctrl_rig:
+                    if scene.expresso_auto_disconnect_ctrl_rig:
                         objects = get_crig_objects_list(ctrl_rig)
-                        target_shapes = ctrl_rig.faceit_crig_targets
-                        bpy.ops.faceit.remove_control_drivers('EXEC_DEFAULT')
+                        target_shapes = ctrl_rig.expresso_crig_targets
+                        bpy.ops.expresso.remove_control_drivers('EXEC_DEFAULT')
                         reconnect_ctrl_rig = True
             if reconnect_ctrl_rig is False:
-                objects = get_faceit_objects_list()
-                target_shapes = scene.faceit_arkit_retarget_shapes
+                objects = get_expresso_objects_list()
+                target_shapes = scene.expresso_arkit_retarget_shapes
                 if not objects:
                     self.report(
                         {'WARNING'},
@@ -122,8 +122,8 @@ class FACEIT_OT_ReceiverStart(bpy.types.Operator):
         # Head animation properties
         if animate_loc or animate_rot:
             head_loc_multiplier = engine_settings.head_location_multiplier
-            head_obj = scene.faceit_head_target_object
-            head_bone_name = scene.faceit_head_sub_target
+            head_obj = scene.expresso_head_target_object
+            head_bone_name = scene.expresso_head_sub_target
             saved_pose = None
             if head_obj:
                 if head_obj.type == 'ARMATURE':
@@ -157,10 +157,10 @@ class FACEIT_OT_ReceiverStart(bpy.types.Operator):
                 restore_saved_pose(head_obj, saved_pose)
         if animate_eye_bones:
             saved_pose = None
-            eye_rig = context.scene.faceit_eye_target_rig
+            eye_rig = context.scene.expresso_eye_target_rig
             if eye_rig is not None:
-                eye_L_bone_name = context.scene.faceit_eye_L_sub_target
-                eye_R_bone_name = context.scene.faceit_eye_R_sub_target
+                eye_L_bone_name = context.scene.expresso_eye_L_sub_target
+                eye_R_bone_name = context.scene.expresso_eye_R_sub_target
                 set_hide_obj(eye_rig, False)
                 saved_pose = save_pose(eye_rig)
                 eye_L_bone = eye_rig.pose.bones.get(eye_L_bone_name)
@@ -181,12 +181,12 @@ class FACEIT_OT_ReceiverStart(bpy.types.Operator):
         # if bpy.context.screen.is_animation_playing:
         #     bpy.ops.screen.animation_cancel()
         try:
-            receiver.start(scene.faceit_live_source, engine_settings.address, engine_settings.port)
+            receiver.start(scene.expresso_live_source, engine_settings.address, engine_settings.port)
         except OSError as e:
             print('Socket error:', e.strerror)
             self.report({'ERROR'}, 'This port is already in use!')
             return self.cancel(context)
-        scene.faceit_osc_receiver_enabled = True
+        scene.expresso_osc_receiver_enabled = True
         restore_scene_state(context, state_dict)
         return {'FINISHED'}
 
@@ -204,7 +204,7 @@ def stop_receiver():
         bpy.app.timers.unregister(process_osc_queue)
     except ValueError:
         pass
-    bpy.context.scene.faceit_osc_receiver_enabled = False
+    bpy.context.scene.expresso_osc_receiver_enabled = False
 
 
 def cancel_recording():
@@ -220,9 +220,9 @@ def clear_data():
     live_animator.clear_animation_data()
 
 
-class FACEIT_OT_ReceiverStop(bpy.types.Operator):
+class EXPRESSO_OT_ReceiverStop(bpy.types.Operator):
     '''Stop the active live session. You can import recorded animation data after stoping the session'''
-    bl_idname = "faceit.receiver_stop"
+    bl_idname = "expresso.receiver_stop"
     bl_label = "Stop Receiver"
     bl_description = "Stop receiving data from OSC stream."
     bl_options = {'INTERNAL'}
@@ -231,19 +231,19 @@ class FACEIT_OT_ReceiverStop(bpy.types.Operator):
         global reconnect_ctrl_rig
         if not osc_queue:
             self.report({'WARNING'}, "No recorded data found.")
-            bpy.ops.faceit.reset_expression_values('EXEC_DEFAULT')
-            bpy.ops.faceit.reset_head_pose('EXEC_DEFAULT')
+            bpy.ops.expresso.reset_expression_values('EXEC_DEFAULT')
+            bpy.ops.expresso.reset_head_pose('EXEC_DEFAULT')
         stop_receiver()
-        ctrl_rig = context.scene.faceit_control_armature
+        ctrl_rig = context.scene.expresso_control_armature
         if ctrl_rig:
-            if context.scene.faceit_auto_disconnect_ctrl_rig and reconnect_ctrl_rig:
-                bpy.ops.faceit.setup_control_drivers('EXEC_DEFAULT')
+            if context.scene.expresso_auto_disconnect_ctrl_rig and reconnect_ctrl_rig:
+                bpy.ops.expresso.setup_control_drivers('EXEC_DEFAULT')
         return {'FINISHED'}
 
 
-class FACEIT_OT_ImportLiveMocap(MocapImporterBase, bpy.types.Operator):
+class EXPRESSO_OT_ImportLiveMocap(MocapImporterBase, bpy.types.Operator):
     '''Import the recorded data into a Blender Action in order to permanently store it.'''
-    bl_idname = "faceit.import_live_mocap"
+    bl_idname = "expresso.import_live_mocap"
     bl_label = "Import OSC Recording"
     bl_description = "Import the recorded data to an animation."
 
@@ -252,8 +252,8 @@ class FACEIT_OT_ImportLiveMocap(MocapImporterBase, bpy.types.Operator):
         return super().poll(context)
 
     def _get_engine_specific_settings(self, context):
-        self.engine_name = context.scene.faceit_live_source
-        self.engine_settings: Mocap_Engine_Properties = context.scene.faceit_live_mocap_settings.get(self.engine_name)
+        self.engine_name = context.scene.expresso_live_source
+        self.engine_settings: Mocap_Engine_Properties = context.scene.expresso_live_mocap_settings.get(self.engine_name)
         self.animate_shapes = live_animator.animate_shapes
         self.animate_head_rotation = live_animator.animate_head_rotation
         self.animate_head_location = live_animator.animate_head_location
@@ -280,13 +280,13 @@ class FACEIT_OT_ImportLiveMocap(MocapImporterBase, bpy.types.Operator):
             self.report({'WARNING'}, "No recorded data found.")
             return {'CANCELLED'}
         self.set_active_regions(self.engine_settings.region_filter.get_active_regions())
-        if get_faceit_control_armature():
+        if get_expresso_control_armature():
             if reconnect_ctrl_rig:
                 self.bake_to_control_rig = True
             self.can_bake_control_rig = True
         else:
-            faceit_objects = get_faceit_objects_list()
-            if not faceit_objects:
+            expresso_objects = get_expresso_objects_list()
+            if not expresso_objects:
                 self.report({'WARNING'}, "You need to register the character meshes in the setup tab.")
             self.can_bake_control_rig = False
         wm = context.window_manager
@@ -300,26 +300,26 @@ class FACEIT_OT_ImportLiveMocap(MocapImporterBase, bpy.types.Operator):
         return osc_queue
 
 
-class FACEIT_OT_ClearLiveData(bpy.types.Operator):
+class EXPRESSO_OT_ClearLiveData(bpy.types.Operator):
     '''Clear the recorded data before starting a new recording (Destructive)'''
-    bl_idname = "faceit.clear_live_data"
+    bl_idname = "expresso.clear_live_data"
     bl_label = "Clear Recorded Data"
     bl_options = {'INTERNAL'}
 
     def execute(self, context):
         clear_data()
-        bpy.ops.faceit.reset_expression_values('EXEC_DEFAULT')
-        bpy.ops.faceit.reset_head_pose('EXEC_DEFAULT')
+        bpy.ops.expresso.reset_expression_values('EXEC_DEFAULT')
+        bpy.ops.expresso.reset_head_pose('EXEC_DEFAULT')
         return {'FINISHED'}
 
 
-class FACEIT_OT_ReceiverCancel(bpy.types.Operator):
-    bl_idname = "faceit.receiver_cancel"
+class EXPRESSO_OT_ReceiverCancel(bpy.types.Operator):
+    bl_idname = "expresso.receiver_cancel"
     bl_label = "Cancel Receiver"
     bl_options = {'INTERNAL'}
 
     def execute(self, context):
-        if bpy.context.scene.faceit_osc_receiver_enabled:
+        if bpy.context.scene.expresso_osc_receiver_enabled:
             self.report({'WARNING'}, 'Cancelled Receiver without writing keyframes.')
         stop_receiver()
         cancel_recording()
@@ -331,7 +331,7 @@ class FACEIT_OT_ReceiverCancel(bpy.types.Operator):
 @persistent
 def close_osc_on_scene_save(self, context):
     # abort live connection, don't write data.
-    bpy.ops.faceit.receiver_cancel()
+    bpy.ops.expresso.receiver_cancel()
 
 
 def register():

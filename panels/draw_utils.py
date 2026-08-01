@@ -13,7 +13,7 @@ from .. import __package__ as base_package
 def draw_web_link(layout, link, text_ui='', show_always=False):
     '''Draws a Web @link in the given @layout. Optionally with plain @text_ui'''
     if bpy.context.preferences.addons[base_package].preferences.web_links or show_always:
-        web = layout.operator('faceit.open_web', text=text_ui, icon='QUESTION')
+        web = layout.operator('expresso.open_web', text=text_ui, icon='QUESTION')
         web.link = link
 
 
@@ -67,7 +67,7 @@ def get_slot_items(self, context):
     """
     Get the items for the slot selector.
     """
-    action = context.scene.faceit_mocap_action
+    action = context.scene.expresso_mocap_action
     if not action:
         return []
     list = []
@@ -77,8 +77,8 @@ def get_slot_items(self, context):
     return list
 
 
-class FACEIT_OT_SelectSlotMenu(bpy.types.Operator):
-    bl_idname = "faceit.select_slot_menu"
+class EXPRESSO_OT_SelectSlotMenu(bpy.types.Operator):
+    bl_idname = "expresso.select_slot_menu"
     bl_label = "Select Slot"
     bl_description = "Select a slot for the action"
     bl_options = {'REGISTER', 'UNDO'}
@@ -136,11 +136,11 @@ class FACEIT_OT_SelectSlotMenu(bpy.types.Operator):
     )
 
     def execute(self, context):
-        action = context.scene.faceit_mocap_action
+        action = context.scene.expresso_mocap_action
         if not action:
             return {'CANCELLED'}
-        context.scene.faceit_mocap_slot_handle = int(self.slot_handle)
-        bpy.ops.faceit.populate_action(
+        context.scene.expresso_mocap_slot_handle = int(self.slot_handle)
+        bpy.ops.expresso.populate_action(
             action_name=action.name,
             set_mocap_action=False,
             activate_slot=True,
@@ -163,28 +163,28 @@ def draw_shapes_action_layout(layout, context, split=True):
     row = col.row(align=True)
     row.template_ID(
         context.scene,
-        "faceit_mocap_action",
-        new='faceit.new_action',
-        unlink='faceit.unlink_shapes_action'
+        "expresso_mocap_action",
+        new='expresso.new_action',
+        unlink='expresso.unlink_shapes_action'
     )
     if bpy.app.version >= (4, 4, 0):
-        action = context.scene.faceit_mocap_action
+        action = context.scene.expresso_mocap_action
         if not action:
             return
         row = col.row(align=True)
-        slot_handle = bpy.context.scene.faceit_mocap_slot_handle
+        slot_handle = bpy.context.scene.expresso_mocap_slot_handle
         slot = find_slot_by_handle(action, slot_handle)
         # if slot:
         #     text = slot.name_display
         # else:
         #     text = ""
-        row.operator_menu_enum("faceit.select_slot_menu", property="slot_handle", text="", icon='ACTION_SLOT',)
+        row.operator_menu_enum("expresso.select_slot_menu", property="slot_handle", text="", icon='ACTION_SLOT',)
         if slot:
             row.prop(slot, "name_display", text="")
-            row.operator("faceit.new_mocap_action_slot", text="", icon='DUPLICATE')
-            row.operator("faceit.unlink_active_shapes_slot", text="", icon='X')
+            row.operator("expresso.new_mocap_action_slot", text="", icon='DUPLICATE')
+            row.operator("expresso.unlink_active_shapes_slot", text="", icon='X')
         else:
-            row.operator("faceit.new_mocap_action_slot", text="New", icon='ADD')
+            row.operator("expresso.new_mocap_action_slot", text="New", icon='ADD')
 
 
 def draw_head_targets_layout(layout: UILayout, scene=None, show_head_action=True):
@@ -194,15 +194,15 @@ def draw_head_targets_layout(layout: UILayout, scene=None, show_head_action=True
     split_layout = layout.use_property_split
     layout.use_property_split = True
     layout.use_property_decorate = False
-    head_obj = scene.faceit_head_target_object
+    head_obj = scene.expresso_head_target_object
     row = layout.row(align=True)
-    row.prop(scene, "faceit_head_target_object")
+    row.prop(scene, "expresso_head_target_object")
     if head_obj:
         row = layout.row(align=True)
         if head_obj.type == "ARMATURE":
             row.prop_search(
                 scene,
-                "faceit_head_sub_target",
+                "expresso_head_sub_target",
                 head_obj.data,
                 "bones"
             )
@@ -211,7 +211,7 @@ def draw_head_targets_layout(layout: UILayout, scene=None, show_head_action=True
     layout.use_property_split = split_layout
 
 
-def draw_action_and_slot_selector_for_id(layout: UILayout, animated_id: ID, new="action.new", unlink="faceit.unlink_action"):
+def draw_action_and_slot_selector_for_id(layout: UILayout, animated_id: ID, new="action.new", unlink="expresso.unlink_action"):
     """
     Draw the action and slot selector for an ID, using the given layout.
 
@@ -249,7 +249,7 @@ def draw_head_action_layout(layout, head_obj):
     sub.alignment = 'RIGHT'
     sub.label(text="Head Action")
     col = sub.column(align=True)
-    draw_action_and_slot_selector_for_id(col, head_obj, new='faceit.new_head_action')
+    draw_action_and_slot_selector_for_id(col, head_obj, new='expresso.new_head_action')
 
 
 def draw_eye_targets_layout(layout: UILayout, context, show_eye_action=True):
@@ -258,20 +258,20 @@ def draw_eye_targets_layout(layout: UILayout, context, show_eye_action=True):
     layout.use_property_split = True
     layout.use_property_decorate = False
     row = layout.row(align=True)
-    row.prop(scene, "faceit_eye_target_rig")
-    eye_rig = scene.faceit_eye_target_rig
+    row.prop(scene, "expresso_eye_target_rig")
+    eye_rig = scene.expresso_eye_target_rig
     if eye_rig:
         row = layout.row(align=True)
         row.prop_search(
             scene,
-            "faceit_eye_L_sub_target",
+            "expresso_eye_L_sub_target",
             eye_rig.data,
             "bones"
         )
         row = layout.row(align=True)
         row.prop_search(
             scene,
-            "faceit_eye_R_sub_target",
+            "expresso_eye_R_sub_target",
             eye_rig.data,
             "bones"
         )
@@ -286,7 +286,7 @@ def draw_eye_action_layout(layout: UILayout, eye_rig):
     sub.alignment = 'RIGHT'
     sub.label(text="Eyes Action")
     col = sub.column(align=True)
-    draw_action_and_slot_selector_for_id(col, eye_rig, new='faceit.new_eye_action')
+    draw_action_and_slot_selector_for_id(col, eye_rig, new='expresso.new_eye_action')
 
 
 def draw_ctrl_rig_action_layout(layout: UILayout, ctrl_rig, use_split=True):
@@ -298,5 +298,5 @@ def draw_ctrl_rig_action_layout(layout: UILayout, ctrl_rig, use_split=True):
         col = sub.column(align=True)
     else:
         col = row.column(align=True)
-    draw_action_and_slot_selector_for_id(col, ctrl_rig, new='faceit.new_ctrl_rig_action')
-    # sub.template_ID(ctrl_rig.animation_data, "action", new='faceit.new_ctrl_rig_action')
+    draw_action_and_slot_selector_for_id(col, ctrl_rig, new='expresso.new_ctrl_rig_action')
+    # sub.template_ID(ctrl_rig.animation_data, "action", new='expresso.new_ctrl_rig_action')

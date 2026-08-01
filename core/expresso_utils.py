@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Object
 from mathutils import Vector
-from .faceit_data import FACEIT_BONES
+from .expresso_data import EXPRESSO_BONES
 
 
 def get_action_frame_range(action) -> Vector:
@@ -95,11 +95,11 @@ def duplicate_obj(obj, link=None):
     return new_obj
 
 
-def get_main_faceit_object(clear_invalid_objects=True):
+def get_main_expresso_object(clear_invalid_objects=True):
     '''Returns the main object (head or face)'''
-    faceit_objects = get_faceit_objects_list(clear_invalid_objects=clear_invalid_objects)
-    for obj in faceit_objects:
-        if "faceit_main" in obj.vertex_groups:
+    expresso_objects = get_expresso_objects_list(clear_invalid_objects=clear_invalid_objects)
+    for obj in expresso_objects:
+        if "expresso_main" in obj.vertex_groups:
             return obj
     return None
 
@@ -111,27 +111,27 @@ def remove_item_from_collection_prop(collection, item):
         collection.remove(item)
 
 
-def get_faceit_objects_list(clear_invalid_objects=True):
-    '''Returns the registered faceit objects in a list.
+def get_expresso_objects_list(clear_invalid_objects=True):
+    '''Returns the registered expresso objects in a list.
     Removes items that can't be found in the scene from the propertycollection
     @clear_invalid_objects: when True, this will remove unfound items from the collection
     '''
 
-    faceit_objects_property_collection = bpy.context.scene.faceit_face_objects
+    expresso_objects_property_collection = bpy.context.scene.expresso_face_objects
 
-    faceit_objects = []
+    expresso_objects = []
 
-    for obj_item in faceit_objects_property_collection:
+    for obj_item in expresso_objects_property_collection:
         # try to find by obj_pointer
         obj = get_object(obj_item.name)
         if obj is not None:
-            faceit_objects.append(obj)
+            expresso_objects.append(obj)
             continue
         elif clear_invalid_objects:
-            print('removing item {} from faceit objects, because it does not exist in scene.'.format(obj_item.name))
-            remove_item_from_collection_prop(faceit_objects_property_collection, obj_item)
+            print('removing item {} from expresso objects, because it does not exist in scene.'.format(obj_item.name))
+            remove_item_from_collection_prop(expresso_objects_property_collection, obj_item)
 
-    return faceit_objects
+    return expresso_objects
 
 
 def get_any_view_locked():
@@ -170,24 +170,24 @@ def get_layer_collection(collection_name):
     return find_collection_in_children(master_collection, collection_name)
 
 
-def get_faceit_collection(force_access=True, create=True):
-    '''Returns the faceit collection, if it does not exist, it creates it'''
-    collection_name = 'Faceit_Collection'
-    faceit_collection = bpy.data.collections.get(collection_name)
-    if faceit_collection is None:
+def get_expresso_collection(force_access=True, create=True):
+    '''Returns the expresso collection, if it does not exist, it creates it'''
+    collection_name = 'Expresso_Collection'
+    expresso_collection = bpy.data.collections.get(collection_name)
+    if expresso_collection is None:
         if create:
-            faceit_collection = bpy.data.collections.new(name=collection_name)
+            expresso_collection = bpy.data.collections.new(name=collection_name)
         else:
             return None
-    faceit_layer_collection = get_layer_collection(collection_name)
-    if faceit_layer_collection is None:
-        bpy.context.scene.collection.children.link(faceit_collection)
-        faceit_layer_collection = get_layer_collection(collection_name)
+    expresso_layer_collection = get_layer_collection(collection_name)
+    if expresso_layer_collection is None:
+        bpy.context.scene.collection.children.link(expresso_collection)
+        expresso_layer_collection = get_layer_collection(collection_name)
     if force_access:
-        faceit_collection.hide_viewport = False
-        faceit_layer_collection.exclude = False
-        faceit_layer_collection.hide_viewport = False
-    return faceit_collection
+        expresso_collection.hide_viewport = False
+        expresso_layer_collection.exclude = False
+        expresso_layer_collection.hide_viewport = False
+    return expresso_collection
 
 
 def is_collection_visible(context, collection):
@@ -258,27 +258,27 @@ def get_hidden_states(objects_to_hide):
     return objects_hidden
 
 
-def get_faceit_control_armatures():
+def get_expresso_control_armatures():
     ctrl_rigs = []
     for obj in bpy.context.scene.objects:
         if 'ctrl_rig_id' in obj:
             ctrl_rigs.append(obj)
             continue
         else:
-            if 'FaceitControlRig' in obj.name:
+            if 'ExpressoControlRig' in obj.name:
                 ctrl_rigs.append(obj)
     return ctrl_rigs
 
 
-def get_faceit_control_armature() -> Object:
-    return bpy.context.scene.faceit_control_armature
+def get_expresso_control_armature() -> Object:
+    return bpy.context.scene.expresso_control_armature
 
 
-def get_faceit_armature(force_original=False) -> Object:
-    '''Get the faceit armature object.'''
-    rig = bpy.context.scene.faceit_armature
+def get_expresso_armature(force_original=False) -> Object:
+    '''Get the expresso armature object.'''
+    rig = bpy.context.scene.expresso_armature
     if rig is not None and force_original is True:
-        if not is_faceit_original_armature(rig):
+        if not is_expresso_original_armature(rig):
             return None
     return rig
 
@@ -287,14 +287,14 @@ def get_rig_type(rig):
     """
     Get the type of this rig.
         @rig: the rig object
-        Returns: 'FACEIT', 'RIGIFY', 'RIGIFY_NEW' or None
+        Returns: 'EXPRESSO', 'RIGIFY', 'RIGIFY_NEW' or None
     """
     if rig is None:
-        rig = get_faceit_armature()
+        rig = get_expresso_armature()
         if rig is None:
             return None
-    # if is_faceit_original_armature(rig):
-    #     return 'FACEIT'
+    # if is_expresso_original_armature(rig):
+    #     return 'EXPRESSO'
     if 'ORG-face' in rig.data.bones or 'DEF-face' in rig.data.bones:
         if any(b.name in ('lip_end.L.001', 'eye_common') for b in rig.data.bones):
             return 'RIGIFY_NEW'
@@ -304,11 +304,11 @@ def get_rig_type(rig):
         return 'ANY'
 
 
-def is_faceit_original_armature(rig):
-    '''Check if the Faceit Armature is created with Faceit.'''
-    if rig.name == 'FaceitRig':
+def is_expresso_original_armature(rig):
+    '''Check if the Expresso Armature is created with Expresso.'''
+    if rig.name == 'ExpressoRig':
         return True
-    if all([b.name in FACEIT_BONES for b in rig.data.bones]) or rig.get('faceit_rig_id'):
+    if all([b.name in EXPRESSO_BONES for b in rig.data.bones]) or rig.get('expresso_rig_id'):
         return True
     return False
 
@@ -316,7 +316,7 @@ def is_faceit_original_armature(rig):
 def using_rigify_armature():
     '''Check if the user wants to use another Rigify face rig for generating the expressions.'''
     scene = bpy.context.scene
-    rig = scene.faceit_armature
+    rig = scene.expresso_armature
     if rig:
         if get_rig_type(rig) in ('RIGIFY', 'RIGIFY_NEW'):
             return True
@@ -325,7 +325,7 @@ def using_rigify_armature():
 
 def is_armature_bound_to_registered_objects(rig):
     '''Check whether the rig is bound to the registered objects. -> does an armature modifier exist?'''
-    for obj in get_faceit_objects_list():
+    for obj in get_expresso_objects_list():
         if rig.name in [mod.object.name for mod in obj.modifiers if mod.type == 'ARMATURE' and mod.object is not None]:
             return True
 

@@ -9,14 +9,14 @@ from .. import __package__ as base_package
 from ..panels.draw_utils import draw_text_block
 
 
-from .faceit_data import get_face_region_items
+from .expresso_data import get_face_region_items
 from .retarget_list_utils import (are_target_shapes_valid, get_index_of_collection_item,
                                   get_index_of_parent_collection_item, get_target_shape_keys, is_target_shape_double,
                                   set_base_regions_from_dict, target_shape_key_in_registered_objects,
                                   get_invalid_target_shapes)
 from .shape_key_utils import (get_shape_key_names_from_objects,
-                              get_shape_keys_from_faceit_objects_enum, set_slider_max)
-from ..core.faceit_utils import get_faceit_objects_list
+                              get_shape_keys_from_expresso_objects_enum, set_slider_max)
+from ..core.expresso_utils import get_expresso_objects_list
 
 
 class TargetShapes(PropertyGroup):
@@ -31,7 +31,7 @@ def update_shape_key_ranges_based_on_amplify(self, context):
     '''Update the shape key ranges based on the amplify value'''
     if not bpy.context.preferences.addons[base_package].preferences.dynamic_shape_key_ranges:
         return
-    target_sk = get_target_shape_keys(self, objects=get_faceit_objects_list())
+    target_sk = get_target_shape_keys(self, objects=get_expresso_objects_list())
     id_data = self.id_data
     idx = get_index_of_collection_item(self)
     setattr(id_data, self.path_from_id().split('[')[-2] + "_index", idx)
@@ -70,7 +70,7 @@ class RetargetShapesBase:
     )
     use_animation: BoolProperty(
         name='Use Animation',
-        description='If this is False, the specified expression won\'t be animated by Faceit operators.',
+        description='If this is False, the specified expression won\'t be animated by Expresso operators.',
         default=True,
         options=set()
     )
@@ -161,7 +161,7 @@ class ResetRegionsOperatorBase:
 
     @staticmethod
     def get_face_regions(context):
-        return context.scene.faceit_face_regions
+        return context.scene.expresso_face_regions
 
     @classmethod
     def poll(cls, context):
@@ -207,7 +207,7 @@ class DrawRegionsFilterBase:
 
     @staticmethod
     def get_face_regions(context):
-        return context.scene.faceit_face_regions
+        return context.scene.expresso_face_regions
 
     @classmethod
     def poll(cls, context):
@@ -304,7 +304,7 @@ class RetargetShapesListBase():
 
     @staticmethod
     def get_face_regions(context):
-        return context.scene.faceit_face_regions
+        return context.scene.expresso_face_regions
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
 
@@ -472,7 +472,7 @@ class DrawTargetShapesListBase(RetargetingBase):
     bl_idname = ''
 
     target_shape_edit: EnumProperty(
-        items=get_shape_keys_from_faceit_objects_enum, name='Change target Shape',
+        items=get_shape_keys_from_expresso_objects_enum, name='Change target Shape',
         description='Choose a Shape Key as target for retargeting this shape. \nThe shapes listed are from the Main Object registered in Setup panel.\n'
     )
 
@@ -546,7 +546,7 @@ class EditTargetShapeBase(RetargetingBase):
 
     # Has to be named type for invoke_search_popup to work... wtf
     new_target_shape: EnumProperty(
-        items=get_shape_keys_from_faceit_objects_enum, name='Change target Shape',
+        items=get_shape_keys_from_expresso_objects_enum, name='Change target Shape',
         description='Choose a Shape Key as target for retargeting this shape. \nThe shapes listed are from the Main Object registered in Setup panel.\n'
     )
 

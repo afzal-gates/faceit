@@ -4,16 +4,16 @@ from bpy.props import BoolProperty, EnumProperty, StringProperty
 
 from ..core.modifier_utils import apply_modifier
 
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core import fc_dr_utils
 from ..core import retarget_list_utils as rutils
 from ..core import shape_key_utils as sk_utils
 
 
-class FACEIT_OT_ClearShapeKeyAction(bpy.types.Operator):
+class EXPRESSO_OT_ClearShapeKeyAction(bpy.types.Operator):
     '''Apply Shape Keys to the active mesh'''
-    bl_idname = 'faceit.clear_shape_key_action'
+    bl_idname = 'expresso.clear_shape_key_action'
     bl_label = 'Clear Shape Key Action'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -26,13 +26,13 @@ class FACEIT_OT_ClearShapeKeyAction(bpy.types.Operator):
     def execute(self, context):
         objects = [context.scene.objects.get(self.obj_name)]
         if not objects:
-            objects = futils.get_faceit_objects_list()
+            objects = futils.get_expresso_objects_list()
         for obj in objects:
             shape_keys = obj.data.shape_keys
             if shape_keys:
                 if shape_keys.animation_data:
                     shape_keys.animation_data.action = None
-                    item = context.scene.faceit_face_objects.get(obj.name)
+                    item = context.scene.expresso_face_objects.get(obj.name)
                     if item:
                         item.warnings = item.warnings.strip('SHAPEKEYS,')
         return {'FINISHED'}
@@ -46,9 +46,9 @@ def get_shape_keys_apply_options(self, context):
     )
 
 
-class FACEIT_OT_ApplyShapeKeysToMesh(bpy.types.Operator):
+class EXPRESSO_OT_ApplyShapeKeysToMesh(bpy.types.Operator):
     '''Apply Shape Keys to the active mesh'''
-    bl_idname = 'faceit.apply_shape_keys_to_mesh'
+    bl_idname = 'expresso.apply_shape_keys_to_mesh'
     bl_label = 'Apply Shape Keys to Mesh'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -117,7 +117,7 @@ class FACEIT_OT_ApplyShapeKeysToMesh(bpy.types.Operator):
         obj.shape_key_remove(apply_sk)
 
         for sk in shape_keys.key_blocks[1:]:
-            if sk.name.startswith('faceit_cc_') and self.keep_corrective_shape_keys:
+            if sk.name.startswith('expresso_cc_') and self.keep_corrective_shape_keys:
                 continue
             if self.apply_option == 'REMOVE':
                 obj.shape_key_remove(sk)
@@ -134,7 +134,7 @@ class FACEIT_OT_ApplyShapeKeysToMesh(bpy.types.Operator):
                     sk.slider_max = 0
                 sk.value = 0
         if self.strip_warning:
-            item = context.scene.faceit_face_objects[self.obj_name]
+            item = context.scene.expresso_face_objects[self.obj_name]
             if not obj.data.shape_keys:
                 item.warnings = item.warnings.strip('SHAPEKEYS,')
             else:
@@ -146,16 +146,16 @@ class FACEIT_OT_ApplyShapeKeysToMesh(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_GenerateTestAction(bpy.types.Operator):
+class EXPRESSO_OT_GenerateTestAction(bpy.types.Operator):
     '''Generate a new Test Action to see all Shape Keys'''
-    bl_idname = 'faceit.test_action'
+    bl_idname = 'expresso.test_action'
     bl_label = 'Generate Test Action'
     bl_options = {'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
         if context.mode == 'OBJECT':
-            expression_list = context.scene.faceit_expression_list
+            expression_list = context.scene.expresso_expression_list
             all_shape_key_names = sk_utils.get_shape_key_names_from_objects()
             return any([x.name in all_shape_key_names for x in expression_list])
 
@@ -164,14 +164,14 @@ class FACEIT_OT_GenerateTestAction(bpy.types.Operator):
 
         scene = context.scene
 
-        faceit_objects = futils.get_faceit_objects_list()
+        expresso_objects = futils.get_expresso_objects_list()
 
-        test_action = bpy.data.actions.get('faceit_bake_test_action')
+        test_action = bpy.data.actions.get('expresso_bake_test_action')
 
         if test_action:
             bpy.data.actions.remove(test_action)
 
-        test_action = bpy.data.actions.new(name='faceit_bake_test_action')
+        test_action = bpy.data.actions.new(name='expresso_bake_test_action')
         slot = None
         if bpy.app.version >= (4, 4, 0):
             slot = test_action.slots.new(id_type='KEY', name="ShapeKeys")
@@ -180,7 +180,7 @@ class FACEIT_OT_GenerateTestAction(bpy.types.Operator):
 
         # shape_dict = {item['name']: item['index'] for item in shape_dict.values()}
 
-        for obj in faceit_objects:
+        for obj in expresso_objects:
             # deselect all
             shape_keys = obj.data.shape_keys
             if not shape_keys:
@@ -197,7 +197,7 @@ class FACEIT_OT_GenerateTestAction(bpy.types.Operator):
             shape_keys = shape_keys.key_blocks
 
             # for expression_name, index in shape_dict.items():
-            for i, item in enumerate(scene.faceit_expression_list):
+            for i, item in enumerate(scene.expresso_expression_list):
                 i += 1
                 frame = i * 10
                 # i = int(index) + 1
@@ -227,16 +227,16 @@ class FACEIT_OT_GenerateTestAction(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_SetShapeKeyRange(bpy.types.Operator):
+class EXPRESSO_OT_SetShapeKeyRange(bpy.types.Operator):
     '''For baked shape keys... This allows to define a range for all shape key animation values.'''
-    bl_idname = 'faceit.set_shape_key_range'
+    bl_idname = 'expresso.set_shape_key_range'
     bl_label = 'Set Range'
     bl_options = {'UNDO', 'REGISTER'}
 
     effect_objects: EnumProperty(
         name='Set Range for Objects',
         items=[
-            ('ALL', 'Faceit Objects', 'All Objects registered in Faceit'),
+            ('ALL', 'Expresso Objects', 'All Objects registered in Expresso'),
             ('SELECTED', 'Selected Objects', 'Try to set range for all selected objects'),
             ('ACTIVE', 'Active Object', 'The Active Object'),
         ]
@@ -246,7 +246,7 @@ class FACEIT_OT_SetShapeKeyRange(bpy.types.Operator):
         items=[
             ('ARKIT', 'ARKIT Target Shapes', 'All ARKit Target Shapes. See Shapes panel in Mocap Workflow'),
             ('A2F', 'Audio2Face Target Shapes', 'All Audio2Face Target Shapes. See Shapes panel in Mocap Workflow'),
-            ('FACEIT', 'All Target Shapes', 'Both ARKit and Audio2Face Target Shapes. See Shapes panel in Mocap Workflow'),
+            ('EXPRESSO', 'All Target Shapes', 'Both ARKit and Audio2Face Target Shapes. See Shapes panel in Mocap Workflow'),
             ('ALL', 'All Shape Keys', 'All Shape Keys'),
             ('ACTIVE', 'Active Shape Key', 'Only selected shape key. Tries to find the shape on all objects or active object'),
         ]
@@ -276,20 +276,20 @@ class FACEIT_OT_SetShapeKeyRange(bpy.types.Operator):
         scene = context.scene
 
         def set_shape_key_slider_range(sk):
-            sk.slider_min = scene.faceit_shape_key_slider_min
-            sk.slider_max = scene.faceit_shape_key_slider_max
+            sk.slider_min = scene.expresso_shape_key_slider_min
+            sk.slider_max = scene.expresso_shape_key_slider_max
 
         active_object = context.active_object
-        faceit_objects = futils.get_faceit_objects_list()
+        expresso_objects = futils.get_expresso_objects_list()
 
         objects_to_effect = []
         shapes_to_effect = []
 
         if self.effect_objects == 'ALL':
-            if not faceit_objects:
+            if not expresso_objects:
                 self.report({'ERROR'}, 'Please register the character geometry in the Setup panel.')
                 return {'CANCELLED'}
-            objects_to_effect.extend(faceit_objects)
+            objects_to_effect.extend(expresso_objects)
         elif self.effect_objects == 'SELECTED':
             if not context.selected_objects:
                 self.report({'ERROR'}, 'Select an Object first')
@@ -308,10 +308,10 @@ class FACEIT_OT_SetShapeKeyRange(bpy.types.Operator):
                 self.report({'ERROR'}, 'Select a Shape Key in the properties panel first')
                 return {'CANCELLED'}
             shapes_to_effect.append(active_key.name)
-        if self.effect_shapes in ('FACEIT', 'ARKIT'):
-            shapes_to_effect.extend(rutils.get_all_set_target_shapes(scene.faceit_arkit_retarget_shapes))
-        if self.effect_shapes in ('FACEIT', 'A2F'):
-            shapes_to_effect.extend(rutils.get_all_set_target_shapes(scene.faceit_a2f_retarget_shapes))
+        if self.effect_shapes in ('EXPRESSO', 'ARKIT'):
+            shapes_to_effect.extend(rutils.get_all_set_target_shapes(scene.expresso_arkit_retarget_shapes))
+        if self.effect_shapes in ('EXPRESSO', 'A2F'):
+            shapes_to_effect.extend(rutils.get_all_set_target_shapes(scene.expresso_a2f_retarget_shapes))
         if self.effect_shapes == 'ALL':
             # shapes_to_effect.append([sk.name for sk in obj.data.shape_keys.key_blocks for obj in objects_to_effect])
             for obj in objects_to_effect:
@@ -352,12 +352,12 @@ class FACEIT_OT_SetShapeKeyRange(bpy.types.Operator):
             return {'CANCELLED'}
 
         # Update Control rig
-        # if scene.faceit_control_rig_connected:
-        #     if futils.get_faceit_control_armature():
-        #         bpy.ops.faceit.setup_control_drivers()
+        # if scene.expresso_control_rig_connected:
+        #     if futils.get_expresso_control_armature():
+        #         bpy.ops.expresso.setup_control_drivers()
 
         # update all shape keys...
-        for obj in faceit_objects:
+        for obj in expresso_objects:
             if sk_utils.has_shape_keys(obj):
                 shape_keys = obj.data.shape_keys.key_blocks
 
@@ -372,9 +372,9 @@ class FACEIT_OT_SetShapeKeyRange(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ReorderKeys(bpy.types.Operator):
+class EXPRESSO_OT_ReorderKeys(bpy.types.Operator):
     '''Reorder Shape Key Indices to the specified order '''
-    bl_idname = 'faceit.reorder_keys'
+    bl_idname = 'expresso.reorder_keys'
     bl_label = 'Reorder Shapekeys'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -420,11 +420,11 @@ class FACEIT_OT_ReorderKeys(bpy.types.Operator):
         elif self.order == 'EPIC':
             shape_dict = fdata.get_epic_shape_data()
 
-        shapes_init = rutils.eval_target_shapes(scene.faceit_arkit_retarget_shapes)
+        shapes_init = rutils.eval_target_shapes(scene.expresso_arkit_retarget_shapes)
 
         arkit_order_list = []
 
-        target_shapes_dict = rutils.get_target_shapes_dict(scene.faceit_arkit_retarget_shapes)
+        target_shapes_dict = rutils.get_target_shapes_dict(scene.expresso_arkit_retarget_shapes)
 
         i = 0
         for arkit_name, data in shape_dict.items():
@@ -449,7 +449,7 @@ class FACEIT_OT_ReorderKeys(bpy.types.Operator):
                     objects.append(obj)
 
         else:
-            objects = futils.get_faceit_objects_list()
+            objects = futils.get_expresso_objects_list()
 
         reordered = False
         order_exists = False
@@ -637,9 +637,9 @@ def get_modifiers_on_object(self, context):
     return mods
 
 
-class FACEIT_OT_ApplyModifierObjectWithShapeKeys(bpy.types.Operator):
+class EXPRESSO_OT_ApplyModifierObjectWithShapeKeys(bpy.types.Operator):
     '''Applies a modifier on an object with Shape Keys'''
-    bl_idname = 'faceit.apply_modifier_object_with_shape_keys'
+    bl_idname = 'expresso.apply_modifier_object_with_shape_keys'
     bl_label = 'Apply Modifier (with Shape Keys)'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -668,7 +668,7 @@ class FACEIT_OT_ApplyModifierObjectWithShapeKeys(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.scene.faceit_workspace.active_tab == 'SETUP':
+        if context.scene.expresso_workspace.active_tab == 'SETUP':
             return True
         if context.mode == 'OBJECT':
             obj = context.object
@@ -709,5 +709,5 @@ class FACEIT_OT_ApplyModifierObjectWithShapeKeys(bpy.types.Operator):
             else:
                 apply_modifier(mod_name)
         if self.check_warnings:
-            bpy.ops.faceit.face_object_warning_check('EXEC_DEFAULT', item_name='ALL')
+            bpy.ops.expresso.face_object_warning_check('EXEC_DEFAULT', item_name='ALL')
         return {'FINISHED'}

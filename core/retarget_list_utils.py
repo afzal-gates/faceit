@@ -1,6 +1,6 @@
 from ..core.shape_key_utils import get_shape_key_names_from_objects
-from .faceit_data import FACE_REGIONS_BASE
-from .faceit_utils import get_faceit_objects_list
+from .expresso_data import FACE_REGIONS_BASE
+from .expresso_utils import get_expresso_objects_list
 
 
 def get_index_from_path(shape_item_path):

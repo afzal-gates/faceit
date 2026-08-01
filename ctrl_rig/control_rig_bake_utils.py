@@ -6,7 +6,7 @@ from bpy.types import Action, Context, Object, ActionFCurves
 
 from ..animate.anim_utils import get_fcurves_from_slot
 from ..core.shape_key_utils import has_shape_keys
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import fc_dr_utils
 from . import control_rig_utils
 from .control_rig_data import get_bone_animation_data
@@ -100,7 +100,7 @@ def bake_shape_keys_to_ctrl_rig(
     Bake the shape key animation to the control rig.
     """
 
-    crig_targets = c_rig.faceit_crig_targets
+    crig_targets = c_rig.expresso_crig_targets
     crig_version = c_rig.get('ctrl_rig_version', 1.0)
 
     # collect all existing fcurves that are relevant.
@@ -151,7 +151,7 @@ def bake_shape_keys_to_ctrl_rig(
         if compensate_amplify_values:
             amp_factor *= getattr(crig_targets.get(sk_name, None), 'amplify')
         if compensate_arkit_amplify_values:
-            shape_item = context.scene.faceit_arkit_retarget_shapes.get(sk_name, None)
+            shape_item = context.scene.expresso_arkit_retarget_shapes.get(sk_name, None)
             if shape_item:
                 amp_factor *= shape_item.amplify
         # Scale the range of motion of the values to the range of motion of the bone

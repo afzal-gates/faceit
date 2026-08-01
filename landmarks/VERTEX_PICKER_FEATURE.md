@@ -66,7 +66,7 @@ A new feature has been added to make manual landmark adjustment much easier. Ins
 
 ### "No main face object found"
 - Make sure you've assigned the main vertex group in the Setup tab
-- The face mesh must be properly registered with FaceIt
+- The face mesh must be properly registered with Expresso
 
 ### Button not visible
 - Make sure you're in Edit Mode on the landmarks object

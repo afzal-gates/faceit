@@ -2,7 +2,7 @@
 import bpy
 from bpy.props import EnumProperty
 
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils as sk_utils
 from ..core.retarget_list_base import (EditTargetShapeBase, RemoveTargetShapeBase,
                                        ResetRegionsOperatorBase,
@@ -10,20 +10,20 @@ from ..core.retarget_list_base import (EditTargetShapeBase, RemoveTargetShapeBas
 from . import control_rig_utils as ctrl_utils
 
 
-class FACEIT_OT_ResetCtrlRigRegions(ResetRegionsOperatorBase, bpy.types.Operator):
-    bl_idname = 'faceit.reset_ctrl_rig_regions'
+class EXPRESSO_OT_ResetCtrlRigRegions(ResetRegionsOperatorBase, bpy.types.Operator):
+    bl_idname = 'expresso.reset_ctrl_rig_regions'
     is_ctrl_rig_regions = True
 
     @classmethod
     def poll(cls, context):
         if super().poll(context):
-            if hasattr(context.scene, 'faceit_control_armature'):
-                return hasattr(context.scene.faceit_control_armature, 'faceit_ctrl_face_regions')
+            if hasattr(context.scene, 'expresso_control_armature'):
+                return hasattr(context.scene.expresso_control_armature, 'expresso_ctrl_face_regions')
 
 
-class FACEIT_OT_SetDefaultCrigRegions(SetDefaultRegionsBase, bpy.types.Operator):
+class EXPRESSO_OT_SetDefaultCrigRegions(SetDefaultRegionsBase, bpy.types.Operator):
     ''' Try to set the correct regions for the source/target shapes'''
-    bl_idname = 'faceit.set_default_crig_regions'
+    bl_idname = 'expresso.set_default_crig_regions'
 
     @classmethod
     def poll(cls, context):
@@ -31,14 +31,14 @@ class FACEIT_OT_SetDefaultCrigRegions(SetDefaultRegionsBase, bpy.types.Operator)
 
     @staticmethod
     def get_face_regions(context):
-        ctrl_rig = context.scene.faceit_control_armature
+        ctrl_rig = context.scene.expresso_control_armature
         if ctrl_rig:
-            return ctrl_rig.faceit_crig_face_regions
+            return ctrl_rig.expresso_crig_face_regions
 
 
-class FACEIT_OT_RemoveCrigTargetObject(bpy.types.Operator):
+class EXPRESSO_OT_RemoveCrigTargetObject(bpy.types.Operator):
     ''' Remove object from target objects of active control rig. '''
-    bl_idname = 'faceit.remove_crig_target_object'
+    bl_idname = 'expresso.remove_crig_target_object'
     bl_label = 'Remove Target Object'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -57,20 +57,20 @@ class FACEIT_OT_RemoveCrigTargetObject(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
         if ctrl_rig:
             if ctrl_rig.library or ctrl_rig.override_library:
                 return False
-            if ctrl_rig.faceit_crig_objects:
+            if ctrl_rig.expresso_crig_objects:
                 return True
 
     def execute(self, context):
 
         scene = context.scene
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
 
-        c_rig_objects = c_rig.faceit_crig_objects
-        list_index = c_rig.faceit_crig_objects_index
+        c_rig_objects = c_rig.expresso_crig_objects
+        list_index = c_rig.expresso_crig_objects_index
 
         def _remove_item(item):
             item_index = c_rig_objects.find(item.name)
@@ -81,19 +81,19 @@ class FACEIT_OT_RemoveCrigTargetObject(bpy.types.Operator):
             if self.remove_item:
                 item = c_rig_objects[self.remove_item]
             else:
-                item = c_rig_objects[scene.faceit_face_index]
+                item = c_rig_objects[scene.expresso_face_index]
 
             _remove_item(item)
         obj_count = len(c_rig_objects)
         if list_index >= obj_count:
-            c_rig.faceit_crig_objects_index = obj_count - 1
+            c_rig.expresso_crig_objects_index = obj_count - 1
 
         return {'FINISHED'}
 
 
-class FACEIT_OT_AddCrigTargetObject(bpy.types.Operator):
+class EXPRESSO_OT_AddCrigTargetObject(bpy.types.Operator):
     ''' Register the selected Object as target for the active control rig '''
-    bl_idname = 'faceit.add_crig_target_object'
+    bl_idname = 'expresso.add_crig_target_object'
     bl_label = 'Add Control Rig Target Object'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -105,15 +105,15 @@ class FACEIT_OT_AddCrigTargetObject(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.object
-        ctrl_rig = futils.get_faceit_control_armature()
+        ctrl_rig = futils.get_expresso_control_armature()
         if obj and ctrl_rig:
             if ctrl_rig.library or ctrl_rig.override_library:
                 return False
-            return (obj.type == 'MESH') and (obj.name not in ctrl_rig.faceit_crig_objects or len(context.selected_objects) > 1)
+            return (obj.type == 'MESH') and (obj.name not in ctrl_rig.expresso_crig_objects or len(context.selected_objects) > 1)
 
     def execute(self, context):
-        ctrl_rig = futils.get_faceit_control_armature()
-        crig_objects = ctrl_rig.faceit_crig_objects
+        ctrl_rig = futils.get_expresso_control_armature()
+        crig_objects = ctrl_rig.expresso_crig_objects
 
         # hidden object is not in selected objects, append context
         objects_add = list(filter(lambda x: x.type == 'MESH', context.selected_objects))
@@ -130,7 +130,7 @@ class FACEIT_OT_AddCrigTargetObject(bpy.types.Operator):
                 item.obj_pointer = obj
 
             # set active index to new item
-        ctrl_rig.faceit_crig_objects_index = crig_objects.find(obj.name)
+        ctrl_rig.expresso_crig_objects_index = crig_objects.find(obj.name)
 
         return {'FINISHED'}
 
@@ -141,11 +141,11 @@ def get_shape_keys_from_crig_target_objects_enum(self, context):
     global shapes
     shapes = []
 
-    ctrl_rig = futils.get_faceit_control_armature()
+    ctrl_rig = futils.get_expresso_control_armature()
 
     if context is None:
         return shapes
-    # faceit_objects = futils.get_faceit_objects_list()
+    # expresso_objects = futils.get_expresso_objects_list()
     crig_objects = ctrl_utils.get_crig_objects_list(ctrl_rig)
 
     if crig_objects:
@@ -161,8 +161,8 @@ def get_shape_keys_from_crig_target_objects_enum(self, context):
     return shapes
 
 
-class FACEIT_OT_EditCrigTargetShape(EditTargetShapeBase, bpy.types.Operator):
-    bl_idname = 'faceit.edit_crig_target_shape'
+class EXPRESSO_OT_EditCrigTargetShape(EditTargetShapeBase, bpy.types.Operator):
+    bl_idname = 'expresso.edit_crig_target_shape'
     bl_property = 'new_target_shape'
 
     new_target_shape: EnumProperty(
@@ -173,33 +173,33 @@ class FACEIT_OT_EditCrigTargetShape(EditTargetShapeBase, bpy.types.Operator):
     @staticmethod
     def get_retarget_shapes():
         ''' Get the retarget_list property group '''
-        ctrl_rig = bpy.context.scene.faceit_control_armature
+        ctrl_rig = bpy.context.scene.expresso_control_armature
         if ctrl_rig:
-            return ctrl_rig.faceit_crig_targets
+            return ctrl_rig.expresso_crig_targets
 
     @classmethod
     def poll(cls, context):
-        ctrl_rig = context.scene.faceit_control_armature
+        ctrl_rig = context.scene.expresso_control_armature
         if super().poll(context):
             if ctrl_rig.library or ctrl_rig.override_library:
                 return False
-            if ctrl_rig.faceit_crig_objects:
+            if ctrl_rig.expresso_crig_objects:
                 return True
 
 
-class FACEIT_OT_RemoveCrigTargetShape(RemoveTargetShapeBase, bpy.types.Operator):
-    bl_idname = 'faceit.remove_crig_target_shape'
+class EXPRESSO_OT_RemoveCrigTargetShape(RemoveTargetShapeBase, bpy.types.Operator):
+    bl_idname = 'expresso.remove_crig_target_shape'
 
     @staticmethod
     def get_retarget_shapes():
         ''' Get the retarget_list property group '''
-        ctrl_rig = bpy.context.scene.faceit_control_armature
+        ctrl_rig = bpy.context.scene.expresso_control_armature
         if ctrl_rig:
-            return ctrl_rig.faceit_crig_targets
+            return ctrl_rig.expresso_crig_targets
 
     @classmethod
     def poll(cls, context):
-        ctrl_rig = context.scene.faceit_control_armature
+        ctrl_rig = context.scene.expresso_control_armature
         if super().poll(context):
             if ctrl_rig.library or ctrl_rig.override_library:
                 return False

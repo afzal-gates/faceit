@@ -6,53 +6,53 @@ import bpy
 
 from . import arkit_shapes as shapes
 
-RIG_FILE = 'resources/FaceitRig.blend'
-CONTROL_RIG_FILE = 'resources/FaceitControlRig.blend'
-LANDMARKS_FILE = 'resources/FaceitLandmarks.blend'
+RIG_FILE = 'resources/ExpressoRig.blend'
+CONTROL_RIG_FILE = 'resources/ExpressoControlRig.blend'
+LANDMARKS_FILE = 'resources/ExpressoLandmarks.blend'
 RETARGET_PRESETS = 'resources/retarget_presets/'
 EXPRESSION_PRESETS = 'resources/expressions/'
 EXPRESSION_PRESETS_RIGIFY_NEW = 'resources/expressions/new_rigify_rig/'
 ARKIT_REFERENCE_MODEL = 'resources/apple_shapes_reference.blend'
 
-FACEIT_VERTEX_GROUPS = [
-    'faceit_right_eyeball',
-    'faceit_left_eyeball',
-    'faceit_left_eyes_other',
-    'faceit_right_eyes_other',
-    'faceit_upper_teeth',
-    'faceit_lower_teeth',
-    'faceit_tongue',
-    'faceit_eyelashes',
-    'faceit_rigid',
-    'faceit_main',
-    'faceit_facial_hair',
+EXPRESSO_VERTEX_GROUPS = [
+    'expresso_right_eyeball',
+    'expresso_left_eyeball',
+    'expresso_left_eyes_other',
+    'expresso_right_eyes_other',
+    'expresso_upper_teeth',
+    'expresso_lower_teeth',
+    'expresso_tongue',
+    'expresso_eyelashes',
+    'expresso_rigid',
+    'expresso_main',
+    'expresso_facial_hair',
 ]
 
 GROUP_COLORS_LIGHT = {
-    'faceit_right_eyeball': (1.0, 0.0, 0.0, 1.0),     # Red
-    'faceit_left_eyeball': (0.0, 1.0, 0.0, 1.0),     # Green
-    'faceit_left_eyes_other': (0.0, 0.0, 1.0, 1.0),     # Blue
-    'faceit_right_eyes_other': (1.0, 1.0, 0.0, 1.0),     # Yellow
-    'faceit_upper_teeth': (0.5, 0.0, 0.5, 1.0),     # Purple
-    'faceit_lower_teeth': (1.0, 0.5, 0.0, 1.0),     # Orange
-    'faceit_tongue': (0.0, 1.0, 1.0, 1.0),     # Cyan
-    'faceit_eyelashes': (1.0, 0.0, 1.0, 1.0),     # Magenta
-    'faceit_rigid': (0.0, 0.5, 0.5, 1.0),     # Teal
-    'faceit_main': (1.0, 0.5, 0.5, 1.0),     # Pink
-    'faceit_facial_hair': (0.5, 1.0, 0.0, 1.0)      # Lime
+    'expresso_right_eyeball': (1.0, 0.0, 0.0, 1.0),     # Red
+    'expresso_left_eyeball': (0.0, 1.0, 0.0, 1.0),     # Green
+    'expresso_left_eyes_other': (0.0, 0.0, 1.0, 1.0),     # Blue
+    'expresso_right_eyes_other': (1.0, 1.0, 0.0, 1.0),     # Yellow
+    'expresso_upper_teeth': (0.5, 0.0, 0.5, 1.0),     # Purple
+    'expresso_lower_teeth': (1.0, 0.5, 0.0, 1.0),     # Orange
+    'expresso_tongue': (0.0, 1.0, 1.0, 1.0),     # Cyan
+    'expresso_eyelashes': (1.0, 0.0, 1.0, 1.0),     # Magenta
+    'expresso_rigid': (0.0, 0.5, 0.5, 1.0),     # Teal
+    'expresso_main': (1.0, 0.5, 0.5, 1.0),     # Pink
+    'expresso_facial_hair': (0.5, 1.0, 0.0, 1.0)      # Lime
 }
 GROUP_COLORS_DARK = {
-    'faceit_right_eyeball': (0.5, 0.0, 0.0, 1.0),     # Dark Red
-    'faceit_left_eyeball': (0.0, 0.5, 0.0, 1.0),     # Dark Green
-    'faceit_left_eyes_other': (0.0, 0.0, 0.5, 1.0),     # Dark Blue
-    'faceit_right_eyes_other': (0.5, 0.5, 0.0, 1.0),     # Dark Yellow
-    'faceit_upper_teeth': (0.25, 0.0, 0.25, 1.0),   # Dark Purple
-    'faceit_lower_teeth': (0.5, 0.25, 0.0, 1.0),    # Dark Orange
-    'faceit_tongue': (0.0, 0.5, 0.5, 1.0),     # Dark Cyan
-    'faceit_eyelashes': (0.5, 0.0, 0.5, 1.0),     # Dark Magenta
-    'faceit_rigid': (0.0, 0.25, 0.25, 1.0),   # Dark Teal
-    'faceit_main': (0.5, 0.25, 0.25, 1.0),   # Dark Pink
-    'faceit_facial_hair': (0.25, 0.5, 0.0, 1.0)     # Dark Lime
+    'expresso_right_eyeball': (0.5, 0.0, 0.0, 1.0),     # Dark Red
+    'expresso_left_eyeball': (0.0, 0.5, 0.0, 1.0),     # Dark Green
+    'expresso_left_eyes_other': (0.0, 0.0, 0.5, 1.0),     # Dark Blue
+    'expresso_right_eyes_other': (0.5, 0.5, 0.0, 1.0),     # Dark Yellow
+    'expresso_upper_teeth': (0.25, 0.0, 0.25, 1.0),   # Dark Purple
+    'expresso_lower_teeth': (0.5, 0.25, 0.0, 1.0),    # Dark Orange
+    'expresso_tongue': (0.0, 0.5, 0.5, 1.0),     # Dark Cyan
+    'expresso_eyelashes': (0.5, 0.0, 0.5, 1.0),     # Dark Magenta
+    'expresso_rigid': (0.0, 0.25, 0.25, 1.0),   # Dark Teal
+    'expresso_main': (0.5, 0.25, 0.25, 1.0),   # Dark Pink
+    'expresso_facial_hair': (0.25, 0.5, 0.0, 1.0)     # Dark Lime
 }
 
 
@@ -64,11 +64,11 @@ def get_retargeting_presets():
     return os.path.join(get_addon_dir(), RETARGET_PRESETS)
 
 
-def get_expression_presets(rig_type='FACEIT'):
+def get_expression_presets(rig_type='EXPRESSO'):
     '''Get the expressions presets folder for the rig type
-    @rig_type: value in ['FACEIT', 'RIGIFY_NEW']
+    @rig_type: value in ['EXPRESSO', 'RIGIFY_NEW']
     '''
-    if rig_type in ('FACEIT', 'RIGIFY'):
+    if rig_type in ('EXPRESSO', 'RIGIFY'):
         return os.path.join(get_addon_dir(), EXPRESSION_PRESETS)
     elif rig_type == 'RIGIFY_NEW':
         return os.path.join(get_addon_dir(), EXPRESSION_PRESETS_RIGIFY_NEW)
@@ -128,7 +128,7 @@ LIVE_MOCAP_DEFAULT_SETTINGS = {
 
 def get_engine_settings(engine):
     scene = bpy.context.scene
-    engine_settings = scene.faceit_live_mocap_settings.get(engine)
+    engine_settings = scene.expresso_live_mocap_settings.get(engine)
     return engine_settings
 
 
@@ -197,9 +197,9 @@ def get_shape_data_for_mocap_engine(mocap_engine=None):
         return get_face_cap_shape_data()
 
 
-def get_list_faceit_groups():
-    ''' Returns the faceit vertex group names. '''
-    return FACEIT_VERTEX_GROUPS.copy()
+def get_list_expresso_groups():
+    ''' Returns the expresso vertex group names. '''
+    return EXPRESSO_VERTEX_GROUPS.copy()
 
 
 def get_face_region_items(self, context):
@@ -369,7 +369,7 @@ FACE_REGIONS_BASE = {
     ]
 }
 
-FACEIT_BONES = [
+EXPRESSO_BONES = [
     'MCH-eyes_parent', 'eyes', 'eye.L', 'eye.R', 'DEF-face', 'DEF-forehead.L', 'DEF-forehead.R', 'DEF-forehead.L.001',
     'DEF-forehead.R.001', 'DEF-forehead.L.002', 'DEF-forehead.R.002', 'DEF-temple.L', 'DEF-temple.R', 'master_eye.L',
     'brow.B.L', 'DEF-brow.B.L', 'brow.B.L.001', 'DEF-brow.B.L.001', 'brow.B.L.002', 'DEF-brow.B.L.002', 'brow.B.L.003',
@@ -401,7 +401,7 @@ FACEIT_BONES = [
     'DEF_forhead_04.L', 'DEF_forhead_01.R', 'DEF_forhead_02.R', 'DEF_forhead_03.R', 'DEF_forhead_04.R', 'teeth.T',
     'DEF-teeth.T']
 
-FACEIT_CTRL_BONES = [
+EXPRESSO_CTRL_BONES = [
     'eyes', 'eye.L', 'eye.R', 'brow.B.L', 'brow.B.L.001', 'brow.B.L.002', 'brow.B.L.003', 'brow.B.L.004', 'lid.B.L',
     'lid.B.L.001', 'lid.B.L.002', 'lid.B.L.003', 'lid.T.L', 'lid.T.L.001', 'lid.T.L.002', 'lid.T.L.003', 'brow.B.R',
     'brow.B.R.001', 'brow.B.R.002', 'brow.B.R.003', 'brow.B.R.004', 'lid.B.R', 'lid.B.R.001', 'lid.B.R.002',

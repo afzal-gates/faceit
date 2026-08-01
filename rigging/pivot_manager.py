@@ -9,7 +9,7 @@ from gpu_extras.batch import batch_for_shader
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 
 from ..core.vgroup_utils import get_vertex_groups_from_objects
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import vgroup_utils as vg_utils
 from ..landmarks import landmarks_data as lm_data
 from . import rig_utils
@@ -34,7 +34,7 @@ def get_eye_pivot_from_landmarks(context):
     pos = Vector((0, 0, 0))
     if landmarks_obj:
         mw = landmarks_obj.matrix_world
-        if scene.faceit_asymmetric:
+        if scene.expresso_asymmetric:
             pass
         else:
             # Symmetric Landmarks:
@@ -93,52 +93,52 @@ class PivotsClass:
     def initialize_pivots(self, context):
         '''Initialize the pivot points when loading a new scene.'''
         self.load_saved_pivots(context)
-        self.symmetric = not context.scene.faceit_asymmetric
+        self.symmetric = not context.scene.expresso_asymmetric
         if self.mode == 'AUTO':
             vgroups = get_vertex_groups_from_objects()
             if self.pivot_left == Vector((0, 0, 0)):
-                if not context.scene.faceit_eye_pivot_group_L:
-                    if 'faceit_left_eyeball' in vgroups:
-                        context.scene.faceit_eye_pivot_group_L = 'faceit_left_eyeball'
-                    elif 'faceit_left_eyes_other' in vgroups:
-                        context.scene.faceit_eye_pivot_group_L = 'faceit_left_eyes_other'
+                if not context.scene.expresso_eye_pivot_group_L:
+                    if 'expresso_left_eyeball' in vgroups:
+                        context.scene.expresso_eye_pivot_group_L = 'expresso_left_eyeball'
+                    elif 'expresso_left_eyes_other' in vgroups:
+                        context.scene.expresso_eye_pivot_group_L = 'expresso_left_eyes_other'
             if self.pivot_right == Vector((0, 0, 0)):
-                if not context.scene.faceit_eye_pivot_group_R:
-                    if 'faceit_right_eyeball' in vgroups:
-                        context.scene.faceit_eye_pivot_group_R = 'faceit_right_eyeball'
-                    elif 'faceit_right_eyes_other' in vgroups:
-                        context.scene.faceit_eye_pivot_group_R = 'faceit_right_eyes_other'
+                if not context.scene.expresso_eye_pivot_group_R:
+                    if 'expresso_right_eyeball' in vgroups:
+                        context.scene.expresso_eye_pivot_group_R = 'expresso_right_eyeball'
+                    elif 'expresso_right_eyes_other' in vgroups:
+                        context.scene.expresso_eye_pivot_group_R = 'expresso_right_eyes_other'
         # initialize the pivot locator scale based on landmarks size
         lm_obj = context.scene.objects.get('facial_landmarks')
         if lm_obj:
             self.locator_scale = lm_obj.dimensions.x / 20
         if self.pivot_left == Vector((0, 0, 0)):
-            pivot_left = context.scene.faceit_eye_pivot_point_L = get_eye_pivot_from_landmarks(context)
-            context.scene.faceit_eye_pivot_point_R = Vector((-pivot_left[0], pivot_left[1], pivot_left[2]))
+            pivot_left = context.scene.expresso_eye_pivot_point_L = get_eye_pivot_from_landmarks(context)
+            context.scene.expresso_eye_pivot_point_R = Vector((-pivot_left[0], pivot_left[1], pivot_left[2]))
             return False
 
-        if context.scene.faceit_use_jaw_pivot:
+        if context.scene.expresso_use_jaw_pivot:
             jaw_pivot_object = context.scene.objects.get('Jaw Pivot')
             if jaw_pivot_object:
                 self.jaw_pivot = jaw_pivot_object.location
         return True
 
     def reset_pivots(self, context):
-        self.pivot_left = self.pivot_right = self.manual_pivot_left = self.manual_pivot_right = context.scene.faceit_eye_manual_pivot_point_L = context.scene.faceit_eye_manual_pivot_point_R = context.scene.faceit_eye_pivot_point_L = context.scene.faceit_eye_pivot_point_R = Vector()
-        context.scene.faceit_eye_pivot_placement = 'AUTO'
+        self.pivot_left = self.pivot_right = self.manual_pivot_left = self.manual_pivot_right = context.scene.expresso_eye_manual_pivot_point_L = context.scene.expresso_eye_manual_pivot_point_R = context.scene.expresso_eye_pivot_point_L = context.scene.expresso_eye_pivot_point_R = Vector()
+        context.scene.expresso_eye_pivot_placement = 'AUTO'
 
     def save_pivots(self, context):
         '''Save the manual pivot points to the scene'''
-        context.scene.faceit_eye_manual_pivot_point_L = self.manual_pivot_left
-        context.scene.faceit_eye_manual_pivot_point_R = self.manual_pivot_right
+        context.scene.expresso_eye_manual_pivot_point_L = self.manual_pivot_left
+        context.scene.expresso_eye_manual_pivot_point_R = self.manual_pivot_right
 
     def load_saved_pivots(self, context):
         '''Load the manual pivot points from the scene'''
-        self.mode = context.scene.faceit_eye_pivot_placement
-        self.pivot_left = context.scene.faceit_eye_pivot_point_L
-        self.pivot_right = context.scene.faceit_eye_pivot_point_R
-        self.manual_pivot_left = context.scene.faceit_eye_manual_pivot_point_L
-        self.manual_pivot_right = context.scene.faceit_eye_manual_pivot_point_R
+        self.mode = context.scene.expresso_eye_pivot_placement
+        self.pivot_left = context.scene.expresso_eye_pivot_point_L
+        self.pivot_right = context.scene.expresso_eye_pivot_point_R
+        self.manual_pivot_left = context.scene.expresso_eye_manual_pivot_point_L
+        self.manual_pivot_right = context.scene.expresso_eye_manual_pivot_point_R
 
     def _save_manual_pivot(self):
         self.manual_pivot_left = self.pivot_left
@@ -199,10 +199,10 @@ class PivotsClass:
         jaw_pivot_obj = context.scene.objects.get('Jaw Pivot')
         if jaw_pivot_obj:
             self.draw_jaw_pivot = True
-            context.scene.faceit_jaw_pivot = self.jaw_pivot = jaw_pivot_obj.location
+            context.scene.expresso_jaw_pivot = self.jaw_pivot = jaw_pivot_obj.location
         else:
             self.draw_jaw_pivot = False
-        if context.scene.faceit_eye_pivot_placement == 'MANUAL':
+        if context.scene.expresso_eye_pivot_placement == 'MANUAL':
             if lm_obj.mode == 'EDIT':
                 bm = bmesh.from_edit_mesh(lm_obj.data)
                 bm.verts.ensure_lookup_table()
@@ -212,7 +212,7 @@ class PivotsClass:
                 else:
                     self.pivot_right = lm_obj.matrix_world @ bm.verts[self.lm_pivot_vert_idx_right].co
                 self.selected_verts = self.get_selected_vert_indices(bm)
-                if context.scene.faceit_pivot_vertex_auto_snap:
+                if context.scene.expresso_pivot_vertex_auto_snap:
                     active_vert = self.get_active_vert_index(bm)
                     if active_vert != self.last_active_vertex:
                         self.last_active_vertex = active_vert
@@ -224,8 +224,8 @@ class PivotsClass:
                             self.snap_toggled = False
                 bmesh.update_edit_mesh(lm_obj.data)
         else:
-            self.pivot_left = context.scene.faceit_eye_pivot_point_L
-            self.pivot_right = context.scene.faceit_eye_pivot_point_R
+            self.pivot_left = context.scene.expresso_eye_pivot_point_L
+            self.pivot_right = context.scene.expresso_eye_pivot_point_R
 
     def get_selected_vert_indices(self, bm: BMesh):
         '''Returns a list of indices of selected vertices'''
@@ -245,7 +245,7 @@ class PivotsClass:
 
     def draw_callback(self, context):
         '''Draws a cross at the empty object's location'''
-        if not context.scene.faceit_draw_pivot_locators:
+        if not context.scene.expresso_draw_pivot_locators:
             return
         self.lm_obj = context.scene.objects.get('facial_landmarks')
         if not self.is_valid(self.lm_obj):
@@ -289,7 +289,7 @@ class PivotsClass:
 
     def draw_callback_blf(self, context, region, rv3d):
         ''' Write the name of each pivot in the view port.'''
-        if not context.scene.faceit_draw_pivot_locators:
+        if not context.scene.expresso_draw_pivot_locators:
             return
         lm_obj = self.lm_obj
         if not self.is_valid(lm_obj):
@@ -411,9 +411,9 @@ def unregister():
         # del PivotManager
 
 
-class FACEIT_OT_AddManualPivotVertex(bpy.types.Operator):
+class EXPRESSO_OT_AddManualPivotVertex(bpy.types.Operator):
     '''Add a vertex for editing the manual pivot point'''
-    bl_idname = 'faceit.add_manual_pivot_vertex'
+    bl_idname = 'expresso.add_manual_pivot_vertex'
     bl_label = 'Add Manual Pivot Vertex'
     bl_options = {'UNDO'}
 
@@ -487,15 +487,15 @@ class FACEIT_OT_AddManualPivotVertex(bpy.types.Operator):
             bm.free()
             if lm_obj == context.active_object:
                 bpy.ops.object.mode_set(mode='EDIT')
-        context.scene.faceit_eye_pivot_placement = 'MANUAL'
+        context.scene.expresso_eye_pivot_placement = 'MANUAL'
         PivotManager.start_drawing(context)
-        context.scene.faceit_draw_pivot_locators = True
+        context.scene.expresso_draw_pivot_locators = True
         return {'FINISHED'}
 
 
-class FACEIT_OT_RemoveManualPivotVertex(bpy.types.Operator):
+class EXPRESSO_OT_RemoveManualPivotVertex(bpy.types.Operator):
     '''Remove the vertex for editing the manual pivot point'''
-    bl_idname = 'faceit.remove_manual_pivot_vertex'
+    bl_idname = 'expresso.remove_manual_pivot_vertex'
     bl_label = 'Remove Manual Pivot Vertex'
     bl_options = {'UNDO'}
 
@@ -528,14 +528,14 @@ class FACEIT_OT_RemoveManualPivotVertex(bpy.types.Operator):
         else:
             bm.to_mesh(lm_obj.data)
             bm.free()
-        context.scene.faceit_eye_pivot_placement = 'AUTO'
+        context.scene.expresso_eye_pivot_placement = 'AUTO'
         PivotManager.start_drawing(context)
         return {'FINISHED'}
 
 
-class FACEIT_OT_ResetManualPivots(bpy.types.Operator):
+class EXPRESSO_OT_ResetManualPivots(bpy.types.Operator):
     '''Reset the manual eye pivots'''
-    bl_idname = 'faceit.reset_manual_pivots'
+    bl_idname = 'expresso.reset_manual_pivots'
     bl_label = 'Reset Manual Pivots'
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -557,12 +557,12 @@ class FACEIT_OT_ResetManualPivots(bpy.types.Operator):
         if len(bm.verts) > PivotManager.lm_default_vert_count:
             if PivotManager.lm_pivot_vert_idx_left in PivotManager.selected_verts:
                 v = bm.verts[PivotManager.lm_pivot_vert_idx_left]
-                pivot = lm_obj.matrix_world.inverted() @ context.scene.faceit_eye_pivot_point_L
+                pivot = lm_obj.matrix_world.inverted() @ context.scene.expresso_eye_pivot_point_L
                 v.co = pivot
             if not PivotManager.symmetric:
                 if PivotManager.lm_pivot_vert_idx_right in PivotManager.selected_verts:
                     v = bm.verts[PivotManager.lm_pivot_vert_idx_right]
-                    pivot = lm_obj.matrix_world.inverted() @ context.scene.faceit_eye_pivot_point_R
+                    pivot = lm_obj.matrix_world.inverted() @ context.scene.expresso_eye_pivot_point_R
                     v.co = pivot
         bm.verts.ensure_lookup_table()
         if context.mode == 'EDIT_MESH':
@@ -576,8 +576,8 @@ class FACEIT_OT_ResetManualPivots(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_AddJawPivotEmpty(bpy.types.Operator):
-    bl_idname = 'faceit.add_jaw_pivot_empty'
+class EXPRESSO_OT_AddJawPivotEmpty(bpy.types.Operator):
+    bl_idname = 'expresso.add_jaw_pivot_empty'
     bl_label = 'Add Jaw Pivot Empty'
     bl_options = {'UNDO'}
 
@@ -600,7 +600,7 @@ class FACEIT_OT_AddJawPivotEmpty(bpy.types.Operator):
         return True
 
     def invoke(self, context, event):
-        if context.scene.faceit_jaw_pivot != Vector((0, 0, 0)):
+        if context.scene.expresso_jaw_pivot != Vector((0, 0, 0)):
             wm = context.window_manager
             return wm.invoke_props_dialog(self)
         else:
@@ -617,9 +617,9 @@ class FACEIT_OT_AddJawPivotEmpty(bpy.types.Operator):
         scene.tool_settings.use_snap = False
 
         lm_obj = futils.get_object('facial_landmarks')
-        faceit_collection = futils.get_faceit_collection(force_access=True, create=True)
-        if not faceit_collection:
-            self.report({'ERROR'}, "Faceit Collection not found.")
+        expresso_collection = futils.get_expresso_collection(force_access=True, create=True)
+        if not expresso_collection:
+            self.report({'ERROR'}, "Expresso Collection not found.")
             return {'CANCELLED'}
         if lm_obj is None:
             self.report({'ERROR'}, "Facial Landmarks object not found.")
@@ -631,9 +631,9 @@ class FACEIT_OT_AddJawPivotEmpty(bpy.types.Operator):
         _lm_size = lm_obj.dimensions.x / 8
         pos = Vector((0, 0, 0))
         if self.restore_saved_pivot:
-            pos = context.scene.faceit_jaw_pivot
+            pos = context.scene.expresso_jaw_pivot
         else:
-            if scene.faceit_asymmetric:
+            if scene.expresso_asymmetric:
                 pos_1 = lm_obj.matrix_world @ lm_obj.data.vertices[24].co
                 pos_2 = lm_obj.matrix_world @ lm_obj.data.vertices[25].co
                 pos = (pos_1 + pos_2) / 2
@@ -645,12 +645,12 @@ class FACEIT_OT_AddJawPivotEmpty(bpy.types.Operator):
         if not obj:
             obj = bpy.data.objects.new(self.pivot_name, None)
             obj.empty_display_type = 'SPHERE'
-            faceit_collection.objects.link(obj)
+            expresso_collection.objects.link(obj)
             obj.empty_display_size = _lm_size
             obj.show_name = False
             obj.select_set(state=True)
             obj.show_in_front = True
-            if not context.scene.faceit_asymmetric:
+            if not context.scene.expresso_asymmetric:
                 obj.lock_location[0] = True
         obj.location = pos
         PivotManager.start_drawing(context)
@@ -658,8 +658,8 @@ class FACEIT_OT_AddJawPivotEmpty(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_RemoveJawPivotEmpty(bpy.types.Operator):
-    bl_idname = 'faceit.remove_jaw_pivot_empty'
+class EXPRESSO_OT_RemoveJawPivotEmpty(bpy.types.Operator):
+    bl_idname = 'expresso.remove_jaw_pivot_empty'
     bl_label = 'Remove Jaw Pivot Empty'
     bl_options = {'UNDO'}
 
@@ -673,12 +673,12 @@ class FACEIT_OT_RemoveJawPivotEmpty(bpy.types.Operator):
             self.report({'ERROR'}, "Jaw Pivot object not found.")
             return {'CANCELLED'}
         bpy.data.objects.remove(jaw_pivot_object)
-        context.scene.faceit_use_jaw_pivot = False
+        context.scene.expresso_use_jaw_pivot = False
         return {'FINISHED'}
 
 
-class FACEIT_OT_ResetJawPivotEmpty(bpy.types.Operator):
-    bl_idname = 'faceit.reset_jaw_pivot_empty'
+class EXPRESSO_OT_ResetJawPivotEmpty(bpy.types.Operator):
+    bl_idname = 'expresso.reset_jaw_pivot_empty'
     bl_label = 'Reset Jaw Pivot Empty'
     bl_options = {'UNDO'}
 
@@ -704,7 +704,7 @@ class FACEIT_OT_ResetJawPivotEmpty(bpy.types.Operator):
             bm = bmesh.new()
             bm.from_mesh(lm_obj.data)
         bm.verts.ensure_lookup_table()
-        if context.scene.faceit_asymmetric:
+        if context.scene.expresso_asymmetric:
             pos_1 = lm_obj.matrix_world @ bm.verts[24].co
             pos_2 = lm_obj.matrix_world @ bm.verts[25].co
             pos = (pos_1 + pos_2) / 2
@@ -738,8 +738,8 @@ def get_teeth_locator_positions(target='upper'):
     target: 'upper','lower'
     """
     scene = bpy.context.scene
-    if scene.faceit_teeth_pivot_options == 'GEO':
-        vgroup_name = scene.faceit_teeth_pivot_group_u if target == 'upper' else scene.faceit_teeth_pivot_group_l
+    if scene.expresso_teeth_pivot_options == 'GEO':
+        vgroup_name = scene.expresso_teeth_pivot_group_u if target == 'upper' else scene.expresso_teeth_pivot_group_l
         pos = Vector((0, 0, 0))
         objects = vg_utils.get_objects_with_vertex_group(vgroup_name, get_all=True)
         # Get the global vertex positions of all verts in vgroup in all objects
@@ -749,13 +749,13 @@ def get_teeth_locator_positions(target='upper'):
             global_vs.extend([obj.matrix_world @ v.co for v in obj_vs])
         bounds = rig_utils.get_bounds_from_locations(global_vs, 'y')
         pos = rig_utils.get_median_pos(bounds)
-        if scene.faceit_asymmetric:
+        if scene.expresso_asymmetric:
             bounds = rig_utils.get_bounds_from_locations(global_vs, 'x')
             pos.x = rig_utils.get_median_pos(bounds).x
         else:
             pos.x = 0
         return pos
-    elif scene.faceit_teeth_pivot_options == 'MANUAL':
+    elif scene.expresso_teeth_pivot_options == 'MANUAL':
         # place based on landmark positions
         # Symmetric Landmarks:
         # Upper Teeth:
@@ -824,9 +824,9 @@ def get_locator_empties(target_locators='ALL', create=True):
                 bpy.data.objects.remove(loc_empty)
                 loc_empty = None
         if not loc_empty and create:
-            faceit_collection = futils.get_faceit_collection(force_access=True, create=True)
+            expresso_collection = futils.get_expresso_collection(force_access=True, create=True)
             loc_empty = create_empty(name, _lm_size)
-            faceit_collection.objects.link(loc_empty)
+            expresso_collection.objects.link(loc_empty)
         if loc_empty:
             locators.append(loc_empty)
             # check if the locator object is animated

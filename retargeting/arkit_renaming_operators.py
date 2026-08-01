@@ -1,14 +1,14 @@
 import bpy
 
 
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils as sk_utils
 
 
-class FACEIT_OT_ChangeNameScheme(bpy.types.Operator):
+class EXPRESSO_OT_ChangeNameScheme(bpy.types.Operator):
     '''Change the retargeting list name scheme'''
-    bl_idname = 'faceit.change_retargeting_name_scheme'
+    bl_idname = 'expresso.change_retargeting_name_scheme'
     bl_label = 'Change Naming Scheme'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -19,9 +19,9 @@ class FACEIT_OT_ChangeNameScheme(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-        retarget_list = scene.faceit_arkit_retarget_shapes
+        retarget_list = scene.expresso_arkit_retarget_shapes
 
-        name_scheme = scene.faceit_retargeting_naming_scheme
+        name_scheme = scene.expresso_retargeting_naming_scheme
 
         if name_scheme == 'ARKIT':
             shape_dict = fdata.get_arkit_shape_data()
@@ -53,9 +53,9 @@ class FACEIT_OT_ChangeNameScheme(bpy.types.Operator):
         return{'FINISHED'}
 
 
-class FACEIT_OT_RetargetNames(bpy.types.Operator):
+class EXPRESSO_OT_RetargetNames(bpy.types.Operator):
     '''Apply the ARKit names to the specified Shape Keys'''
-    bl_idname = 'faceit.retarget_names'
+    bl_idname = 'expresso.retarget_names'
     bl_label = 'Apply Source Naming'
     bl_description = 'Applies the names from the source shapes to the target shape keys on all registered objects.'
     bl_options = {'UNDO', 'INTERNAL'}
@@ -65,15 +65,15 @@ class FACEIT_OT_RetargetNames(bpy.types.Operator):
         # return context.mode != 'POSE'
         return True
         # if context.mode == 'OBJECT':
-        #     return context.scene.faceit_arkit_retarget_shapes
+        #     return context.scene.expresso_arkit_retarget_shapes
 
     def execute(self, context):
 
         scene = context.scene
-        faceit_objects = futils.get_faceit_objects_list()
-        retarget_list = scene.faceit_arkit_retarget_shapes
+        expresso_objects = futils.get_expresso_objects_list()
+        retarget_list = scene.expresso_arkit_retarget_shapes
 
-        for obj in faceit_objects:
+        for obj in expresso_objects:
 
             if not sk_utils.has_shape_keys(obj):
                 continue
@@ -104,7 +104,7 @@ class FACEIT_OT_RetargetNames(bpy.types.Operator):
                 else:
                     self.report({'WARNING'}, 'Did not find shape {}'.format(target_shape_item.name))
 
-                if obj == faceit_objects[-1]:
+                if obj == expresso_objects[-1]:
                     target_shape_item.name = display_name
 
         return{'FINISHED'}

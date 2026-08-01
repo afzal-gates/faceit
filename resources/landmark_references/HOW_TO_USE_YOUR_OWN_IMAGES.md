@@ -45,7 +45,7 @@ source_images/
 ### Step 3: Run the Overlay Script
 
 ```bash
-cd "E:\AddOns\Customized Addons\FaceIt\faceit\resources\landmark_references"
+cd "E:\AddOns\Customized Addons\Expresso\expresso\resources\landmark_references"
 python overlay_landmarks_on_images.py
 ```
 

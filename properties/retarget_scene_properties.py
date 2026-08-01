@@ -24,24 +24,24 @@ class RetargetShapes(RetargetShapesBase, PropertyGroup):
 def update_retargeting_scheme(self, context):
     if context is None:
         return
-    if self.faceit_arkit_retarget_shapes:
-        bpy.ops.faceit.change_retargeting_name_scheme()
+    if self.expresso_arkit_retarget_shapes:
+        bpy.ops.expresso.change_retargeting_name_scheme()
 
 
 def update_retarget_index(self, context):
     if context is None:
         return
     active_shape_item = None
-    if self.faceit_display_retarget_list == 'ARKIT':
-        if self.faceit_arkit_retarget_shapes:
-            active_shape_item = self.faceit_arkit_retarget_shapes[self.faceit_arkit_retarget_shapes_index]
+    if self.expresso_display_retarget_list == 'ARKIT':
+        if self.expresso_arkit_retarget_shapes:
+            active_shape_item = self.expresso_arkit_retarget_shapes[self.expresso_arkit_retarget_shapes_index]
     else:
-        if self.faceit_a2f_retarget_shapes:
-            active_shape_item = self.faceit_a2f_retarget_shapes[self.faceit_a2f_retarget_shapes_index]
+        if self.expresso_a2f_retarget_shapes:
+            active_shape_item = self.expresso_a2f_retarget_shapes[self.expresso_a2f_retarget_shapes_index]
 
     if active_shape_item:
         shape_name = active_shape_item.name
-        bpy.ops.faceit.set_active_shape_key_index(
+        bpy.ops.expresso.set_active_shape_key_index(
             'EXEC_DEFAULT',
             shape_name=shape_name,
             get_active_target_shapes=True,
@@ -52,40 +52,40 @@ def update_retarget_index(self, context):
 def register():
     ############## Retargeting Shapes ##################
 
-    Scene.faceit_arkit_retarget_shapes = CollectionProperty(
+    Scene.expresso_arkit_retarget_shapes = CollectionProperty(
         name='ARKIT Target Expressions',
         type=RetargetShapes,
     )
 
-    Scene.faceit_arkit_retarget_shapes_index = IntProperty(
+    Scene.expresso_arkit_retarget_shapes_index = IntProperty(
         name='Expression Index',
         default=0,
         update=update_retarget_index,
         options=set(),
     )
-    Scene.faceit_a2f_retarget_shapes = CollectionProperty(
+    Scene.expresso_a2f_retarget_shapes = CollectionProperty(
         name='Audio2Face Target Expressions',
         type=RetargetShapes,
     )
-    Scene.faceit_a2f_retarget_shapes_index = IntProperty(
+    Scene.expresso_a2f_retarget_shapes_index = IntProperty(
         name='Expression Index',
         default=0,
         update=update_retarget_index,
         options=set(),
     )
 
-    Scene.faceit_face_regions = PointerProperty(
+    Scene.expresso_face_regions = PointerProperty(
         name='Face Regions',
         type=FaceRegionsBase,
     )
-    Scene.faceit_display_retarget_list = EnumProperty(
+    Scene.expresso_display_retarget_list = EnumProperty(
         items=(
             ('ARKIT', 'ARKit', 'ARKit Native'),
             ('A2F', 'Audio2Face', 'Nvidia Audio2Face'),
         ),
         default='ARKIT',
     )
-    Scene.faceit_retargeting_naming_scheme = EnumProperty(
+    Scene.expresso_retargeting_naming_scheme = EnumProperty(
         items=(
             ('ARKIT', 'ARKit Native', 'ARKit Native'),
             ('FACECAP', 'FaceCap', 'bannaflak FaceCap'),
@@ -96,9 +96,9 @@ def register():
 
 
 def unregister():
-    del Scene.faceit_face_regions
-    del Scene.faceit_arkit_retarget_shapes
-    del Scene.faceit_arkit_retarget_shapes_index
-    del Scene.faceit_a2f_retarget_shapes
-    del Scene.faceit_a2f_retarget_shapes_index
-    del Scene.faceit_retargeting_naming_scheme
+    del Scene.expresso_face_regions
+    del Scene.expresso_arkit_retarget_shapes
+    del Scene.expresso_arkit_retarget_shapes_index
+    del Scene.expresso_a2f_retarget_shapes
+    del Scene.expresso_a2f_retarget_shapes_index
+    del Scene.expresso_retargeting_naming_scheme

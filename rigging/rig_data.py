@@ -2,7 +2,7 @@
 
 # ---------------- BONE DICTIONARY -------------------
 # | - holds the matching values for the
-# | - FaceitRig to the landmarks(vert index)
+# | - ExpressoRig to the landmarks(vert index)
 # | - asymmetric and symmetric vert order
 # ----------------------------------------------
 

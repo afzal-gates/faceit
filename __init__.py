@@ -1,8 +1,8 @@
 '''
-Copyright (C) 2020 Fynn Braren
-fynn.braren@posteo.de
+Copyright (C) 2026 Afzal Hossain
+afzal.gates@gmail.com
 
-Created by Fynn Braren
+Created by Afzal Hossain
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,17 +26,16 @@ from . import auto_load
 from .landmarks.landmarks_utils import unlock_3d_view
 
 VERSION = 2
-# Kept for legacy add-on compatibility < Blender 4.2
 bl_info = {
-    'name': 'FACEIT',
-    'author': 'Fynn Braren',
+    'name': 'EXPRESSO',
+    'author': 'Afzal Hossain',
     'description': 'Facial Expressions And Performance Capture',
-    'blender': (2, 80, 0),
-    'version': (2, 3, 56),
+    'blender': (4, 2, 0),
+    'version': (1, 0, 0),
     'location': 'View3D',
     'warning': '',
-    'doc_url': "https://faceit-doc.readthedocs.io/en/latest/",
-    'tracker_url': "https://faceit-doc.readthedocs.io/en/latest/support/",
+    'doc_url': "https://expresso-doc.readthedocs.io/en/latest/",
+    'tracker_url': "",
     'category': 'Animation'
 }
 
@@ -56,12 +55,12 @@ def update_auto_lock_3d_view(self, context):
         unlock_3d_view()
 
 
-class FaceitPreferences(bpy.types.AddonPreferences):
+class ExpressoPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
     web_links: bpy.props.BoolProperty(
         name='Show Web Links',
-        description='Display Links to the Documentation in the Faceit UI',
+        description='Display Links to the Documentation in the Expresso UI',
         default=True,
     )
 
@@ -140,14 +139,14 @@ class FaceitPreferences(bpy.types.AddonPreferences):
 
         # Data cleanup button
         row = box.row()
-        row.operator("faceit.cleanup_data", text="Clean Up FaceIt Data", icon='BRUSH_DATA')
+        row.operator("expresso.cleanup_data", text="Clean Up Expresso Data", icon='BRUSH_DATA')
 
         box.separator()
 
         # Uninstall instructions
         col = box.column(align=True)
         col.label(text="To completely uninstall this addon:")
-        col.label(text="1. Click 'Clean Up FaceIt Data' above (optional)")
+        col.label(text="1. Click 'Clean Up Expresso Data' above (optional)")
         col.label(text="2. Look for the 'Remove' button below")
         col.label(text="3. Click 'Remove' then restart Blender")
 
@@ -156,7 +155,7 @@ class FaceitPreferences(bpy.types.AddonPreferences):
         # Direct uninstall button
         row = box.row()
         row.scale_y = 1.5
-        row.operator("faceit.uninstall_addon", text="Uninstall FACEIT Addon", icon='X')
+        row.operator("expresso.uninstall_addon", text="Uninstall EXPRESSO Addon", icon='X')
 
 
 def cleanse_modules():
@@ -168,7 +167,7 @@ def cleanse_modules():
     all_modules = dict(sorted(all_modules.items(), key=lambda x: x[0]))  # sort them
 
     for k, v in all_modules.items():
-        if k.startswith("faceit"):
+        if k.startswith(__package__):
             if "auto_load" in k:
                 continue
             del sys.modules[k]
@@ -180,14 +179,14 @@ auto_load.init()
 
 
 def register():
-    bpy.utils.register_class(FaceitPreferences)
+    bpy.utils.register_class(ExpressoPreferences)
     auto_load.register()
 
     # def get_version(self):
     #     return bl_info['version'][0]
 
-    # bpy.types.Scene.faceit_version = IntProperty(
-    #     name='Faceit Version',
+    # bpy.types.Scene.expresso_version = IntProperty(
+    #     name='Expresso Version',
     #     default=1,
     #     options=set(),
     #     get=get_version,
@@ -195,6 +194,6 @@ def register():
 
 
 def unregister():
-    bpy.utils.unregister_class(FaceitPreferences)
+    bpy.utils.unregister_class(ExpressoPreferences)
     auto_load.unregister()
     cleanse_modules()

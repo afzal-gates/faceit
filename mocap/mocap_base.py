@@ -16,8 +16,8 @@ from mathutils import Euler, Vector, Quaternion, Matrix
 from ..animate.anim_utils import find_slot_by_handle, get_fcurves_from_slot
 
 from .. import __package__ as base_package
-from ..core.faceit_data import get_a2f_shape_data, get_arkit_shape_data
-from ..core import faceit_utils as futils
+from ..core.expresso_data import get_a2f_shape_data, get_arkit_shape_data
+from ..core import expresso_utils as futils
 from ..core.fc_dr_utils import (frame_value_pairs_to_numpy_array,
                                 populate_keyframe_points_from_np_array)
 from ..core.pose_utils import reset_pb, reset_pose, restore_saved_pose, save_pose
@@ -406,7 +406,7 @@ class MocapBase:
     def _get_initial_location_offset(self, value):
         '''Calculate the location offset from the first incoming location value'''
         offset = Vector()
-        if bpy.context.scene.faceit_use_head_location_offset:
+        if bpy.context.scene.expresso_use_head_location_offset:
             if not self.head_bone:
                 offset = self.head_obj.location.copy()
         self.initial_location_offset = offset - self._location_to_blender(value)
@@ -637,7 +637,7 @@ def update_new_action_name(self, context):
 
 
 def update_bake_ctrl_rig(self, context):
-    crig = futils.get_faceit_control_armature()
+    crig = futils.get_expresso_control_armature()
     if not crig.animation_data:
         crig.animation_data_create()
 
@@ -771,7 +771,7 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
         super().__init__(*args, **kwargs)
         self.engine_name = "FACECAP"
         self.can_load_audio = False
-        self.target_shapes_prop_name = "faceit_arkit_retarget_shapes"
+        self.target_shapes_prop_name = "expresso_arkit_retarget_shapes"
         self.engine_settings = None
         self.filename = ""
         # self.can_bake_control_rig = True
@@ -784,7 +784,7 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
         return True
 
     def _get_engine_specific_settings(self, context):
-        self.engine_settings = context.scene.faceit_live_mocap_settings.get(self.engine_name)
+        self.engine_settings = context.scene.expresso_live_mocap_settings.get(self.engine_name)
 
     def _get_mocap_importer(self) -> MocapBase:
         return MocapBase()
@@ -824,7 +824,7 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
                         else:
                             self.report(
                                 {'ERROR'},
-                                "It looks like you used a blendshape solver that is unknown in Faceit. Please reach out through discord or blendermarket for support.")
+                                "It looks like you used a blendshape solver that is unknown in Expresso. Please reach out through discord or blendermarket for support.")
                             return {'CANCELLED'}
                 if self.a2f_solver == 'ARKIT':
                     self.can_bake_control_rig = True
@@ -845,7 +845,7 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
                     frames.append(int(tc.split(':')[-1].split('.')[0]))
                 self.record_frame_rate = max(frames) + 1
 
-        ctrl_rig = context.scene.faceit_control_armature
+        ctrl_rig = context.scene.expresso_control_armature
         if ctrl_rig and self.can_bake_control_rig:
             if ctrl_utils.is_control_rig_connected(ctrl_rig):
                 self.bake_to_control_rig = True
@@ -993,17 +993,17 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
         row = layout.row()
         row.label(text='Action Settings')
         if self.bake_to_control_rig:
-            ctrl_rig = scene.faceit_control_armature
+            ctrl_rig = scene.expresso_control_armature
             if ctrl_rig:
                 draw_ctrl_rig_action_layout(layout, ctrl_rig)
         elif self.animate_shapes:
             draw_shapes_action_layout(layout, context)
-        head_obj = scene.faceit_head_target_object
+        head_obj = scene.expresso_head_target_object
         if self.animate_head_location or self.animate_head_rotation:
             if head_obj:
                 draw_head_action_layout(layout, head_obj)
         if self.animate_eye_rotation_bones:
-            eye_rig = scene.faceit_eye_target_rig
+            eye_rig = scene.expresso_eye_target_rig
             if eye_rig and eye_rig is not head_obj:
                 draw_eye_action_layout(layout, eye_rig)
         layout.separator()
@@ -1016,7 +1016,7 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
 
     def _draw_control_rig_ui(self, layout):
         row = layout.row()
-        if futils.get_faceit_control_armature():
+        if futils.get_expresso_control_armature():
             row.prop(self, 'bake_to_control_rig', icon='CON_ARMATURE')
 
     def _draw_head_motion_types(self, layout):
@@ -1127,7 +1127,7 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
                 self.audio_filename, audio_file, channel, start_frame_mocap)
 
         if soundstrip is not None:
-            soundstrip.faceit_audio = True
+            soundstrip.expresso_audio = True
 
     def _get_raw_animation_data(self):
         '''Return the raw animation data. Filename or osc queue for live animation'''
@@ -1191,13 +1191,13 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
             mocap_slot = None
             if getattr(self, "a2f_solver", None):
                 if self.a2f_solver == 'A2F':
-                    self.target_shapes_prop_name = "faceit_a2f_retarget_shapes"
+                    self.target_shapes_prop_name = "expresso_a2f_retarget_shapes"
                     mocap_importer.set_source_shape_reference(list(get_a2f_shape_data().keys()))
                 else:
-                    self.target_shapes_prop_name = "faceit_arkit_retarget_shapes"
+                    self.target_shapes_prop_name = "expresso_arkit_retarget_shapes"
                     mocap_importer.set_source_shape_reference(list(get_arkit_shape_data().keys()))
             if self.bake_to_control_rig:
-                c_rig = futils.get_faceit_control_armature()
+                c_rig = futils.get_expresso_control_armature()
                 if not c_rig:
                     self.report(
                         {'ERROR'},
@@ -1207,24 +1207,24 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
                 mocap_action = self._get_action("mocap_import", replace=True, slot_id='KEY', slot_name="ShapeKeys")
                 # Get target objects and shapes
                 target_objects = ctrl_utils.get_crig_objects_list(c_rig)
-                target_shapes = c_rig.faceit_crig_targets
+                target_shapes = c_rig.expresso_crig_targets
             else:
                 # Get target action
-                if scene.faceit_mocap_action is None:  # or self.overwrite_method == 'REPLACE':
+                if scene.expresso_mocap_action is None:  # or self.overwrite_method == 'REPLACE':
                     mocap_action = self._get_action(self.new_action_name, replace=False,
                                                     slot_id='KEY', slot_name="ShapeKeys")
                 else:
-                    mocap_action = scene.faceit_mocap_action
+                    mocap_action = scene.expresso_mocap_action
 
                 mocap_action.use_fake_user = True
                 # Get target objects and shapes
-                target_objects = futils.get_faceit_objects_list()
+                target_objects = futils.get_expresso_objects_list()
                 target_shapes = self._get_engine_target_shapes(scene)
 
             if bpy.app.version >= (4, 4, 0):
                 # get the mocap slot
-                if mocap_action is scene.faceit_mocap_action:
-                    slot_handle = scene.faceit_mocap_slot_handle
+                if mocap_action is scene.expresso_mocap_action:
+                    slot_handle = scene.expresso_mocap_slot_handle
                     if slot_handle:
                         for slot in mocap_action.slots:
                             if slot.handle == slot_handle:
@@ -1234,7 +1234,7 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
                     mocap_slot = mocap_action.slots.get("KEShapeKeys")
                     if mocap_slot is None:
                         mocap_slot = mocap_action.slots.new(id_type='KEY', name="ShapeKeys")
-                scene.faceit_mocap_slot_handle = mocap_slot.handle
+                scene.expresso_mocap_slot_handle = mocap_slot.handle
 
             if not target_objects:
                 self.report(
@@ -1258,11 +1258,11 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
                 # return {'CANCELLED'}
                 # TODO: Strip objects from target objects that are assigned to eye deform groups in case the eye rotation target is set to transforms.
                 # Otherwise a double transformation will be applied.
-                # Get the objects that are assigned to faceit_left_eyes_other and faceit_right_eyes_other
-                # left_eye_objects = get_objects_with_vertex_group(vgroup_name='faceit_left_eyes_other', objects=target_objects, get_all=True)
+                # Get the objects that are assigned to expresso_left_eyes_other and expresso_right_eyes_other
+                # left_eye_objects = get_objects_with_vertex_group(vgroup_name='expresso_left_eyes_other', objects=target_objects, get_all=True)
                 # if left_eye_objects:
                 #     target_objects = [obj for obj in target_objects if obj not in left_eye_objects]
-                # right_eye_objects = get_objects_with_vertex_group(vgroup_name='faceit_right_eyes_other', objects=target_objects, get_all=True)
+                # right_eye_objects = get_objects_with_vertex_group(vgroup_name='expresso_right_eyes_other', objects=target_objects, get_all=True)
                 # if right_eye_objects:
                 #     target_objects = [obj for obj in target_objects if obj not in right_eye_objects]
                 # Shape Settings
@@ -1282,9 +1282,9 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
         head_action: Action = None
         if animate_loc or animate_rot:
             # Head Settings
-            head_obj = context.scene.faceit_head_target_object
+            head_obj = context.scene.expresso_head_target_object
             head_loc_multiplier = self.engine_settings.head_location_multiplier
-            head_bone_name = context.scene.faceit_head_sub_target
+            head_bone_name = context.scene.expresso_head_sub_target
             saved_pose = None
             if head_obj:
                 if head_obj.type == 'ARMATURE':
@@ -1327,10 +1327,10 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
                 restore_saved_pose(head_obj, saved_pose)
         if self.animate_eye_rotation_bones:
             saved_pose = None
-            eye_rig: Object = context.scene.faceit_eye_target_rig
+            eye_rig: Object = context.scene.expresso_eye_target_rig
             if eye_rig is not None:
-                eye_L_bone_name = context.scene.faceit_eye_L_sub_target
-                eye_R_bone_name = context.scene.faceit_eye_R_sub_target
+                eye_L_bone_name = context.scene.expresso_eye_L_sub_target
+                eye_R_bone_name = context.scene.expresso_eye_R_sub_target
                 futils.set_hide_obj(eye_rig, False)
                 saved_pose = save_pose(eye_rig)
                 eye_L_bone = eye_rig.pose.bones.get(eye_L_bone_name)
@@ -1401,13 +1401,13 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
         if animate_shapes:
             if self.bake_to_control_rig:
                 if mocap_action.fcurves:
-                    current_shape_action: Action = scene.faceit_mocap_action
+                    current_shape_action: Action = scene.expresso_mocap_action
                     current_shape_slot = None
                     if bpy.app.version >= (4, 4, 0):
-                        current_shape_slot = find_slot_by_handle(mocap_action, scene.faceit_mocap_slot_handle)
-                    scene.faceit_mocap_action = mocap_action
+                        current_shape_slot = find_slot_by_handle(mocap_action, scene.expresso_mocap_slot_handle)
+                    scene.expresso_mocap_action = mocap_action
                     try:
-                        bpy.ops.faceit.bake_shape_keys_to_control_rig(
+                        bpy.ops.expresso.bake_shape_keys_to_control_rig(
                             'EXEC_DEFAULT',
                             use_mocap_action=False,
                             overwrite_method=self.overwrite_method,
@@ -1418,8 +1418,8 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
                         self.report({'ERROR'}, "Failed to bake shape keys to control rig.")
                     if current_shape_action:
                         if current_shape_slot:
-                            scene.faceit_mocap_slot_handle = current_shape_slot.handle
-                        scene.faceit_mocap_action = current_shape_action
+                            scene.expresso_mocap_slot_handle = current_shape_slot.handle
+                        scene.expresso_mocap_action = current_shape_action
                     bpy.data.actions.remove(mocap_action, do_unlink=True)
                 else:
                     self.report({'WARNING'}, 'No target shapes found. Please update control rig first!')
@@ -1428,7 +1428,7 @@ class MocapImporterBase(FaceRegionsBaseProperties, SmoothBaseProperties):
                     futils.restore_scene_state(context, state_dict)
                     return {'CANCELLED'}
             elif result is True:
-                scene.faceit_mocap_action = mocap_action
+                scene.expresso_mocap_action = mocap_action
                 if self.set_scene_frame_range:
                     try:
                         scene.frame_start, scene.frame_end = (int(x)

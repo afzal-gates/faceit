@@ -2,23 +2,23 @@
 import bpy
 
 from ..core.shape_key_utils import has_shape_keys
-from ..core.faceit_utils import get_faceit_objects_list
+from ..core.expresso_utils import get_expresso_objects_list
 
-CORRECTIVE_SK_ACTION_NAME = 'faceit_corrective_shape_keys'
+CORRECTIVE_SK_ACTION_NAME = 'expresso_corrective_shape_keys'
 
 
 def reevaluate_corrective_shape_keys(expression_list=None, objects=None):
     ''' Re-evaluate the keyframes and properties (in @expression_list) in correspondence to the found corrective shape keys (on @objects). '''
     if not expression_list:
-        expression_list = bpy.context.scene.faceit_expression_list
+        expression_list = bpy.context.scene.expresso_expression_list
     if not objects:
-        objects = get_faceit_objects_list()
+        objects = get_expresso_objects_list()
 
     for obj in objects:
         if has_shape_keys(obj):
             found_corrective_shapes = False
             for exp_item in expression_list:
-                corr_sk = obj.data.shape_keys.key_blocks.get('faceit_cc_' + exp_item.name)
+                corr_sk = obj.data.shape_keys.key_blocks.get('expresso_cc_' + exp_item.name)
                 if corr_sk:
                     corr_sk.mute = False
                     exp_item.corr_shape_key = True
@@ -34,15 +34,15 @@ def reevaluate_corrective_shape_keys(expression_list=None, objects=None):
 def mute_corrective_shape_keys(expression_list=None, objects=None):
     '''Mute all corrective shape keys'''
     if not expression_list:
-        expression_list = bpy.context.scene.faceit_expression_list
+        expression_list = bpy.context.scene.expresso_expression_list
     if not objects:
-        objects = get_faceit_objects_list()
+        objects = get_expresso_objects_list()
 
     for obj in objects:
         if has_shape_keys(obj):
             found_corrective_shapes = False
             for exp_item in expression_list:
-                corr_sk = obj.data.shape_keys.key_blocks.get('faceit_cc_' + exp_item.name)
+                corr_sk = obj.data.shape_keys.key_blocks.get('expresso_cc_' + exp_item.name)
                 if corr_sk:
                     corr_sk.mute = True
                     found_corrective_shapes = True
@@ -65,7 +65,7 @@ def get_corrective_sk_action(clear_invalid_fcurves=True, create=True):
     elif clear_invalid_fcurves:
         # Purge old data-paths not valid
         for fc in action.fcurves:
-            if not fc.data_path.startswith('key_blocks["faceit_cc_') or not fc.is_valid:
+            if not fc.data_path.startswith('key_blocks["expresso_cc_') or not fc.is_valid:
                 action.fcurves.remove(fc)
     return action
 
@@ -92,7 +92,7 @@ def keyframe_corrective_sk_action(expression_item):
 
     frame = expression_item.frame
 
-    data_path = 'key_blocks["faceit_cc_{}"].value'.format(expression_item.name)
+    data_path = 'key_blocks["expresso_cc_{}"].value'.format(expression_item.name)
 
     fc = action.fcurves.find(data_path)
     if fc:
@@ -110,7 +110,7 @@ def clear_all_corrective_shape_keys(objects, expression_list=None):
     for obj in objects:
         if has_shape_keys(obj):
             for sk in obj.data.shape_keys.key_blocks:
-                if not sk.name.startswith('faceit_cc_'):
+                if not sk.name.startswith('expresso_cc_'):
                     continue
             obj.shape_key_remove(sk)
         else:
@@ -137,7 +137,7 @@ def remove_corrective_shape_key(expression_list, objects, expression_name=''):
         print(f'couldnt find the expression {expression_name}')
         return
 
-    corr_sk_name = 'faceit_cc_' + expression_name
+    corr_sk_name = 'expresso_cc_' + expression_name
     sk_found = False
     for obj in objects:
         print(obj.name)
@@ -151,9 +151,9 @@ def remove_corrective_shape_key(expression_list, objects, expression_name=''):
     if not sk_found:
         return False
 
-    # check if a corrective shape key is still found on any of the other faceit objects
+    # check if a corrective shape key is still found on any of the other expresso objects
     corrective_sk_cleared = True
-    for obj in get_faceit_objects_list():
+    for obj in get_expresso_objects_list():
         if has_shape_keys(obj):
             corr_sk = obj.data.shape_keys.key_blocks.get(corr_sk_name)
             if corr_sk:
@@ -164,7 +164,7 @@ def remove_corrective_shape_key(expression_list, objects, expression_name=''):
         expression_item.corr_shape_key = False
         a = bpy.data.actions.get(CORRECTIVE_SK_ACTION_NAME)
         if a:
-            fc = a.fcurves.find(f'key_blocks["faceit_cc_{expression_name}"].value')
+            fc = a.fcurves.find(f'key_blocks["expresso_cc_{expression_name}"].value')
             if fc:
                 a.fcurves.remove(fc)
     return True
@@ -173,9 +173,9 @@ def remove_corrective_shape_key(expression_list, objects, expression_name=''):
 def get_objects_with_corrective_shape_key_for_expression(expression_name=''):
     '''Return list of objects that hold a corrective sk for the given expression.'''
     found_sk_objects = []
-    objects = get_faceit_objects_list()
+    objects = get_expresso_objects_list()
     for obj in objects:
         if has_shape_keys(obj):
-            if 'faceit_cc_' + expression_name in obj.data.shape_keys.key_blocks:
+            if 'expresso_cc_' + expression_name in obj.data.shape_keys.key_blocks:
                 found_sk_objects.append(obj)
     return found_sk_objects

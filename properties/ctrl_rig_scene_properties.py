@@ -17,7 +17,7 @@ def is_armature_object(self, obj):
     if obj.library:
         return False
     if obj.type == 'ARMATURE' and obj.name in bpy.context.scene.objects:
-        if 'FaceitControlRig' in obj.name or 'ctrl_rig_id' in obj:
+        if 'ExpressoControlRig' in obj.name or 'ctrl_rig_id' in obj:
             return True
 
 
@@ -48,7 +48,7 @@ class Target_Objects(PropertyGroup):
 
 def update_amplify_id_property(expression_name, amplify_value, ctrl_rig):
     '''Updates the amplify value for the specific expression on the rig object
-        This is important because the control rig otherwise can't be used without the faceit add-on.
+        This is important because the control rig otherwise can't be used without the expresso add-on.
         Examples: animators / renderfarms / ...
     '''
     ctrl_rig[expression_name] = amplify_value
@@ -68,7 +68,7 @@ def update_ctrl_rig_amplify_value(self, context):
     ctrl_rig = self.id_data
     # set the active index
     idx = get_index_of_collection_item(self)
-    setattr(ctrl_rig, "faceit_crig_targets_index", idx)
+    setattr(ctrl_rig, "expresso_crig_targets_index", idx)
     # update the shape key ranges
     if bpy.context.preferences.addons[base_package].preferences.dynamic_shape_key_ranges:
         update_shape_key_ranges_based_on_amplify(self, ctrl_rig)
@@ -128,12 +128,12 @@ class ControlRigShapes(RetargetShapesBase, PropertyGroup):
 
 def update_slider_rows(self, context):
     if context.mode in ('OBJECT', 'POSE'):
-        bpy.ops.faceit.rearrange_custom_controllers('EXEC_DEFAULT')
+        bpy.ops.expresso.rearrange_custom_controllers('EXEC_DEFAULT')
 
 
 def update_crig_target_index(self, context):
-    c_rig = context.scene.faceit_control_armature
-    active_target = c_rig.faceit_crig_targets[c_rig.faceit_crig_targets_index]
+    c_rig = context.scene.expresso_control_armature
+    active_target = c_rig.expresso_crig_targets[c_rig.expresso_crig_targets_index]
     if not c_rig.mode == 'POSE':
         return
     slider_name = active_target.slider_name
@@ -151,49 +151,49 @@ def update_crig_target_index(self, context):
         c_rig.data.bones.active = slider.bone
         slider.bone.select = True
     # try:
-    #     bpy.ops.faceit.select_bone_from_source_shape('EXEC_DEFAULT', expression=active_target.name)
+    #     bpy.ops.expresso.select_bone_from_source_shape('EXEC_DEFAULT', expression=active_target.name)
     # except RuntimeError:
     #     pass
 
 
 def register():
 
-    Scene.faceit_draw_handler_name = StringProperty(
+    Scene.expresso_draw_handler_name = StringProperty(
         name='draw handler',
         default=''
     )
-    Scene.faceit_show_landmarks_ctrl_rig = BoolProperty(
+    Scene.expresso_show_landmarks_ctrl_rig = BoolProperty(
         name="Show Landmarks Panel",
         description="Show the Landmarks Panel in the Control Rig Tab",
         default=False,
     )
-    Scene.faceit_control_armature = PointerProperty(
+    Scene.expresso_control_armature = PointerProperty(
         name='The Control Rig',
-        description='the control rig used to control and manipulate the Faceit Expressions. Create override to load linked control rigs.',
+        description='the control rig used to control and manipulate the Expresso Expressions. Create override to load linked control rigs.',
         type=Object, poll=is_armature_object)
 
-    Scene.faceit_crig_targets = CollectionProperty(
+    Scene.expresso_crig_targets = CollectionProperty(
         name='Control Rig Target Expressions',
         type=ControlRigShapes,
     )
-    Scene.faceit_crig_targets_index = IntProperty(
+    Scene.expresso_crig_targets_index = IntProperty(
         name='CRig Shapes Index',
         default=0,
         options=set(),
         update=update_crig_target_index,
     )
-    # Scene.faceit_crig_force_mouth_close_slider_position_index = IntProperty(
+    # Scene.expresso_crig_force_mouth_close_slider_position_index = IntProperty(
     #     name='Force Mouth Close Slider Index',
     #     default=0,
     #     min=0,
     # )
-    Scene.faceit_new_slider = EnumProperty(
+    Scene.expresso_new_slider = EnumProperty(
         name='Target',
         items=get_custom_sliders_enum_for_active_ctrl_rig,
         description='The Shape that will be driven by the new controller',
     )
     if bpy.app.version >= (2, 90, 0):
-        Object.faceit_crig_targets_index = IntProperty(
+        Object.expresso_crig_targets_index = IntProperty(
             name='CRig Shapes Index',
             default=0,
             options=set(),
@@ -201,30 +201,30 @@ def register():
             update=update_crig_target_index,
         )
 
-        Object.faceit_crig_targets = CollectionProperty(
+        Object.expresso_crig_targets = CollectionProperty(
             name='Control Rig Target Expressions',
             type=ControlRigShapes,
             override={'LIBRARY_OVERRIDABLE'},
         )
 
-        Object.faceit_crig_objects = CollectionProperty(
+        Object.expresso_crig_objects = CollectionProperty(
             name='Objects Driven',
             type=Target_Objects,
         )
 
-        Object.faceit_crig_objects_index = IntProperty(
+        Object.expresso_crig_objects_index = IntProperty(
             name='CRig Objects Index',
             default=0,
             options=set(),
             override={'LIBRARY_OVERRIDABLE'},
         )
 
-        Object.faceit_crig_face_regions = PointerProperty(
+        Object.expresso_crig_face_regions = PointerProperty(
             name='Face Regions (Control Rig)',
             type=FaceRegionsBase,
             override={'LIBRARY_OVERRIDABLE'},
         )
-        Object.faceit_crig_rows = IntProperty(
+        Object.expresso_crig_rows = IntProperty(
             name='Custom Slider Rows',
             default=10,
             min=1,
@@ -234,33 +234,33 @@ def register():
             override={'LIBRARY_OVERRIDABLE'},
         )
     else:
-        Object.faceit_crig_targets_index = IntProperty(
+        Object.expresso_crig_targets_index = IntProperty(
             name='CRig Shapes Index',
             default=0,
             options=set(),
             update=update_crig_target_index,
         )
 
-        Object.faceit_crig_targets = CollectionProperty(
+        Object.expresso_crig_targets = CollectionProperty(
             name='Control Rig Target Expressions',
             type=ControlRigShapes,
         )
 
-        Object.faceit_crig_objects = CollectionProperty(
+        Object.expresso_crig_objects = CollectionProperty(
             name='Objects Driven',
             type=Target_Objects,
         )
 
-        Object.faceit_crig_objects_index = IntProperty(
+        Object.expresso_crig_objects_index = IntProperty(
             name='CRig Objects Index',
             default=0,
             options=set(),
         )
-        Object.faceit_crig_face_regions = PointerProperty(
+        Object.expresso_crig_face_regions = PointerProperty(
             name='Face Regions (Control Rig)',
             type=FaceRegionsBase,
         )
-        Object.faceit_crig_rows = IntProperty(
+        Object.expresso_crig_rows = IntProperty(
             name='Custom Slider Rows',
             default=10,
             min=1,
@@ -273,14 +273,14 @@ def register():
 
 def unregister():
 
-    del Scene.faceit_draw_handler_name
-    del Scene.faceit_control_armature
+    del Scene.expresso_draw_handler_name
+    del Scene.expresso_control_armature
 
-    del Scene.faceit_crig_targets
-    del Scene.faceit_crig_targets_index
-    del Scene.faceit_new_slider
+    del Scene.expresso_crig_targets
+    del Scene.expresso_crig_targets_index
+    del Scene.expresso_new_slider
 
-    del Object.faceit_crig_targets
-    del Object.faceit_crig_objects_index
-    del Object.faceit_crig_objects
-    del Object.faceit_crig_face_regions
+    del Object.expresso_crig_targets
+    del Object.expresso_crig_objects_index
+    del Object.expresso_crig_objects
+    del Object.expresso_crig_face_regions

@@ -3,7 +3,7 @@ import bmesh
 
 from ..core.modifier_utils import get_modifiers_of_type
 from ..core import mesh_utils
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import vgroup_utils as vg_utils
 
 
@@ -113,14 +113,14 @@ def data_transfer_vertex_groups(obj_from, obj_to, apply=True, method=''):
         bpy.ops.object.mode_set(mode='OBJECT')
 
 
-def split_by_faceit_groups(obj):
-    '''Split the object into parts by assigned faceit vertex groups'''
+def split_by_expresso_groups(obj):
+    '''Split the object into parts by assigned expresso vertex groups'''
     futils.clear_object_selection()
     futils.set_active_object(obj.name)
     for grp in obj.vertex_groups:
-        if 'faceit_' in grp.name:
+        if 'expresso_' in grp.name:
             vs = vg_utils.get_verts_in_vgroup(obj, grp.name)
-            if grp.name == 'faceit_main':
+            if grp.name == 'expresso_main':
                 # get the vertices that are only in the main group
                 vs = [v for v in vs if len(v.groups) == 1]
             if not vs:

@@ -15,12 +15,12 @@ from .manual_landmarks_data import (
     get_landmark_categories,
     get_landmark_mirror_map
 )
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 
 
-class FACEIT_OT_PickLandmarkVertex(Operator):
+class EXPRESSO_OT_PickLandmarkVertex(Operator):
     """Pick a vertex from the mesh to set as a landmark point"""
-    bl_idname = "faceit.pick_landmark_vertex"
+    bl_idname = "expresso.pick_landmark_vertex"
     bl_label = "Pick Landmark Vertex"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -33,11 +33,11 @@ class FACEIT_OT_PickLandmarkVertex(Operator):
     @classmethod
     def poll(cls, context):
         return (context.mode in {'OBJECT', 'EDIT_MESH'} and
-                context.scene.faceit_manual_landmarks_target_mesh is not None)
+                context.scene.expresso_manual_landmarks_target_mesh is not None)
 
     def execute(self, context):
         scene = context.scene
-        target_mesh = scene.faceit_manual_landmarks_target_mesh
+        target_mesh = scene.expresso_manual_landmarks_target_mesh
 
         if not target_mesh:
             self.report({'WARNING'}, "No target mesh selected")
@@ -71,14 +71,14 @@ class FACEIT_OT_PickLandmarkVertex(Operator):
 
         # Store the landmark data
         landmark_item = None
-        for lm in scene.faceit_manual_landmarks:
+        for lm in scene.expresso_manual_landmarks:
             if lm.landmark_id == self.landmark_id:
                 landmark_item = lm
                 break
 
         if landmark_item is None:
             # Create new landmark item
-            landmark_item = scene.faceit_manual_landmarks.add()
+            landmark_item = scene.expresso_manual_landmarks.add()
             landmark_item.landmark_id = self.landmark_id
 
         landmark_item.vertex_index = vertex_index
@@ -94,7 +94,7 @@ class FACEIT_OT_PickLandmarkVertex(Operator):
         report_message = f"Landmark '{landmark_label}' set to vertex {vertex_index}"
 
         # Handle mirroring if enabled
-        if scene.faceit_manual_landmarks_mirror:
+        if scene.expresso_manual_landmarks_mirror:
             mirror_map = get_landmark_mirror_map()
             mirror_landmark_id = mirror_map.get(self.landmark_id)
 
@@ -119,14 +119,14 @@ class FACEIT_OT_PickLandmarkVertex(Operator):
                 if closest_vert_index is not None:
                     # Set the mirrored landmark
                     mirror_landmark_item = None
-                    for lm in scene.faceit_manual_landmarks:
+                    for lm in scene.expresso_manual_landmarks:
                         if lm.landmark_id == mirror_landmark_id:
                             mirror_landmark_item = lm
                             break
 
                     if mirror_landmark_item is None:
                         # Create new landmark item
-                        mirror_landmark_item = scene.faceit_manual_landmarks.add()
+                        mirror_landmark_item = scene.expresso_manual_landmarks.add()
                         mirror_landmark_item.landmark_id = mirror_landmark_id
 
                     mirror_landmark_item.vertex_index = closest_vert_index
@@ -139,15 +139,15 @@ class FACEIT_OT_PickLandmarkVertex(Operator):
         self.report({'INFO'}, report_message)
 
         # Update preview if enabled
-        if scene.faceit_manual_landmarks_preview:
-            bpy.ops.faceit.preview_manual_landmarks('INVOKE_DEFAULT', enable=True)
+        if scene.expresso_manual_landmarks_preview:
+            bpy.ops.expresso.preview_manual_landmarks('INVOKE_DEFAULT', enable=True)
 
         return {'FINISHED'}
 
 
-class FACEIT_OT_ClearLandmark(Operator):
+class EXPRESSO_OT_ClearLandmark(Operator):
     """Clear a specific landmark"""
-    bl_idname = "faceit.clear_landmark"
+    bl_idname = "expresso.clear_landmark"
     bl_label = "Clear Landmark"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -160,33 +160,33 @@ class FACEIT_OT_ClearLandmark(Operator):
         scene = context.scene
 
         # Find and remove the landmark
-        for i, lm in enumerate(scene.faceit_manual_landmarks):
+        for i, lm in enumerate(scene.expresso_manual_landmarks):
             if lm.landmark_id == self.landmark_id:
-                scene.faceit_manual_landmarks.remove(i)
+                scene.expresso_manual_landmarks.remove(i)
                 break
 
         # Update preview if enabled
-        if scene.faceit_manual_landmarks_preview:
-            bpy.ops.faceit.preview_manual_landmarks('INVOKE_DEFAULT', enable=True)
+        if scene.expresso_manual_landmarks_preview:
+            bpy.ops.expresso.preview_manual_landmarks('INVOKE_DEFAULT', enable=True)
 
         self.report({'INFO'}, f"Cleared landmark {self.landmark_id}")
         return {'FINISHED'}
 
 
-class FACEIT_OT_ClearAllLandmarks(Operator):
+class EXPRESSO_OT_ClearAllLandmarks(Operator):
     """Clear all manual landmarks"""
-    bl_idname = "faceit.clear_all_landmarks"
+    bl_idname = "expresso.clear_all_landmarks"
     bl_label = "Clear All Landmarks"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
         scene = context.scene
-        scene.faceit_manual_landmarks.clear()
+        scene.expresso_manual_landmarks.clear()
 
         # Disable preview and clean up empties
-        if scene.faceit_manual_landmarks_preview:
-            scene.faceit_manual_landmarks_preview = False
-            bpy.ops.faceit.preview_manual_landmarks('INVOKE_DEFAULT', enable=False)
+        if scene.expresso_manual_landmarks_preview:
+            scene.expresso_manual_landmarks_preview = False
+            bpy.ops.expresso.preview_manual_landmarks('INVOKE_DEFAULT', enable=False)
 
         self.report({'INFO'}, "Cleared all manual landmarks")
         return {'FINISHED'}
@@ -195,9 +195,9 @@ class FACEIT_OT_ClearAllLandmarks(Operator):
         return context.window_manager.invoke_confirm(self, event)
 
 
-class FACEIT_OT_ResetManualLandmarks(Operator):
+class EXPRESSO_OT_ResetManualLandmarks(Operator):
     """Reset all manual landmarks (clear and reinitialize)"""
-    bl_idname = "faceit.reset_manual_landmarks"
+    bl_idname = "expresso.reset_manual_landmarks"
     bl_label = "Reset Manual Landmarks"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -205,16 +205,16 @@ class FACEIT_OT_ResetManualLandmarks(Operator):
         scene = context.scene
 
         # Clear existing landmarks
-        scene.faceit_manual_landmarks.clear()
+        scene.expresso_manual_landmarks.clear()
 
         # Disable preview and clean up empties
-        if scene.faceit_manual_landmarks_preview:
-            scene.faceit_manual_landmarks_preview = False
-            bpy.ops.faceit.preview_manual_landmarks('INVOKE_DEFAULT', enable=False)
+        if scene.expresso_manual_landmarks_preview:
+            scene.expresso_manual_landmarks_preview = False
+            bpy.ops.expresso.preview_manual_landmarks('INVOKE_DEFAULT', enable=False)
 
         # Reinitialize landmarks
         for landmark_id, landmark_label in MANUAL_LANDMARK_LABELS:
-            item = scene.faceit_manual_landmarks.add()
+            item = scene.expresso_manual_landmarks.add()
             item.landmark_id = landmark_id
             item.vertex_index = -1
             item.object_name = ""
@@ -227,9 +227,9 @@ class FACEIT_OT_ResetManualLandmarks(Operator):
         return context.window_manager.invoke_confirm(self, event)
 
 
-class FACEIT_OT_InitializeManualLandmarks(Operator):
+class EXPRESSO_OT_InitializeManualLandmarks(Operator):
     """Initialize the manual landmarks collection with all landmark IDs"""
-    bl_idname = "faceit.initialize_manual_landmarks"
+    bl_idname = "expresso.initialize_manual_landmarks"
     bl_label = "Initialize Manual Landmarks"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -237,11 +237,11 @@ class FACEIT_OT_InitializeManualLandmarks(Operator):
         scene = context.scene
 
         # Clear existing landmarks
-        scene.faceit_manual_landmarks.clear()
+        scene.expresso_manual_landmarks.clear()
 
         # Add all landmark IDs
         for landmark_id, landmark_label in MANUAL_LANDMARK_LABELS:
-            item = scene.faceit_manual_landmarks.add()
+            item = scene.expresso_manual_landmarks.add()
             item.landmark_id = landmark_id
             item.vertex_index = -1
             item.object_name = ""
@@ -251,9 +251,9 @@ class FACEIT_OT_InitializeManualLandmarks(Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_PreviewManualLandmarks(Operator):
+class EXPRESSO_OT_PreviewManualLandmarks(Operator):
     """Toggle preview of manual landmarks using empties"""
-    bl_idname = "faceit.preview_manual_landmarks"
+    bl_idname = "expresso.preview_manual_landmarks"
     bl_label = "Preview Manual Landmarks"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -268,7 +268,7 @@ class FACEIT_OT_PreviewManualLandmarks(Operator):
 
     def execute(self, context):
         scene = context.scene
-        collection_name = "FaceIt_Manual_Landmarks_Preview"
+        collection_name = "Expresso_Manual_Landmarks_Preview"
 
         if not self.enable:
             # Remove all preview empties
@@ -292,7 +292,7 @@ class FACEIT_OT_PreviewManualLandmarks(Operator):
         # Create empties for each set landmark
         label_dict = get_landmark_label_dict()
 
-        for lm in scene.faceit_manual_landmarks:
+        for lm in scene.expresso_manual_landmarks:
             if not lm.is_set:
                 continue
 
@@ -319,7 +319,7 @@ class FACEIT_OT_PreviewManualLandmarks(Operator):
             empty.show_in_front = True
 
             # Set custom property for easy identification
-            empty["faceit_manual_landmark"] = lm.landmark_id
+            empty["expresso_manual_landmark"] = lm.landmark_id
 
             collection.objects.link(empty)
 
@@ -327,9 +327,9 @@ class FACEIT_OT_PreviewManualLandmarks(Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ExportManualLandmarks(Operator):
+class EXPRESSO_OT_ExportManualLandmarks(Operator):
     """Export manual landmarks to a JSON file"""
-    bl_idname = "faceit.export_manual_landmarks"
+    bl_idname = "expresso.export_manual_landmarks"
     bl_label = "Export Manual Landmarks"
     bl_options = {'REGISTER'}
 
@@ -345,7 +345,7 @@ class FACEIT_OT_ExportManualLandmarks(Operator):
         scene = context.scene
         landmarks_data = {}
 
-        for lm in scene.faceit_manual_landmarks:
+        for lm in scene.expresso_manual_landmarks:
             if lm.is_set:
                 landmarks_data[lm.landmark_id] = {
                     "vertex_index": lm.vertex_index,
@@ -367,9 +367,9 @@ class FACEIT_OT_ExportManualLandmarks(Operator):
         return {'RUNNING_MODAL'}
 
 
-class FACEIT_OT_ImportManualLandmarks(Operator):
+class EXPRESSO_OT_ImportManualLandmarks(Operator):
     """Import manual landmarks from a JSON file"""
-    bl_idname = "faceit.import_manual_landmarks"
+    bl_idname = "expresso.import_manual_landmarks"
     bl_label = "Import Manual Landmarks"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -392,13 +392,13 @@ class FACEIT_OT_ImportManualLandmarks(Operator):
             return {'CANCELLED'}
 
         # Initialize landmarks if not already done
-        if len(scene.faceit_manual_landmarks) == 0:
-            bpy.ops.faceit.initialize_manual_landmarks()
+        if len(scene.expresso_manual_landmarks) == 0:
+            bpy.ops.expresso.initialize_manual_landmarks()
 
         # Apply imported data
         loaded_count = 0
         for landmark_id, data in landmarks_data.items():
-            for lm in scene.faceit_manual_landmarks:
+            for lm in scene.expresso_manual_landmarks:
                 if lm.landmark_id == landmark_id:
                     lm.vertex_index = data.get("vertex_index", -1)
                     lm.object_name = data.get("object_name", "")
@@ -407,8 +407,8 @@ class FACEIT_OT_ImportManualLandmarks(Operator):
                     break
 
         # Update preview if enabled
-        if scene.faceit_manual_landmarks_preview:
-            bpy.ops.faceit.preview_manual_landmarks('INVOKE_DEFAULT', enable=True)
+        if scene.expresso_manual_landmarks_preview:
+            bpy.ops.expresso.preview_manual_landmarks('INVOKE_DEFAULT', enable=True)
 
         self.report({'INFO'}, f"Imported {loaded_count} landmarks from {self.filepath}")
         return {'FINISHED'}
@@ -418,9 +418,9 @@ class FACEIT_OT_ImportManualLandmarks(Operator):
         return {'RUNNING_MODAL'}
 
 
-class FACEIT_OT_GenerateRigFromManualLandmarks(Operator):
+class EXPRESSO_OT_GenerateRigFromManualLandmarks(Operator):
     """Generate facial rig from manually placed landmarks"""
-    bl_idname = "faceit.generate_rig_from_manual_landmarks"
+    bl_idname = "expresso.generate_rig_from_manual_landmarks"
     bl_label = "Generate Rig from Manual Landmarks"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -428,17 +428,17 @@ class FACEIT_OT_GenerateRigFromManualLandmarks(Operator):
     def poll(cls, context):
         scene = context.scene
         # Check if we have manual landmarks
-        if not scene.faceit_manual_landmarks:
+        if not scene.expresso_manual_landmarks:
             return False
         # Check if target mesh is set
-        if not scene.faceit_manual_landmarks_target_mesh:
+        if not scene.expresso_manual_landmarks_target_mesh:
             return False
         # Check if at least some landmarks are set
-        return any(lm.is_set for lm in scene.faceit_manual_landmarks)
+        return any(lm.is_set for lm in scene.expresso_manual_landmarks)
 
     def execute(self, context):
         from .manual_landmarks_rig import (
-            create_faceit_landmarks_from_manual,
+            create_expresso_landmarks_from_manual,
             validate_manual_landmarks_for_rig
         )
 
@@ -458,7 +458,7 @@ class FACEIT_OT_GenerateRigFromManualLandmarks(Operator):
             bpy.ops.object.mode_set(mode='OBJECT')
 
         # Create facial_landmarks object from manual landmarks
-        landmarks_obj = create_faceit_landmarks_from_manual(context)
+        landmarks_obj = create_expresso_landmarks_from_manual(context)
 
         if not landmarks_obj:
             self.report({'ERROR'}, "Failed to create landmarks object from manual landmarks")
@@ -466,36 +466,36 @@ class FACEIT_OT_GenerateRigFromManualLandmarks(Operator):
 
         self.report({'INFO'}, f"Created facial landmarks object with {len(landmarks_obj.data.vertices)} vertices")
 
-        # Check if FaceIt rig generation operator is available
-        if not hasattr(bpy.ops.faceit, 'generate_rig'):
-            self.report({'ERROR'}, "FaceIt rig generation operator not found. Make sure FaceIt addon is properly installed.")
+        # Check if Expresso rig generation operator is available
+        if not hasattr(bpy.ops.expresso, 'generate_rig'):
+            self.report({'ERROR'}, "Expresso rig generation operator not found. Make sure Expresso addon is properly installed.")
             # Clean up landmarks object
             bpy.data.objects.remove(landmarks_obj, do_unlink=True)
             return {'CANCELLED'}
 
         # Add target mesh to face objects if not already there
-        target_mesh = scene.faceit_manual_landmarks_target_mesh
+        target_mesh = scene.expresso_manual_landmarks_target_mesh
         if target_mesh:
-            # Check if target mesh is registered in FaceIt
-            face_objects = scene.faceit_face_objects
+            # Check if target mesh is registered in Expresso
+            face_objects = scene.expresso_face_objects
             if target_mesh.name not in [obj.name for obj in face_objects]:
                 # Try to register the mesh
                 try:
                     item = face_objects.add()
                     item.name = target_mesh.name
-                    self.report({'INFO'}, f"Added {target_mesh.name} to FaceIt face objects")
+                    self.report({'INFO'}, f"Added {target_mesh.name} to Expresso face objects")
                 except:
-                    self.report({'WARNING'}, f"Could not register {target_mesh.name} in FaceIt. Rig generation may fail.")
+                    self.report({'WARNING'}, f"Could not register {target_mesh.name} in Expresso. Rig generation may fail.")
 
-        # Call FaceIt's rig generation operator
+        # Call Expresso's rig generation operator
         try:
-            result = bpy.ops.faceit.generate_rig('INVOKE_DEFAULT')
+            result = bpy.ops.expresso.generate_rig('INVOKE_DEFAULT')
 
             if result == {'FINISHED'}:
                 self.report({'INFO'}, "Successfully generated rig from manual landmarks")
                 return {'FINISHED'}
             else:
-                self.report({'WARNING'}, "Rig generation completed with warnings. Check FaceIt panel for details.")
+                self.report({'WARNING'}, "Rig generation completed with warnings. Check Expresso panel for details.")
                 return {'CANCELLED'}
 
         except Exception as e:
@@ -505,8 +505,8 @@ class FACEIT_OT_GenerateRigFromManualLandmarks(Operator):
     def invoke(self, context, event):
         # Show confirmation dialog with landmark count
         scene = context.scene
-        set_count = sum(1 for lm in scene.faceit_manual_landmarks if lm.is_set)
-        total_count = len(scene.faceit_manual_landmarks)
+        set_count = sum(1 for lm in scene.expresso_manual_landmarks if lm.is_set)
+        total_count = len(scene.expresso_manual_landmarks)
 
         if set_count < total_count * 0.5:  # Less than 50% landmarks set
             return context.window_manager.invoke_confirm(self, event)

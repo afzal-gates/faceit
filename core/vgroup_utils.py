@@ -1,9 +1,9 @@
 import bpy
 from bpy.types import Context
 
-from ..core.faceit_data import FACEIT_VERTEX_GROUPS
-from ..core.modifier_utils import get_faceit_armature_modifier
-from . import faceit_utils as futils
+from ..core.expresso_data import EXPRESSO_VERTEX_GROUPS
+from ..core.modifier_utils import get_expresso_armature_modifier
+from . import expresso_utils as futils
 
 
 def get_weights(ob, vgroup):
@@ -47,7 +47,7 @@ def remove_unused_vertex_groups_thresh(obj, thres=0):
 
 
 def vertex_group_sanity_check(obj):
-    '''Check if the vertex groups data is matching the actual objects data. This fixes a Blender indexing error and follow-up errors in faceit.'''
+    '''Check if the vertex groups data is matching the actual objects data. This fixes a Blender indexing error and follow-up errors in expresso.'''
     vg_count = len(obj.vertex_groups)
     for v in obj.data.vertices:
         if any(g.group > vg_count for g in v.groups):
@@ -94,7 +94,7 @@ def get_vertex_groups_from_objects(objects=None) -> list:
     '''Return list of vertex groups for all passed @objects'''
     vg_names = []
     if not objects:
-        objects = futils.get_faceit_objects_list()
+        objects = futils.get_expresso_objects_list()
 
     for obj in objects:
         if obj.vertex_groups:
@@ -157,7 +157,7 @@ def remove_deform_vertex_grps(obj, armature=None, remove_all=False):
     Removes all DEF (deform) vertex groups from an object
     @armature: object of type armature
     @obj : the object
-    @remove_all : Remove all Vertex Group except faceit groups
+    @remove_all : Remove all Vertex Group except expresso groups
     '''
     if not obj.vertex_groups:
         return
@@ -169,22 +169,22 @@ def remove_deform_vertex_grps(obj, armature=None, remove_all=False):
             deform_groups = get_deform_bones_from_armature(armature_obj=armature)
 
     for grp in obj.vertex_groups:
-        if 'faceit' not in grp.name:
+        if 'expresso' not in grp.name:
             if not grp.lock_weight:
                 if grp.name in deform_groups or remove_all:
                     obj.vertex_groups.remove(grp)
 
 
-def remove_faceit_vertex_grps(obj):
+def remove_expresso_vertex_grps(obj):
     '''
-    Remove all user defined faceit vertex groups on obj
+    Remove all user defined expresso vertex groups on obj
     @obj : the object
     '''
     if len(obj.vertex_groups) <= 0:
         return
     removed = []
     for grp in obj.vertex_groups:
-        if 'faceit' in grp.name:
+        if 'expresso' in grp.name:
             removed.append(grp.name)
             obj.vertex_groups.remove(grp)
     return removed
@@ -199,7 +199,7 @@ def remove_all_weight(obj, vs=None, armature_obj=None):
     deform_groups = []
 
     if not armature_obj:
-        arm_mod = get_faceit_armature_modifier(obj)
+        arm_mod = get_expresso_armature_modifier(obj)
         if arm_mod:
             armature_obj = arm_mod.object
 
@@ -229,42 +229,42 @@ def remove_vgroups_from_verts(obj, vs=None, filter_keep=None):
                 break
 
 
-def get_faceit_vertex_grps(obj, groups_filter=None):
+def get_expresso_vertex_grps(obj, groups_filter=None):
     '''
-    check for user defined faceit groups on obj
-    returns : list of all faceit groups on obj
+    check for user defined expresso groups on obj
+    returns : list of all expresso groups on obj
     @obj : the object
     @groups_filter : list of vertex groups to check for, keywords alloud
     '''
     if len(obj.vertex_groups) <= 0:
         return []
-    faceit_groups = []
+    expresso_groups = []
     for grp in obj.vertex_groups:
         if groups_filter:
             if any((i == grp.name) for i in groups_filter):
-                faceit_groups.append(grp.name)
+                expresso_groups.append(grp.name)
         else:
-            if 'faceit' in grp.name:
-                faceit_groups.append(grp.name)
-    return faceit_groups
+            if 'expresso' in grp.name:
+                expresso_groups.append(grp.name)
+    return expresso_groups
 
 
-def get_assigned_faceit_vertex_groups(objects=None) -> list:
+def get_assigned_expresso_vertex_groups(objects=None) -> list:
     '''Return list of vertex groups for all passed @objects'''
-    faceit_groups = set(FACEIT_VERTEX_GROUPS)
+    expresso_groups = set(EXPRESSO_VERTEX_GROUPS)
     found_groups = set()
     if not objects:
-        objects = futils.get_faceit_objects_list()
+        objects = futils.get_expresso_objects_list()
     for obj in objects:
-        found_groups.update(faceit_groups.intersection(obj.vertex_groups.keys()))
-        if len(found_groups) == len(faceit_groups):
-            break  # Stop searching if all faceit groups are found
+        found_groups.update(expresso_groups.intersection(obj.vertex_groups.keys()))
+        if len(found_groups) == len(expresso_groups):
+            break  # Stop searching if all expresso groups are found
     return found_groups
 
 
 def get_objects_with_vertex_group(vgroup_name, objects=None, get_all=False):
     '''Find objects in the list with the specified vertex group'''
-    objects = objects or futils.get_faceit_objects_list()
+    objects = objects or futils.get_expresso_objects_list()
     if not objects:
         return
     # return only the first occurence of vgroup in objects
@@ -294,7 +294,7 @@ def get_verts_in_vgroup(obj, grp_name):
     vg_idx = obj.vertex_groups.find(grp_name)
     if vg_idx == -1:
         return
-    # get all vertices in faceit group
+    # get all vertices in expresso group
     return [v for v in obj.data.vertices if vg_idx in [vg.group for vg in v.groups]]
 
 

@@ -146,7 +146,7 @@ def get_driver_from_retarget_dictionary_fixed_slider_range(
         t.id_type = 'OBJECT'
         t.id = control_rig_id
         t.data_path = f'["{expression_name}"]'
-        # t.data_path = f'faceit_crig_targets["{expression_name}"].amplify'
+        # t.data_path = f'expresso_crig_targets["{expression_name}"].amplify'
         dr.expression = '(' + expression + ') * amp'
         return True, bone_name
     else:

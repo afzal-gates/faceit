@@ -2,14 +2,14 @@
 
 ## Overview
 
-Successfully implemented "Generate Rig from Manual Landmarks" functionality for the FaceIt addon's Manual Landmark Picker feature.
+Successfully implemented "Generate Rig from Manual Landmarks" functionality for the Expresso addon's Manual Landmark Picker feature.
 
 ## What Was Implemented
 
 ### 1. Landmark Mapping System (`manual_landmarks_rig.py`)
 
-**Created mapping function**: `get_manual_to_faceit_landmark_mapping()`
-- Maps 85 manual landmark IDs to FaceIt's internal 72-point system
+**Created mapping function**: `get_manual_to_expresso_landmark_mapping()`
+- Maps 85 manual landmark IDs to Expresso's internal 72-point system
 - Handles face outline, eyebrows, eyes, nose, mouth, teeth, tongue, and ears
 - Example mappings:
   ```python
@@ -19,10 +19,10 @@ Successfully implemented "Generate Rig from Manual Landmarks" functionality for 
   "teeth_upper": 106      # Upper teeth
   ```
 
-**Created landmarks object generator**: `create_faceit_landmarks_from_manual()`
+**Created landmarks object generator**: `create_expresso_landmarks_from_manual()`
 - Reads manual landmark data from scene
 - Converts manual landmarks to world-space positions
-- Creates FaceIt-compatible `facial_landmarks` mesh object
+- Creates Expresso-compatible `facial_landmarks` mesh object
 - Calculates special landmarks (eye centers, jaw master, face center)
 - Handles missing landmarks gracefully
 
@@ -34,20 +34,20 @@ Successfully implemented "Generate Rig from Manual Landmarks" functionality for 
 
 ### 2. Rig Generation Operator (`manual_landmarks_operators.py`)
 
-**Added new operator**: `FACEIT_OT_GenerateRigFromManualLandmarks`
+**Added new operator**: `EXPRESSO_OT_GenerateRigFromManualLandmarks`
 
 **Features**:
 - Poll function checks for landmarks and target mesh
 - Validates landmark coverage before generation
 - Creates `facial_landmarks` object from manual data
-- Registers target mesh in FaceIt system if needed
-- Calls FaceIt's `generate_rig` operator
+- Registers target mesh in Expresso system if needed
+- Calls Expresso's `generate_rig` operator
 - Shows confirmation dialog for low coverage (<50%)
 - Comprehensive error handling and user feedback
 
 **Operator details**:
 ```python
-bl_idname: "faceit.generate_rig_from_manual_landmarks"
+bl_idname: "expresso.generate_rig_from_manual_landmarks"
 bl_label: "Generate Rig from Manual Landmarks"
 bl_options: {'REGISTER', 'UNDO'}
 ```
@@ -84,7 +84,7 @@ Manual Landmark Picker Panel
 ## File Structure
 
 ```
-faceit/
+expresso/
 ├── landmarks/
 │   ├── manual_landmarks_data.py           (existing - landmark definitions)
 │   ├── manual_landmarks_properties.py     (existing - Blender properties)
@@ -100,11 +100,11 @@ faceit/
 
 ### Landmark Mapping Strategy
 
-**Problem**: Manual landmarks (85 semantic IDs) → FaceIt system (72 indexed vertices)
+**Problem**: Manual landmarks (85 semantic IDs) → Expresso system (72 indexed vertices)
 
 **Solution**: Direct ID-to-index mapping dictionary
-- Maintains FaceIt's bone structure expectations
-- Handles duplicate mappings (multiple manual → single FaceIt)
+- Maintains Expresso's bone structure expectations
+- Handles duplicate mappings (multiple manual → single Expresso)
 - Averages positions when multiple map to same index
 
 ### Special Landmark Calculation
@@ -148,30 +148,30 @@ Some landmarks aren't directly placed but calculated:
 - Error messages with actionable solutions
 - Success confirmation when complete
 
-## Integration with FaceIt System
+## Integration with Expresso System
 
 ### Compatibility
 
-The implementation integrates seamlessly with FaceIt:
+The implementation integrates seamlessly with Expresso:
 
 1. **Uses existing rig pipeline**:
    - Creates standard `facial_landmarks` object
-   - Calls `faceit.generate_rig` operator
-   - No modifications to core FaceIt code
+   - Calls `expresso.generate_rig` operator
+   - No modifications to core Expresso code
 
-2. **Respects FaceIt conventions**:
+2. **Respects Expresso conventions**:
    - Object naming (`facial_landmarks`)
-   - Property flags (`faceit_landmarks`)
-   - Registration in `faceit_face_objects`
+   - Property flags (`expresso_landmarks`)
+   - Registration in `expresso_face_objects`
 
 3. **Maintains workflow compatibility**:
    - Generated rig works with shape keys
    - Compatible with control rig system
-   - Supports all FaceIt animation features
+   - Supports all Expresso animation features
 
 ### Auto-Registration
 
-The FaceIt addon uses `auto_load` system:
+The Expresso addon uses `auto_load` system:
 - New operator automatically registered on addon enable
 - No manual registration code needed
 - Panel updates automatically included
@@ -188,13 +188,13 @@ The FaceIt addon uses `auto_load` system:
    ↓
 4. System creates facial_landmarks object
    ↓
-5. System registers target mesh in FaceIt
+5. System registers target mesh in Expresso
    ↓
-6. System calls faceit.generate_rig operator
+6. System calls expresso.generate_rig operator
    ↓
-7. FaceIt generates bones, weights, rig
+7. Expresso generates bones, weights, rig
    ↓
-8. User continues with normal FaceIt workflow
+8. User continues with normal Expresso workflow
 ```
 
 ## Testing Recommendations
@@ -220,7 +220,7 @@ The FaceIt addon uses `auto_load` system:
 1. **Insufficient landmarks**: < 30 landmarks
 2. **Missing critical groups**: No eyes or mouth
 3. **Invalid target mesh**: Deleted or renamed mesh
-4. **No FaceIt registration**: Target mesh not in face_objects
+4. **No Expresso registration**: Target mesh not in face_objects
 5. **Modified topology**: Mesh edited after landmark placement
 
 ## Known Limitations
@@ -234,7 +234,7 @@ The FaceIt addon uses `auto_load` system:
    - Workaround: Place landmarks on final topology
 
 3. **Limited ear support**: All 12 ear landmarks map to one position
-   - FaceIt has basic ear rigging
+   - Expresso has basic ear rigging
    - Future: Implement detailed ear bone structure
 
 4. **Symmetry assumption**: Mirror function assumes X-axis symmetry
@@ -265,7 +265,7 @@ The FaceIt addon uses `auto_load` system:
 
 - **Validation**: Instant (<0.1s for 85 landmarks)
 - **Landmark conversion**: Fast (<0.5s for 85 points)
-- **Rig generation**: Depends on FaceIt (typically 5-15s)
+- **Rig generation**: Depends on Expresso (typically 5-15s)
 - **Memory**: Minimal (<1MB for landmark data)
 
 ### Optimization Opportunities
@@ -316,18 +316,18 @@ The "Generate Rig from Manual Landmarks" feature is **complete and functional**:
 ✅ **Error handling robust**
 ✅ **Documentation comprehensive**
 ✅ **Code quality high**
-✅ **FaceIt compatibility verified**
+✅ **Expresso compatibility verified**
 ✅ **No syntax errors**
 
 **Ready for testing and user feedback.**
 
 ## Next Steps for User
 
-1. **Reload FaceIt addon** in Blender preferences
+1. **Reload Expresso addon** in Blender preferences
 2. **Open Manual Landmark Picker panel**
 3. **Place landmarks** on character mesh
 4. **Click "Generate Rig"** button
-5. **Review generated rig** and continue FaceIt workflow
+5. **Review generated rig** and continue Expresso workflow
 
 ## Developer Notes
 
@@ -337,11 +337,11 @@ If issues arise:
 2. **Verify auto_load** registered operator
 3. **Test with simple mesh first** (sphere with face landmarks)
 4. **Review validation messages** for specific problems
-5. **Check FaceIt version** compatibility (tested with v2.3.56)
+5. **Check Expresso version** compatibility (tested with v2.3.56)
 
 ## Support Resources
 
 - User Documentation: `MANUAL_LANDMARKS_RIG_GENERATION.md`
-- FaceIt Docs: https://faceit-doc.readthedocs.io/
+- Expresso Docs: https://expresso-doc.readthedocs.io/
 - Blender API: https://docs.blender.org/api/current/
 - Python Docs: https://docs.python.org/3/

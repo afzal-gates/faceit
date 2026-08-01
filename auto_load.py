@@ -90,7 +90,7 @@ def get_register_deps_dict(modules):
 def iter_my_register_deps(cls, my_classes, my_classes_by_idname):
     yield from iter_my_deps_from_parent_id(cls, my_classes_by_idname)
     yield from iter_my_deps_from_annotations(cls, my_classes)
-    yield from iter_my_deps_from_faceit_predecessor(cls, my_classes)
+    yield from iter_my_deps_from_expresso_predecessor(cls, my_classes)
 
 
 def iter_my_deps_from_annotations(cls, my_classes):
@@ -112,11 +112,11 @@ def get_dependency_from_annotation(value):
     return None
 
 
-def iter_my_deps_from_faceit_predecessor(cls, my_classes_by_idname):
+def iter_my_deps_from_expresso_predecessor(cls, my_classes_by_idname):
     if bpy.types.Panel in cls.__bases__:
-        if getattr(cls, "faceit_predecessor", None):
+        if getattr(cls, "expresso_predecessor", None):
             for other_cls in my_classes_by_idname:
-                if other_cls.__name__ == cls.faceit_predecessor:
+                if other_cls.__name__ == cls.expresso_predecessor:
                     yield other_cls
 
 

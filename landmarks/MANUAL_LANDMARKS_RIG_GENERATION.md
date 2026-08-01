@@ -1,10 +1,10 @@
 # Manual Landmarks Rig Generation
 
-Generate facial rigs directly from manually placed landmarks in the FaceIt addon.
+Generate facial rigs directly from manually placed landmarks in the Expresso addon.
 
 ## Overview
 
-The Manual Landmarks Rig Generation feature allows you to create a complete FaceIt facial rig using landmarks that you manually place on your character's mesh. This is useful when:
+The Manual Landmarks Rig Generation feature allows you to create a complete Expresso facial rig using landmarks that you manually place on your character's mesh. This is useful when:
 
 - Automatic landmark detection doesn't work well for your character
 - You have a stylized or non-human character
@@ -13,11 +13,11 @@ The Manual Landmarks Rig Generation feature allows you to create a complete Face
 
 ## How It Works
 
-The system converts your manually placed landmarks into FaceIt's standard landmark format, then uses the existing FaceIt rig generation pipeline to create a fully functional facial rig.
+The system converts your manually placed landmarks into Expresso's standard landmark format, then uses the existing Expresso rig generation pipeline to create a fully functional facial rig.
 
 ### Landmark Mapping
 
-Manual landmarks (85 points) are mapped to FaceIt's internal landmark system:
+Manual landmarks (85 points) are mapped to Expresso's internal landmark system:
 
 - **Face Outline** → Jaw and face contour bones
 - **Eyebrows** → Eyebrow deformation bones
@@ -56,7 +56,7 @@ The UI shows real-time status:
 
 ### 1. Place Manual Landmarks
 
-1. Open **FaceIt Panel** → **Landmarks** → **Manual Landmark Picker**
+1. Open **Expresso Panel** → **Landmarks** → **Manual Landmark Picker**
 2. Select your character's head mesh as **Target Mesh**
 3. Click **Initialize Manual Landmarks**
 4. Place landmarks by:
@@ -79,13 +79,13 @@ Check the **Rig Generation** section:
 
 ### 3. Generate the Rig
 
-1. Ensure your target mesh is registered in FaceIt (Setup tab)
+1. Ensure your target mesh is registered in Expresso (Setup tab)
 2. Click **Generate Rig** button
 3. If coverage is low (<50%), confirm the action
 4. The system will:
    - Validate your landmarks
    - Create a `facial_landmarks` object
-   - Call FaceIt's rig generation system
+   - Call Expresso's rig generation system
    - Generate bones and weights
 
 ### 4. Post-Generation
@@ -94,7 +94,7 @@ After rig generation:
 - The facial rig armature is created
 - Bones are positioned based on your landmarks
 - Vertex weights are calculated automatically
-- You can proceed with FaceIt's standard workflow:
+- You can proceed with Expresso's standard workflow:
   - Shape key creation
   - Control rig generation
   - Animation and expressions
@@ -119,7 +119,7 @@ After rig generation:
 
 ### "Failed to create landmarks object"
 
-**Problem:** Manual landmarks couldn't be converted to FaceIt format
+**Problem:** Manual landmarks couldn't be converted to Expresso format
 
 **Solutions:**
 - Check that all landmarks reference valid mesh objects
@@ -127,15 +127,15 @@ After rig generation:
 - Ensure target mesh still exists and hasn't been modified
 - Try resetting and re-placing problematic landmarks
 
-### "FaceIt rig generation operator not found"
+### "Expresso rig generation operator not found"
 
-**Problem:** FaceIt rig system isn't available
+**Problem:** Expresso rig system isn't available
 
 **Solutions:**
-- Verify FaceIt addon is properly installed and enabled
+- Verify Expresso addon is properly installed and enabled
 - Restart Blender to refresh the addon
-- Check FaceIt addon version compatibility
-- Reinstall FaceIt if necessary
+- Check Expresso addon version compatibility
+- Reinstall Expresso if necessary
 
 ### Rig generation fails or produces poor results
 
@@ -212,9 +212,9 @@ Load previously saved landmarks:
 
 ### Landmark Conversion
 
-The system maps 85 manual landmarks to FaceIt's 72-point + special points system:
+The system maps 85 manual landmarks to Expresso's 72-point + special points system:
 
-| Manual Landmarks | FaceIt System | Bone Regions |
+| Manual Landmarks | Expresso System | Bone Regions |
 |-----------------|---------------|--------------|
 | Face Outline (17) | Indices 0-16 | Jaw, chin, temples |
 | Eyebrows (10) | Indices 47-64 | Brow deformation |
@@ -242,7 +242,7 @@ The system calculates derived landmarks:
 
 ## Workflow Integration
 
-### With FaceIt Standard Workflow
+### With Expresso Standard Workflow
 
 1. **Setup Tab**
    - Register your character mesh
@@ -262,8 +262,8 @@ The system calculates derived landmarks:
 
 ### With Custom Pipelines
 
-The generated rig is a standard FaceIt rig:
-- Compatible with all FaceIt features
+The generated rig is a standard Expresso rig:
+- Compatible with all Expresso features
 - Exports to standard formats (FBX, glTF)
 - Works with motion capture data
 - Integrates with game engines
@@ -285,7 +285,7 @@ The generated rig is a standard FaceIt rig:
    - Teeth, tongue must be part of main head mesh
    - Separate meshes not supported (yet)
 
-4. **Ear support limited** - FaceIt has basic ear rigging
+4. **Ear support limited** - Expresso has basic ear rigging
    - All 12 ear landmarks map to general ear region
    - Detailed ear deformation may require custom bones
 
@@ -308,12 +308,12 @@ Planned improvements:
 ## Support
 
 For issues or questions:
-- Check FaceIt documentation: https://faceit-doc.readthedocs.io/
+- Check Expresso documentation: https://expresso-doc.readthedocs.io/
 - Review this guide's troubleshooting section
 - Ensure manual landmarks are properly placed
-- Verify FaceIt addon is up to date
+- Verify Expresso addon is up to date
 - Test with simplified character first
 
 ## Credits
 
-Manual Landmarks Rig Generation is an extension to the FaceIt addon by Fynn Braren.
+Manual Landmarks Rig Generation is an extension to the Expresso addon by Fynn Braren.

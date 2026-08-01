@@ -2,24 +2,24 @@ import bpy
 
 from ..properties.mocap_scene_properties import Mocap_Engine_Properties
 
-from ..core.faceit_data import get_engine_settings
+from ..core.expresso_data import get_engine_settings
 
 from .draw_utils import draw_eye_targets_layout, draw_head_targets_layout, draw_shapes_action_layout
-from .ui import FACEIT_PT_Base, FACEIT_PT_BaseSub
+from .ui import EXPRESSO_PT_Base, EXPRESSO_PT_BaseSub
 from ..mocap.osc_receiver import osc_queue
 from ..panels.draw_utils import draw_text_block
 from ..ctrl_rig.control_rig_utils import is_control_rig_connected
 
 
-class FACEIT_PT_BaseMocap(FACEIT_PT_Base):
+class EXPRESSO_PT_BaseMocap(EXPRESSO_PT_Base):
     UI_TABS = ('MOCAP',)
 
 
-class FACEIT_PT_MocapSetup(FACEIT_PT_BaseMocap, bpy.types.Panel):
+class EXPRESSO_PT_MocapSetup(EXPRESSO_PT_BaseMocap, bpy.types.Panel):
     '''Setup / Head Targets / Actions / Control Rig'''
     bl_label = 'Setup'
-    bl_idname = 'FACEIT_PT_MocapSetup'
-    weblink = "https://faceit-doc.readthedocs.io/en/latest/mocap_setup/"
+    bl_idname = 'EXPRESSO_PT_MocapSetup'
+    weblink = "https://expresso-doc.readthedocs.io/en/latest/mocap_setup/"
 
     @classmethod
     def poll(cls, context):
@@ -29,20 +29,20 @@ class FACEIT_PT_MocapSetup(FACEIT_PT_BaseMocap, bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         row = layout.row(align=True)
-        row.operator("faceit.reset_expression_values", icon='LOOP_BACK')
-        head_obj = scene.faceit_head_target_object
+        row.operator("expresso.reset_expression_values", icon='LOOP_BACK')
+        head_obj = scene.expresso_head_target_object
         if head_obj is not None:
-            row.operator("faceit.reset_head_pose", icon='LOOP_BACK')
-        eye_rig = scene.faceit_eye_target_rig
+            row.operator("expresso.reset_head_pose", icon='LOOP_BACK')
+        eye_rig = scene.expresso_eye_target_rig
         if eye_rig:
             if eye_rig is not head_obj:
-                row.operator("faceit.reset_eye_pose", icon='LOOP_BACK')
+                row.operator("expresso.reset_eye_pose", icon='LOOP_BACK')
 
 
-class FACEIT_PT_ShapesSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
+class EXPRESSO_PT_ShapesSetup(EXPRESSO_PT_BaseSub, bpy.types.Panel):
     bl_label = 'Shapes Setup'
-    bl_idname = 'FACEIT_PT_ShapesSetup'
-    bl_parent_id = 'FACEIT_PT_MocapSetup'
+    bl_idname = 'EXPRESSO_PT_ShapesSetup'
+    bl_parent_id = 'EXPRESSO_PT_MocapSetup'
 
     @classmethod
     def poll(cls, context):
@@ -55,24 +55,24 @@ class FACEIT_PT_ShapesSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
         sub = row.split(factor=0.4)
         sub.alignment = 'RIGHT'
         sub.label(text="Target Objects")
-        sub.operator("faceit.go_to_tab", text="Setup Tab", icon='TRIA_LEFT').tab = "SETUP"
+        sub.operator("expresso.go_to_tab", text="Setup Tab", icon='TRIA_LEFT').tab = "SETUP"
         row = layout.row()
         sub = row.split(factor=0.4)
         sub.alignment = 'RIGHT'
         sub.label(text="Target Shapes")
-        sub.operator("faceit.go_to_tab", text="Shapes Tab", icon='TRIA_LEFT').tab = "SHAPES"
+        sub.operator("expresso.go_to_tab", text="Shapes Tab", icon='TRIA_LEFT').tab = "SHAPES"
         row = layout.row()
         sub = row.split(factor=0.4)
         sub.alignment = 'RIGHT'
         sub.label(text="Control Rig")
-        sub.operator("faceit.go_to_tab", text="Control Tab", icon='TRIA_LEFT').tab = "CONTROL"
+        sub.operator("expresso.go_to_tab", text="Control Tab", icon='TRIA_LEFT').tab = "CONTROL"
 
 
-class FACEIT_PT_MocapMotionTargets(FACEIT_PT_BaseSub, bpy.types.Panel):
+class EXPRESSO_PT_MocapMotionTargets(EXPRESSO_PT_BaseSub, bpy.types.Panel):
     bl_label = 'Head Setup'
-    bl_idname = 'FACEIT_PT_MocapMotionTargets'
-    bl_parent_id = 'FACEIT_PT_MocapSetup'
-    faceit_predecessor = 'FACEIT_PT_ShapesSetup'
+    bl_idname = 'EXPRESSO_PT_MocapMotionTargets'
+    bl_parent_id = 'EXPRESSO_PT_MocapSetup'
+    expresso_predecessor = 'EXPRESSO_PT_ShapesSetup'
 
     @classmethod
     def poll(cls, context):
@@ -87,11 +87,11 @@ class FACEIT_PT_MocapMotionTargets(FACEIT_PT_BaseSub, bpy.types.Panel):
         draw_head_targets_layout(col, scene=scene)
 
 
-class FACEIT_PT_MocapEyeSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
+class EXPRESSO_PT_MocapEyeSetup(EXPRESSO_PT_BaseSub, bpy.types.Panel):
     bl_label = 'Eye Setup'
-    bl_idname = 'FACEIT_PT_MocapEyeSetup'
-    bl_parent_id = 'FACEIT_PT_MocapSetup'
-    faceit_predecessor = 'FACEIT_PT_MocapMotionTargets'
+    bl_idname = 'EXPRESSO_PT_MocapEyeSetup'
+    bl_parent_id = 'EXPRESSO_PT_MocapSetup'
+    expresso_predecessor = 'EXPRESSO_PT_MocapMotionTargets'
 
     @classmethod
     def poll(cls, context):
@@ -118,25 +118,25 @@ class FACEIT_PT_MocapEyeSetup(FACEIT_PT_BaseSub, bpy.types.Panel):
             col,
             text="Remove or disable the target shapes on the eye objects to avoid double deformation from shape keys and bone rotation.",)
         row = col.row(align=False)
-        row.operator('faceit.disable_eye_look_shape_keys_from_selected_objects', icon='HIDE_OFF')
+        row.operator('expresso.disable_eye_look_shape_keys_from_selected_objects', icon='HIDE_OFF')
 
 
-class FACEIT_PT_MocapImporters(FACEIT_PT_BaseMocap, bpy.types.Panel):
+class EXPRESSO_PT_MocapImporters(EXPRESSO_PT_BaseMocap, bpy.types.Panel):
     bl_label = 'Import (Recorded)'
-    bl_idname = 'FACEIT_PT_MocapImporters'
-    faceit_predecessor = 'FACEIT_PT_MocapSetup'
-    weblink = "https://faceit-doc.readthedocs.io/en/latest/mocap_importers/"
+    bl_idname = 'EXPRESSO_PT_MocapImporters'
+    expresso_predecessor = 'EXPRESSO_PT_MocapSetup'
+    weblink = "https://expresso-doc.readthedocs.io/en/latest/mocap_importers/"
 
     @classmethod
     def poll(cls, context):
         return super().poll(context)
 
 
-class FACEIT_PT_MocapA2F(FACEIT_PT_BaseSub, bpy.types.Panel):
+class EXPRESSO_PT_MocapA2F(EXPRESSO_PT_BaseSub, bpy.types.Panel):
     bl_label = 'Audio2Face'
-    bl_idname = 'FACEIT_PT_MocapA2F'
-    bl_parent_id = 'FACEIT_PT_MocapImporters'
-    faceit_predecessor = 'FACEIT_PT_MocapEpic'
+    bl_idname = 'EXPRESSO_PT_MocapA2F'
+    bl_parent_id = 'EXPRESSO_PT_MocapImporters'
+    expresso_predecessor = 'EXPRESSO_PT_MocapEpic'
 
     @classmethod
     def poll(cls, context):
@@ -148,30 +148,30 @@ class FACEIT_PT_MocapA2F(FACEIT_PT_BaseSub, bpy.types.Panel):
 
         col = layout.column(align=True)
 
-        a2f_mocap_settings = scene.faceit_live_mocap_settings.get('A2F')
-        # draw_utils.draw_web_link(row, 'https://faceit-doc.readthedocs.io/en/latest/epic_utils/')
+        a2f_mocap_settings = scene.expresso_live_mocap_settings.get('A2F')
+        # draw_utils.draw_web_link(row, 'https://expresso-doc.readthedocs.io/en/latest/epic_utils/')
 
         row = col.row(align=True)
         row.prop(a2f_mocap_settings, 'audio_filename', text='')
-        row.operator('faceit.load_audio_file', icon='FILE_FOLDER').engine = 'A2F'
-        row.operator('faceit.clear_audio_file', text='', icon='X').engine = 'A2F'
+        row.operator('expresso.load_audio_file', icon='FILE_FOLDER').engine = 'A2F'
+        row.operator('expresso.clear_audio_file', text='', icon='X').engine = 'A2F'
         row = col.row(align=True)
         row.prop(a2f_mocap_settings, 'filename', text='')
-        row.operator('faceit.load_audio2face_json_file', text='Load Json', icon='FILE_FOLDER')
-        row.operator('faceit.clear_motion_file', text='', icon='X').engine = 'A2F'
+        row.operator('expresso.load_audio2face_json_file', text='Load Json', icon='FILE_FOLDER')
+        row.operator('expresso.clear_motion_file', text='', icon='X').engine = 'A2F'
 
         row = col.row(align=True)
         row.operator_context = 'INVOKE_DEFAULT'
 
-        row.operator('faceit.import_a2f_mocap', icon='IMPORT')
+        row.operator('expresso.import_a2f_mocap', icon='IMPORT')
         row.enabled = (a2f_mocap_settings.filename != '')
 
 
-class FACEIT_PT_MocapFaceCap(FACEIT_PT_BaseSub, bpy.types.Panel):
+class EXPRESSO_PT_MocapFaceCap(EXPRESSO_PT_BaseSub, bpy.types.Panel):
     bl_label = 'Face Cap'
-    bl_idname = 'FACEIT_PT_MocapFaceCap'
-    bl_parent_id = 'FACEIT_PT_MocapImporters'
-    # faceit_predecessor = 'FACEIT_PT_MocapImporters'
+    bl_idname = 'EXPRESSO_PT_MocapFaceCap'
+    bl_parent_id = 'EXPRESSO_PT_MocapImporters'
+    # expresso_predecessor = 'EXPRESSO_PT_MocapImporters'
 
     @classmethod
     def poll(cls, context):
@@ -183,28 +183,28 @@ class FACEIT_PT_MocapFaceCap(FACEIT_PT_BaseSub, bpy.types.Panel):
 
         col = layout.column(align=True)
 
-        face_cap_mocap_settings = scene.faceit_live_mocap_settings.get('FACECAP')
+        face_cap_mocap_settings = scene.expresso_live_mocap_settings.get('FACECAP')
 
         row = col.row(align=True)
         row.prop(face_cap_mocap_settings, 'audio_filename', text='')
-        row.operator('faceit.load_audio_file', icon='FILE_FOLDER').engine = 'FACECAP'
-        row.operator('faceit.clear_audio_file', text='', icon='X').engine = 'FACECAP'
+        row.operator('expresso.load_audio_file', icon='FILE_FOLDER').engine = 'FACECAP'
+        row.operator('expresso.clear_audio_file', text='', icon='X').engine = 'FACECAP'
         row = col.row(align=True)
         row.prop(face_cap_mocap_settings, 'filename', text='')
-        row.operator('faceit.load_face_cap_txt_file', text='Load TXT', icon='FILE_FOLDER')
-        row.operator('faceit.clear_motion_file', text='', icon='X').engine = 'FACECAP'
+        row.operator('expresso.load_face_cap_txt_file', text='Load TXT', icon='FILE_FOLDER')
+        row.operator('expresso.clear_motion_file', text='', icon='X').engine = 'FACECAP'
         row = col.row(align=True)
         row.operator_context = 'INVOKE_DEFAULT'
 
-        row.operator('faceit.import_face_cap_mocap', icon='IMPORT')
+        row.operator('expresso.import_face_cap_mocap', icon='IMPORT')
         row.enabled = (face_cap_mocap_settings.filename != '')
 
 
-class FACEIT_PT_MocapEpic(FACEIT_PT_BaseSub, bpy.types.Panel):
+class EXPRESSO_PT_MocapEpic(EXPRESSO_PT_BaseSub, bpy.types.Panel):
     bl_label = 'Live Link Face'
-    bl_idname = 'FACEIT_PT_MocapEpic'
-    bl_parent_id = 'FACEIT_PT_MocapImporters'
-    faceit_predecessor = 'FACEIT_PT_MocapFaceCap'
+    bl_idname = 'EXPRESSO_PT_MocapEpic'
+    bl_parent_id = 'EXPRESSO_PT_MocapImporters'
+    expresso_predecessor = 'EXPRESSO_PT_MocapFaceCap'
 
     @classmethod
     def poll(cls, context):
@@ -216,28 +216,28 @@ class FACEIT_PT_MocapEpic(FACEIT_PT_BaseSub, bpy.types.Panel):
 
         col = layout.column(align=True)
 
-        ue_mocap_settings = scene.faceit_live_mocap_settings.get('EPIC')
-        # draw_utils.draw_web_link(row, 'https://faceit-doc.readthedocs.io/en/latest/epic_utils/')
+        ue_mocap_settings = scene.expresso_live_mocap_settings.get('EPIC')
+        # draw_utils.draw_web_link(row, 'https://expresso-doc.readthedocs.io/en/latest/epic_utils/')
         row = col.row(align=True)
         row.prop(ue_mocap_settings, 'audio_filename', text='')
-        row.operator('faceit.load_audio_file', icon='FILE_FOLDER').engine = 'EPIC'
-        row.operator('faceit.clear_audio_file', text='', icon='X').engine = 'EPIC'
+        row.operator('expresso.load_audio_file', icon='FILE_FOLDER').engine = 'EPIC'
+        row.operator('expresso.clear_audio_file', text='', icon='X').engine = 'EPIC'
         row = col.row(align=True)
         row.prop(ue_mocap_settings, 'filename', text='')
-        row.operator('faceit.load_live_link_face_csv_file', text='Load CSV', icon='FILE_FOLDER')
-        row.operator('faceit.clear_motion_file', text='', icon='X').engine = 'EPIC'
+        row.operator('expresso.load_live_link_face_csv_file', text='Load CSV', icon='FILE_FOLDER')
+        row.operator('expresso.clear_motion_file', text='', icon='X').engine = 'EPIC'
         row = col.row(align=True)
         row.operator_context = 'INVOKE_DEFAULT'
 
-        row.operator('faceit.import_epic_mocap', icon='IMPORT')
+        row.operator('expresso.import_epic_mocap', icon='IMPORT')
         row.enabled = (ue_mocap_settings.filename != '')
 
 
-class FACEIT_PT_MocapLive(FACEIT_PT_BaseMocap, bpy.types.Panel):
+class EXPRESSO_PT_MocapLive(EXPRESSO_PT_BaseMocap, bpy.types.Panel):
     bl_label = 'Live Recorder'
-    bl_idname = 'FACEIT_PT_MocapLive'
-    faceit_predecessor = 'FACEIT_PT_MocapImporters'
-    weblink = "https://faceit-doc.readthedocs.io/en/latest/mocap_live/"
+    bl_idname = 'EXPRESSO_PT_MocapLive'
+    expresso_predecessor = 'EXPRESSO_PT_MocapImporters'
+    weblink = "https://expresso-doc.readthedocs.io/en/latest/mocap_live/"
 
     @classmethod
     def poll(cls, context):
@@ -248,13 +248,13 @@ class FACEIT_PT_MocapLive(FACEIT_PT_BaseMocap, bpy.types.Panel):
         scene = context.scene
 
         recorded_data_found = bool(osc_queue)
-        receiver_enabled = scene.faceit_osc_receiver_enabled
+        receiver_enabled = scene.expresso_osc_receiver_enabled
         col = layout.column(align=True)
         row = col.row(align=False)
         col.use_property_split = True
         col.use_property_decorate = False
-        row.prop(scene, 'faceit_live_source', expand=True)
-        engine_settings: Mocap_Engine_Properties = get_engine_settings(scene.faceit_live_source)
+        row.prop(scene, 'expresso_live_source', expand=True)
+        engine_settings: Mocap_Engine_Properties = get_engine_settings(scene.expresso_live_source)
         col.separator(factor=2)
         row = col.row(align=True)
         row.prop(engine_settings, 'address')
@@ -272,15 +272,15 @@ class FACEIT_PT_MocapLive(FACEIT_PT_BaseMocap, bpy.types.Panel):
         col = layout.column(align=True)
         row = col.row(align=True)
         if not receiver_enabled:
-            row.operator("faceit.receiver_start", icon='PLAY')
+            row.operator("expresso.receiver_start", icon='PLAY')
             row.enabled = not recorded_data_found
         else:
-            row.operator("faceit.receiver_stop", icon='PAUSE')
+            row.operator("expresso.receiver_stop", icon='PAUSE')
 
         if osc_queue and not receiver_enabled:
             row = col.row(align=True)
-            row.operator("faceit.import_live_mocap", icon='IMPORT')
-            row.operator("faceit.clear_live_data", icon='X')
+            row.operator("expresso.import_live_mocap", icon='IMPORT')
+            row.operator("expresso.clear_live_data", icon='X')
 
         recorder_settings_box = col.box()
         recorder_settings_box.enabled = not (recorded_data_found or receiver_enabled)
@@ -379,18 +379,18 @@ class FACEIT_PT_MocapLive(FACEIT_PT_BaseMocap, bpy.types.Panel):
                     row.prop(engine_settings.smooth_regions, 'tongue', icon=icon_value)
                 col.use_property_split = False
 
-        ctrl_rig = scene.faceit_control_armature
+        ctrl_rig = scene.expresso_control_armature
         if ctrl_rig:
             col.use_property_split = False
             row = col.row(align=True)
             row.label(text="Control Rig")
             if is_control_rig_connected(ctrl_rig):
-                if not scene.faceit_auto_disconnect_ctrl_rig:
+                if not scene.expresso_auto_disconnect_ctrl_rig:
                     draw_text_block(context, col, text="Live Preview is disabled while the control rig is connected.",
                                     heading="WARNING")
                     col.separator()
                 row = col.row(align=True)
-                row.prop(scene, "faceit_auto_disconnect_ctrl_rig", icon='UNLINKED')
+                row.prop(scene, "expresso_auto_disconnect_ctrl_rig", icon='UNLINKED')
         # HEAD
         row = col.row(align=True)
         row.label(text="Head Animation")
@@ -418,9 +418,9 @@ class FACEIT_PT_MocapLive(FACEIT_PT_BaseMocap, bpy.types.Panel):
             row = col.row(align=True)
             row.prop(engine_settings, "head_location_multiplier")
             # row = col.row(align=True)
-            if scene.faceit_head_target_object:
-                if scene.faceit_head_target_object.type != 'ARMATURE':
-                    # if scene.faceit_head_sub_target
+            if scene.expresso_head_target_object:
+                if scene.expresso_head_target_object.type != 'ARMATURE':
+                    # if scene.expresso_head_sub_target
                     row.prop(engine_settings, "use_head_location_offset", icon='TRANSFORM_ORIGINS')
         # col.use_property_split = False
         if not (animate_loc or animate_rot or animate_shapes):
@@ -448,12 +448,12 @@ class FACEIT_PT_MocapLive(FACEIT_PT_BaseMocap, bpy.types.Panel):
                     row.prop(engine_settings, 'smooth_window_eye_bones')
 
 
-# class FACEIT_PT_MocapUtils(FACEIT_PT_BaseMocap, bpy.types.Panel):
+# class EXPRESSO_PT_MocapUtils(EXPRESSO_PT_BaseMocap, bpy.types.Panel):
 #     bl_label = 'Other Tools and Utilities'
-#     bl_idname = 'FACEIT_PT_MocapUtils'
-#     # bl_parent_id = 'FACEIT_PT_MocapSettings'
+#     bl_idname = 'EXPRESSO_PT_MocapUtils'
+#     # bl_parent_id = 'EXPRESSO_PT_MocapSettings'
 #     # bl_options = set()
-#     faceit_predecessor = 'FACEIT_PT_MocapLive'
+#     expresso_predecessor = 'EXPRESSO_PT_MocapLive'
 #     weblink = ""
 
 #     @classmethod
@@ -461,17 +461,17 @@ class FACEIT_PT_MocapLive(FACEIT_PT_BaseMocap, bpy.types.Panel):
 #         return super().poll(context)
 
 
-# class FACEIT_PT_MocapKeyframesOps(FACEIT_PT_BaseSub, bpy.types.Panel):
+# class EXPRESSO_PT_MocapKeyframesOps(EXPRESSO_PT_BaseSub, bpy.types.Panel):
 #     bl_label = 'Manipulate Keyframes'
-#     bl_idname = 'FACEIT_PT_MocapKeyframesOps'
-#     bl_parent_id = 'FACEIT_PT_MocapUtils'
-#     faceit_predecessor = 'FACEIT_PT_MocapMotionTargets'
+#     bl_idname = 'EXPRESSO_PT_MocapKeyframesOps'
+#     bl_parent_id = 'EXPRESSO_PT_MocapUtils'
+#     expresso_predecessor = 'EXPRESSO_PT_MocapMotionTargets'
 
 #     def draw(self, context):
 #         layout = self.layout
 #         # box = layout.box()
 #         col = layout.column(align=True)
 #         row = col.row()
-#         row.operator('faceit.add_zero_keyframe', icon='KEYFRAME')
+#         row.operator('expresso.add_zero_keyframe', icon='KEYFRAME')
 #         row = col.row()
-#         row.operator('faceit.remove_frame_range', icon='KEYFRAME')
+#         row.operator('expresso.remove_frame_range', icon='KEYFRAME')

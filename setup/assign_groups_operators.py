@@ -13,8 +13,8 @@ from bpy_extras.view3d_utils import region_2d_to_vector_3d, region_2d_to_origin_
 from mathutils import kdtree, Vector
 
 from ..core.modifier_utils import move_above_generators
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core.mesh_utils import search_corresponding_vertices_in_other_object, delete_vertices_outside, select_vertices, GeometryIslands
 from ..core import vgroup_utils as vg_utils
 
@@ -65,7 +65,7 @@ def draw_callback(self):
 
 
 def get_nice_group_name(grp_name):
-    '''splits the faceit group names by underscores and removes the faceit prefix'''
+    '''splits the expresso group names by underscores and removes the expresso prefix'''
     split_name = grp_name.split('_')[1:]
     nice_name = ' '.join(split_name).title()
     return nice_name
@@ -125,9 +125,9 @@ def draw_callback_blf(self):
             blf.draw(font_id, '(Ctrl + Z) to Undo')
 
 
-class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
+class EXPRESSO_OT_VertexGroupPicker(bpy.types.Operator):
     ''' Register the main surface. Draws an overlay to help you select the right vertices.'''
-    bl_idname = 'faceit.vertex_group_picker'
+    bl_idname = 'expresso.vertex_group_picker'
     bl_label = 'Assign Main Vertex Group'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -144,7 +144,7 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
     )
     additive_group: BoolProperty(
         name='Additive Group',
-        description="This group can be applied to the same vertex as other faceit groups. Other assigned groups won't be overridden",
+        description="This group can be applied to the same vertex as other expresso groups. Other assigned groups won't be overridden",
     )
     pick_geometry: EnumProperty(
         name='Pick Geometry',
@@ -179,7 +179,7 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
         # dict of type (obj: island_ids)
         self.active_assign_data: dict = None
         self.active_assign_shader_data: dict = None
-        # assigned data for each faceit vertex group
+        # assigned data for each expresso vertex group
         self.assigned_dict: dict = None
         self.assigned_islands: dict = None
         self.hit_assigned_group = ''
@@ -270,7 +270,7 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
 
     def is_group_overwritable(self, grp_name):
         '''Check if the group will be overwritten by new assignment.'''
-        return grp_name not in ('faceit_main', 'faceit_left_eyeball', 'faceit_right_eyeball')
+        return grp_name not in ('expresso_main', 'expresso_left_eyeball', 'expresso_right_eyeball')
 
     def execute_raycast(self, context, cursor_pos, ray_count=8):
         ''' Cast the ray to find valid surfaces below the cursor
@@ -390,7 +390,7 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
             if not self.active_assign_data:
                 self.report({'WARNING'}, "You need to make a valid selection to assign the vertex group. (ESC) to cancel.")
                 return {'RUNNING_MODAL'}
-            grp_name = 'faceit_' + self.vertex_group_name
+            grp_name = 'expresso_' + self.vertex_group_name
             warning = None
             mode_save = None
             if context.mode != 'OBJECT':
@@ -421,8 +421,8 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
                             grp_warning = False
                             if not self.additive_group:
                                 for assigned_grp_name, assigned_overlap in overlapping_groups.items():
-                                    if assigned_grp_name in ('faceit_main', 'faceit_left_eyeball',
-                                                             'faceit_right_eyeball'):
+                                    if assigned_grp_name in ('expresso_main', 'expresso_left_eyeball',
+                                                             'expresso_right_eyeball'):
                                         continue
                                     assigned_vgroup = obj.vertex_groups.get(assigned_grp_name)
                                     if assigned_vgroup:
@@ -446,18 +446,18 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
                         )
                         # Assign the new group
                         vg_utils.assign_vertex_grp(
-                            obj, assign_ids, 'faceit_' + self.vertex_group_name, overwrite=False)
+                            obj, assign_ids, 'expresso_' + self.vertex_group_name, overwrite=False)
                 if self.is_pivot_group:
                     if self.vertex_group_name == 'right_eyes_other':
-                        if 'faceit_right_eyeball' not in obj.vertex_groups:
-                            context.scene.faceit_eye_pivot_group_R = grp_name
+                        if 'expresso_right_eyeball' not in obj.vertex_groups:
+                            context.scene.expresso_eye_pivot_group_R = grp_name
                     if self.vertex_group_name == 'right_eyeball':
-                        context.scene.faceit_eye_pivot_group_R = grp_name
+                        context.scene.expresso_eye_pivot_group_R = grp_name
                     if self.vertex_group_name == 'left_eyes_other':
-                        if 'faceit_left_eyeball' not in obj.vertex_groups:
-                            context.scene.faceit_eye_pivot_group_L = grp_name
+                        if 'expresso_left_eyeball' not in obj.vertex_groups:
+                            context.scene.expresso_eye_pivot_group_L = grp_name
                     if self.vertex_group_name == 'left_eyeball':
-                        context.scene.faceit_eye_pivot_group_L = grp_name
+                        context.scene.expresso_eye_pivot_group_L = grp_name
                 obj.data.update()
             if mode_save and context.object:
                 bpy.ops.object.mode_set(mode=self.mode_save)
@@ -476,13 +476,13 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
         elif event.type == 'S':
             self.report({'INFO'}, "Surface Mode activated.")
             self.pick_geometry = 'SURFACE'
-            context.scene.faceit_picker_options.pick_geometry = self.pick_geometry
+            context.scene.expresso_picker_options.pick_geometry = self.pick_geometry
             self.execute_raycast(context, coord)
             return {'RUNNING_MODAL'}
         elif event.type == 'O':
             self.report({'INFO'}, "Object Mode activated.")
             self.pick_geometry = 'OBJECT'
-            context.scene.faceit_picker_options.pick_geometry = self.pick_geometry
+            context.scene.expresso_picker_options.pick_geometry = self.pick_geometry
             self.execute_raycast(context, coord)
             return {'RUNNING_MODAL'}
         elif event.type == 'X':
@@ -630,7 +630,7 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
                     mod.show_viewport = True
         context.scene.render.use_simplify = self.simplify_state
         context.scene.render.simplify_subdivision = self.simplify_count
-        context.scene.faceit_picker_options.picking_group = ""
+        context.scene.expresso_picker_options.picking_group = ""
 
     def save_hide_data(self, hidden_data: tuple):
         '''save the vert indices that have been hidden last.
@@ -744,7 +744,7 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
                 }
 
     def get_assigned_data(self, init_active_assign_data=False, group_filter: list = None):
-        '''loads the assigned data for all registered objects and Faceit groups.'''
+        '''loads the assigned data for all registered objects and Expresso groups.'''
         if group_filter is None:
             group_filter = list(self.assigned_groups)
         for obj_name, data_dict in self.obj_data_dict.items():
@@ -758,7 +758,7 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
                             if vgroup.index in [vg.group for vg in v.groups]]
                     if not vids:
                         continue
-                    if init_active_assign_data and grp_name == 'faceit_' + self.vertex_group_name:
+                    if init_active_assign_data and grp_name == 'expresso_' + self.vertex_group_name:
                         self.add_to_active_assign_data(obj, vids)
                     else:
                         assigned_islands[tuple(vids)] = grp_name
@@ -814,22 +814,22 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
         if context.area.type == 'VIEW_3D':
             self.simplify_state = context.scene.render.use_simplify
             self.simplify_count = context.scene.render.simplify_subdivision
-            self.hide_assigned = context.scene.faceit_picker_options.hide_assigned
-            self.pick_geometry = context.scene.faceit_picker_options.pick_geometry
+            self.hide_assigned = context.scene.expresso_picker_options.hide_assigned
+            self.pick_geometry = context.scene.expresso_picker_options.pick_geometry
             context.scene.render.use_simplify = True
             context.scene.render.simplify_subdivision = 0
             self.mode_save = futils.get_object_mode_from_context_mode(context.mode)
-            faceit_objects = futils.get_faceit_objects_list()
+            expresso_objects = futils.get_expresso_objects_list()
             self.dg = context.evaluated_depsgraph_get()
-            faceit_groups = fdata.get_list_faceit_groups()
+            expresso_groups = fdata.get_list_expresso_groups()
             # Remove the eyeball groups, as they are only relevant for pivots.
             if 'eyeball' not in self.vertex_group_name:
-                faceit_groups.remove('faceit_left_eyeball')
-                faceit_groups.remove('faceit_right_eyeball')
-            for obj in faceit_objects:
+                expresso_groups.remove('expresso_left_eyeball')
+                expresso_groups.remove('expresso_right_eyeball')
+            for obj in expresso_objects:
                 if futils.get_hide_obj(obj):
                     continue
-                for grp_name in faceit_groups:
+                for grp_name in expresso_groups:
                     if grp_name in obj.vertex_groups:
                         self.assigned_groups.add(grp_name)
                 for mod in obj.modifiers:
@@ -854,7 +854,7 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
             self._handler = bpy.types.SpaceView3D.draw_handler_add(draw_callback, args, 'WINDOW', 'POST_VIEW')
             # For some reason gpu drawing doesn't work in POST_PIXEL and blf doesn't work in POST_VIEW.
             self._blf_handler = bpy.types.SpaceView3D.draw_handler_add(draw_callback_blf, args, 'WINDOW', 'POST_PIXEL')
-            context.scene.faceit_picker_options.picking_group = self.vertex_group_name
+            context.scene.expresso_picker_options.picking_group = self.vertex_group_name
         else:
             self.report({'WARNING'}, "View3D not found, cannot run operator")
             return {'CANCELLED'}
@@ -862,9 +862,9 @@ class FACEIT_OT_VertexGroupPicker(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class FACEIT_OT_AssignMain(bpy.types.Operator):
+class EXPRESSO_OT_AssignMain(bpy.types.Operator):
     ''' Register the respective vertices in Edit Mode or all vertices in Object Mode'''
-    bl_idname = 'faceit.assign_main'
+    bl_idname = 'expresso.assign_main'
     bl_label = 'Assign Main Vertex Group'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -882,7 +882,7 @@ class FACEIT_OT_AssignMain(bpy.types.Operator):
         _doc_string += "You can assign multiple groups to one object.\n\n"
         _doc_string += "The main group: (face, skull, body, skin)\n"
         _doc_string += "This group should consist of one connected surface. In other words, all vertices assigned to this group should be linked by edges. It does not matter if this encompasses the skull or even the whole body. \n"
-        _doc_string += "Read more in the Faceit documentation."
+        _doc_string += "Read more in the Expresso documentation."
         return _doc_string
         # return 'Assign the selected vertices to the %s group' % properties.vertex_group
 
@@ -890,7 +890,7 @@ class FACEIT_OT_AssignMain(bpy.types.Operator):
     def poll(cls, context):
         obj = context.active_object
         if obj is not None:
-            if obj.type == 'MESH' and obj.name in context.scene.faceit_face_objects:
+            if obj.type == 'MESH' and obj.name in context.scene.expresso_face_objects:
                 return (context.mode in ('EDIT_MESH', 'OBJECT'))
 
     def invoke(self, context, event):
@@ -962,19 +962,19 @@ class FACEIT_OT_AssignMain(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        faceit_objects = futils.get_faceit_objects_list()
-        assigned_vertex_groups = vg_utils.get_assigned_faceit_vertex_groups()
-        if 'faceit_main' in assigned_vertex_groups:
-            for _obj in faceit_objects:
+        expresso_objects = futils.get_expresso_objects_list()
+        assigned_vertex_groups = vg_utils.get_assigned_expresso_vertex_groups()
+        if 'expresso_main' in assigned_vertex_groups:
+            for _obj in expresso_objects:
                 if _obj != obj:
-                    vgroup_name = _obj.vertex_groups.get('faceit_main')
+                    vgroup_name = _obj.vertex_groups.get('expresso_main')
                     if vgroup_name:
                         _obj.vertex_groups.remove(vgroup_name)
                         self.report(
                             {'WARNING'},
                             'You attempted to register multiple objects as main face. Removed previous assignments of main vertex group.')
         bpy.ops.object.mode_set(mode=self.mode_save)
-        bpy.ops.faceit.assign_group('INVOKE_DEFAULT', vertex_group='main')
+        bpy.ops.expresso.assign_group('INVOKE_DEFAULT', vertex_group='main')
         self.report({'INFO'}, f'The main surface has been assigned in object {obj.name}.')
         return {'FINISHED'}
 
@@ -1010,12 +1010,12 @@ def update_selection_based_on_assing_method(self, context):
     bm.select_flush(True)
     bm.select_flush(False)
     bmesh.update_edit_mesh(obj.data)
-    bpy.ops.ed.undo_push(message='Faceit: Selection changed')
+    bpy.ops.ed.undo_push(message='Expresso: Selection changed')
 
 
-class FACEIT_OT_AssignGroup(bpy.types.Operator):
+class EXPRESSO_OT_AssignGroup(bpy.types.Operator):
     ''' Register the respective vertices in Edit Mode or all vertices in Object Mode'''
-    bl_idname = 'faceit.assign_group'
+    bl_idname = 'expresso.assign_group'
     bl_label = 'Assign Vertex Group'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -1046,10 +1046,10 @@ class FACEIT_OT_AssignGroup(bpy.types.Operator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         global initial_selection, vertices_already_in_group
-        # True when any of the faceit vertex groups is assigned to the vertex selection.
-        self.faceit_group_in_selection = False
+        # True when any of the expresso vertex groups is assigned to the vertex selection.
+        self.expresso_group_in_selection = False
         # Groups that are already assigned to the selection.
-        self.faceit_groups_in_selection = []
+        self.expresso_groups_in_selection = []
         self.mode_save = 'OBJECT'
         # The selected vertices (indices).
         initial_selection = []
@@ -1086,7 +1086,7 @@ class FACEIT_OT_AssignGroup(bpy.types.Operator):
         elif "facial_hair" in properties.vertex_group:
             _doc_string += "Facial Hair: (Beard, Moustache, Sideburns, etc.)"
             _doc_string += "This group is optional. Currently, geometry that is not assigned to any group will be treated as facial hair.\n"
-        _doc_string += "Read more in the Faceit documentation."
+        _doc_string += "Read more in the Expresso documentation."
         return _doc_string
 
     @classmethod
@@ -1095,7 +1095,7 @@ class FACEIT_OT_AssignGroup(bpy.types.Operator):
         if obj is not None:
             if obj.select_get() is False:
                 return False
-            if obj.type == 'MESH' and obj.name in context.scene.faceit_face_objects:
+            if obj.type == 'MESH' and obj.name in context.scene.expresso_face_objects:
                 return (context.mode in ('EDIT_MESH', 'OBJECT'))
 
     def invoke(self, context, event):
@@ -1117,9 +1117,9 @@ class FACEIT_OT_AssignGroup(bpy.types.Operator):
             return {'CANCELLED'}
         initial_selection = [v.index for v in v_selected]
         # Don't check for overlapping groups if it's the main group
-        # assigned_vertex_groups = vg_utils.get_assigned_faceit_vertex_groups()
-        faceit_groups = [grp for grp in fdata.FACEIT_VERTEX_GROUPS if grp != "faceit_main"]
-        for vgroup_name in faceit_groups:
+        # assigned_vertex_groups = vg_utils.get_assigned_expresso_vertex_groups()
+        expresso_groups = [grp for grp in fdata.EXPRESSO_VERTEX_GROUPS if grp != "expresso_main"]
+        for vgroup_name in expresso_groups:
             vgroup = obj.vertex_groups.get(vgroup_name)
             if not vgroup:
                 continue
@@ -1134,15 +1134,15 @@ class FACEIT_OT_AssignGroup(bpy.types.Operator):
                 vertices_already_in_group = vid_in_vgroup
                 self.vgroup_already_assigned = True
             elif vid_in_vgroup:  # the vertex group is assigned.
-                # Check if the faceit vertex group overlaps with the active selection
+                # Check if the expresso vertex group overlaps with the active selection
                 if self.vertex_group in ("left_eyeball", "right_eyeball",):
                     continue
-                if vgroup_name in ("faceit_left_eyeball", "faceit_right_eyeball",):
+                if vgroup_name in ("expresso_left_eyeball", "expresso_right_eyeball",):
                     continue
-                if any((vid in vid_in_vgroup for vid in initial_selection)):  # and vgroup_name != "faceit_main":
-                    self.faceit_groups_in_selection.append(vgroup_name)
+                if any((vid in vid_in_vgroup for vid in initial_selection)):  # and vgroup_name != "expresso_main":
+                    self.expresso_groups_in_selection.append(vgroup_name)
 
-        if self.vgroup_already_assigned or self.faceit_groups_in_selection:
+        if self.vgroup_already_assigned or self.expresso_groups_in_selection:
             bpy.ops.object.mode_set(mode=self.mode_save)
             return context.window_manager.invoke_props_dialog(self)
         return self.execute(context)
@@ -1155,35 +1155,35 @@ class FACEIT_OT_AssignGroup(bpy.types.Operator):
             box.label(text='"%s" is already assigned.' % self.get_clean_name(self.vertex_group))
             box.label(text='Do you want to overwrite the existing assignment?')
             box.prop(self, 'method', expand=True)
-        if self.faceit_groups_in_selection:
+        if self.expresso_groups_in_selection:
             box = layout.box()
             row = box.row(align=True)
             row.label(text="WARNING", icon='ERROR')
             row = box.row(align=True)
             row.label(text="The following groups will be overwritten:")
-            for grp_name in self.faceit_groups_in_selection:
+            for grp_name in self.expresso_groups_in_selection:
                 box.label(text=self.get_clean_name(grp_name))
 
             # layout.label(text='Warning: Selection already assigned to:')
     def get_clean_name(self, name):
         '''Return a printable name for the vertex group'''
-        return name.replace("faceit_", "").replace("_", " ").title()
+        return name.replace("expresso_", "").replace("_", " ").title()
 
     def execute(self, context):
         obj = context.active_object
         if obj.mode != 'OBJECT':
             bpy.ops.object.mode_set()
-        grp_name = 'faceit_' + self.vertex_group
-        # UnLock all Faceit Groups!
+        grp_name = 'expresso_' + self.vertex_group
+        # UnLock all Expresso Groups!
         for grp in obj.vertex_groups:
-            if 'faceit_' in grp.name:
+            if 'expresso_' in grp.name:
                 grp.lock_weight = False
         if self.mode_save == 'EDIT':
             v_selected = [v for v in obj.data.vertices if v.select]
         else:
             v_selected = obj.data.vertices
-        # Remove all faceit vertex groups from the active vertex selection
-        for vgroup_name in self.faceit_groups_in_selection:
+        # Remove all expresso vertex groups from the active vertex selection
+        for vgroup_name in self.expresso_groups_in_selection:
             vgroup = obj.vertex_groups.get(vgroup_name)
             selected_verts_in_group = [v.index for v in v_selected if vgroup.index in [vg.group for vg in v.groups]]
             vgroup.remove(selected_verts_in_group)
@@ -1209,13 +1209,13 @@ class FACEIT_OT_AssignGroup(bpy.types.Operator):
             bpy.ops.object.mode_set(mode=self.mode_save)
         if self.is_pivot_group:
             if self.vertex_group == 'right_eyes_other':
-                context.scene.faceit_eye_pivot_group_R = grp_name
+                context.scene.expresso_eye_pivot_group_R = grp_name
             if self.vertex_group == 'right_eyeball':
-                context.scene.faceit_eye_pivot_group_R = grp_name
+                context.scene.expresso_eye_pivot_group_R = grp_name
             if self.vertex_group == 'left_eyes_other':
-                context.scene.faceit_eye_pivot_group_L = grp_name
+                context.scene.expresso_eye_pivot_group_L = grp_name
             if self.vertex_group == 'left_eyeball':
-                context.scene.faceit_eye_pivot_group_L = grp_name
+                context.scene.expresso_eye_pivot_group_L = grp_name
         return {'FINISHED'}
 
 
@@ -1241,16 +1241,16 @@ def get_objects_with_vertex_group_enum(self, context):
     return objects
 
 
-class FACEIT_OT_RemoveFaceitGroup(bpy.types.Operator):
-    '''Remove Faceit group(s) from selected object'''
-    bl_idname = 'faceit.remove_faceit_groups'
+class EXPRESSO_OT_RemoveExpressoGroup(bpy.types.Operator):
+    '''Remove Expresso group(s) from selected object'''
+    bl_idname = 'expresso.remove_expresso_groups'
     bl_label = 'Reset Vertex Groups'
     bl_property = 'operate_objects'
     bl_options = {'UNDO', 'INTERNAL'}
 
-    # also accepts multiple groups seperated by , (e.g. 'faceit_left_eyeball,faceit_right_eyeball')
+    # also accepts multiple groups seperated by , (e.g. 'expresso_left_eyeball,expresso_right_eyeball')
     vgroup_name: bpy.props.StringProperty(
-        name='FaceitGroup',
+        name='ExpressoGroup',
         default='',
         options={'SKIP_SAVE'}
     )
@@ -1272,7 +1272,7 @@ class FACEIT_OT_RemoveFaceitGroup(bpy.types.Operator):
 
         operate_objects = []
         if self.operate_objects == 'ALL':
-            operate_objects = futils.get_faceit_objects_list()
+            operate_objects = futils.get_expresso_objects_list()
             self.report({'INFO'}, f'Removed the vertex group {self.vgroup_name} from all objects')
         else:
             obj = futils.get_object(self.operate_objects)
@@ -1280,7 +1280,7 @@ class FACEIT_OT_RemoveFaceitGroup(bpy.types.Operator):
             self.report({'INFO'}, f'Removed the vertex group {self.vgroup_name} from {obj.name}')
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
-        bpy.ops.faceit.mask_group('INVOKE_DEFAULT', vgroup_name=self.vgroup_name, operation='REMOVE')
+        bpy.ops.expresso.mask_group('INVOKE_DEFAULT', vgroup_name=self.vgroup_name, operation='REMOVE')
         for obj in operate_objects:
             grp = obj.vertex_groups.get(self.vgroup_name)
             if grp:
@@ -1288,14 +1288,14 @@ class FACEIT_OT_RemoveFaceitGroup(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_RemoveFaceitGroupList(bpy.types.Operator):
-    '''Remove Faceit group(s) from selected object'''
-    bl_idname = 'faceit.remove_faceit_group_list'
+class EXPRESSO_OT_RemoveExpressoGroupList(bpy.types.Operator):
+    '''Remove Expresso group(s) from selected object'''
+    bl_idname = 'expresso.remove_expresso_group_list'
     bl_label = 'Reset Vertex Groups'
     bl_options = {'UNDO', 'INTERNAL'}
 
     vgroup_name: bpy.props.StringProperty(
-        name='FaceitGroup',
+        name='ExpressoGroup',
         default='',
         options={'SKIP_SAVE'}
     )
@@ -1311,8 +1311,8 @@ class FACEIT_OT_RemoveFaceitGroupList(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         if self.object_list_index != -1:
-            operate_objects = [futils.get_object(scene.faceit_face_objects[self.object_list_index].name)]
-        bpy.ops.faceit.mask_group('INVOKE_DEFAULT', vgroup_name=self.vgroup_name, operation='REMOVE')
+            operate_objects = [futils.get_object(scene.expresso_face_objects[self.object_list_index].name)]
+        bpy.ops.expresso.mask_group('INVOKE_DEFAULT', vgroup_name=self.vgroup_name, operation='REMOVE')
         for obj in operate_objects:
             grp = obj.vertex_groups.get(self.vgroup_name)
             if grp:
@@ -1320,16 +1320,16 @@ class FACEIT_OT_RemoveFaceitGroupList(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_RemoveAllFaceitGroups(bpy.types.Operator):
-    '''Remove Faceit group(s) from selected object'''
-    bl_idname = 'faceit.remove_all_faceit_groups'
-    bl_label = 'Reset All Faceit Vertex Groups'
+class EXPRESSO_OT_RemoveAllExpressoGroups(bpy.types.Operator):
+    '''Remove Expresso group(s) from selected object'''
+    bl_idname = 'expresso.remove_all_expresso_groups'
+    bl_label = 'Reset All Expresso Vertex Groups'
     bl_options = {'UNDO', 'INTERNAL'}
 
     operate_scope: EnumProperty(
         name='Objects to Operate on',
         items=(
-            ('ALL', 'All Objects', 'Remove all Faceit Vertex Groups from all registered Objects'),
+            ('ALL', 'All Objects', 'Remove all Expresso Vertex Groups from all registered Objects'),
             ('SELECTED', 'Selected Objects', 'Remove All Vertex Groups from Selected Objects in Scene'),
         ),
         default='SELECTED',
@@ -1351,16 +1351,16 @@ class FACEIT_OT_RemoveAllFaceitGroups(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         if self.operate_scope == 'ALL':
-            operate_objects = [item.get_object() for item in scene.faceit_face_objects]
+            operate_objects = [item.get_object() for item in scene.expresso_face_objects]
             self.report({'INFO'}, 'Cleared Vertex Groups for all registered objects')
         elif self.operate_scope == 'SELECTED':
-            operate_objects = [obj for obj in context.selected_objects if obj.name in scene.faceit_face_objects]
+            operate_objects = [obj for obj in context.selected_objects if obj.name in scene.expresso_face_objects]
             if not operate_objects:
                 self.report({'WARNING'}, 'You need to select at least one object for this operation to work.')
                 return {'CANCELLED'}
-        groups_to_remove = fdata.get_list_faceit_groups()
+        groups_to_remove = fdata.get_list_expresso_groups()
         for grp_name in groups_to_remove:
-            bpy.ops.faceit.mask_group('INVOKE_DEFAULT', vgroup_name=grp_name, operation='REMOVE')
+            bpy.ops.expresso.mask_group('INVOKE_DEFAULT', vgroup_name=grp_name, operation='REMOVE')
             for obj in operate_objects:
                 grp = obj.vertex_groups.get(grp_name)
                 if grp:
@@ -1368,14 +1368,14 @@ class FACEIT_OT_RemoveAllFaceitGroups(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_SelectFaceitGroup(bpy.types.Operator):
-    '''Select all Vertices in the specified Faceit Vertex Group'''
-    bl_idname = 'faceit.select_faceit_groups'
+class EXPRESSO_OT_SelectExpressoGroup(bpy.types.Operator):
+    '''Select all Vertices in the specified Expresso Vertex Group'''
+    bl_idname = 'expresso.select_expresso_groups'
     bl_label = 'Select Vertices'
     bl_options = {'INTERNAL'}
 
-    faceit_vertex_group_name: bpy.props.StringProperty(
-        name='FaceitGroup',
+    expresso_vertex_group_name: bpy.props.StringProperty(
+        name='ExpressoGroup',
         default='',
         options={'SKIP_SAVE'}
     )
@@ -1393,12 +1393,12 @@ class FACEIT_OT_SelectFaceitGroup(bpy.types.Operator):
         scene = context.scene
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set()
-        scene.faceit_face_index = self.object_list_index
-        obj = futils.get_object(scene.faceit_face_objects[self.object_list_index].name)
+        scene.expresso_face_index = self.object_list_index
+        obj = futils.get_object(scene.expresso_face_objects[self.object_list_index].name)
         if futils.get_hide_obj(obj):
             futils.set_hide_obj(obj, False)
         futils.set_active_object(obj)
-        vs = vg_utils.get_verts_in_vgroup(obj, self.faceit_vertex_group_name)
+        vs = vg_utils.get_verts_in_vgroup(obj, self.expresso_vertex_group_name)
         select_vertices(obj, [v.index for v in vs], deselect_others=True)
         bpy.ops.object.mode_set(mode='EDIT')
         return {'FINISHED'}
@@ -1417,14 +1417,14 @@ def draw_group_callback(self):
     batch.draw(shader)
 
 
-class FACEIT_OT_DrawFaceitVertexGroup(bpy.types.Operator):
+class EXPRESSO_OT_DrawExpressoVertexGroup(bpy.types.Operator):
     ''' Register the main surface. Draws an overlay to help you select the right vertices.'''
-    bl_idname = 'faceit.draw_faceit_vertex_group'
+    bl_idname = 'expresso.draw_expresso_vertex_group'
     bl_label = 'Draw Vertex Group'
     bl_options = {'UNDO', 'INTERNAL'}
 
-    faceit_vertex_group_name: bpy.props.StringProperty(
-        name='FaceitGroup',
+    expresso_vertex_group_name: bpy.props.StringProperty(
+        name='ExpressoGroup',
         default='',
         options={'SKIP_SAVE'}
     )
@@ -1453,7 +1453,7 @@ class FACEIT_OT_DrawFaceitVertexGroup(bpy.types.Operator):
         _doc_string += "You can assign multiple groups to one object.\n\n"
         _doc_string += "The main group: (face, skull, body, skin)\n"
         _doc_string += "This group should consist of one connected surface. In other words, all vertices assigned to this group should be linked by edges. It does not matter if this encompasses the skull or even the whole body. \n"
-        _doc_string += "Read more in the Faceit documentation."
+        _doc_string += "Read more in the Expresso documentation."
         return _doc_string
 
     def get_vertex_data(self, bm):
@@ -1480,7 +1480,7 @@ class FACEIT_OT_DrawFaceitVertexGroup(bpy.types.Operator):
         simplify_count = context.scene.render.simplify_subdivision
         context.scene.render.use_simplify = True
         context.scene.render.simplify_subdivision = 0
-        show_unassigned = 'UNASSIGNED' == self.faceit_vertex_group_name
+        show_unassigned = 'UNASSIGNED' == self.expresso_vertex_group_name
         mode_save = futils.get_object_mode_from_context_mode(context.mode)
         if mode_save != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
@@ -1490,7 +1490,7 @@ class FACEIT_OT_DrawFaceitVertexGroup(bpy.types.Operator):
             any_group_found = False
             # Get bmesh consisting of all vertices among
             # all objects that are in the group.
-            for obj in futils.get_faceit_objects_list():
+            for obj in futils.get_expresso_objects_list():
                 for mod in obj.modifiers:
                     if not mod.show_viewport:
                         continue
@@ -1499,7 +1499,7 @@ class FACEIT_OT_DrawFaceitVertexGroup(bpy.types.Operator):
                         self.disabled_mods.append(mod)
                 self.dg.update()
                 if not show_unassigned:
-                    vgroup = obj.vertex_groups.get(self.faceit_vertex_group_name)
+                    vgroup = obj.vertex_groups.get(self.expresso_vertex_group_name)
                     if not vgroup:
                         continue
                     obj = obj.evaluated_get(self.dg)
@@ -1509,7 +1509,7 @@ class FACEIT_OT_DrawFaceitVertexGroup(bpy.types.Operator):
                     obj = obj.evaluated_get(self.dg)
                     vids = set()
                     for vgroup in obj.vertex_groups:
-                        if vgroup.name.startswith('faceit_'):
+                        if vgroup.name.startswith('expresso_'):
                             vg_idx = vgroup.index
                             vids.update([v.index for v in obj.data.vertices
                                          if vg_idx in [vg.group for vg in v.groups]])
@@ -1536,7 +1536,7 @@ class FACEIT_OT_DrawFaceitVertexGroup(bpy.types.Operator):
                     bpy.ops.object.mode_set(mode=mode_save)
                 context.scene.render.use_simplify = simplify_state
                 context.scene.render.simplify_subdivision = simplify_count
-                self.report({'WARNING'}, f"No vertices assigned to group {self.faceit_vertex_group_name}")
+                self.report({'WARNING'}, f"No vertices assigned to group {self.expresso_vertex_group_name}")
                 bm.free()
                 return {'CANCELLED'}
             # index update needed
@@ -1562,9 +1562,9 @@ class FACEIT_OT_DrawFaceitVertexGroup(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class FACEIT_OT_MaskMainObject(bpy.types.Operator):
+class EXPRESSO_OT_MaskMainObject(bpy.types.Operator):
     '''	Mask all geometry that is not assigned to the main face. '''
-    bl_idname = 'faceit.mask_main'
+    bl_idname = 'expresso.mask_main'
     bl_label = 'Mask Main Face'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -1574,10 +1574,10 @@ class FACEIT_OT_MaskMainObject(bpy.types.Operator):
 
     def execute(self, context):
 
-        main_obj = futils.get_main_faceit_object()
-        main_group = main_obj.vertex_groups.get("faceit_main")
+        main_obj = futils.get_main_expresso_object()
+        main_group = main_obj.vertex_groups.get("expresso_main")
         if not main_group:
-            self.report({'ERROR'}, "Couldn't find the faceit_main vertex group. Make sure to assign it in the setup tab.")
+            self.report({'ERROR'}, "Couldn't find the expresso_main vertex group. Make sure to assign it in the setup tab.")
             return {'CANCELLED'}
         # add the mask modifier
         mod = main_obj.modifiers.get("Main Mask")
@@ -1586,19 +1586,19 @@ class FACEIT_OT_MaskMainObject(bpy.types.Operator):
         mod.vertex_group = main_group.name
         mod.show_viewport = True
         move_above_generators(mod, main_obj)
-        # hide all other faceit objects
-        faceit_objects = futils.get_faceit_objects_list()
-        for obj in faceit_objects:
+        # hide all other expresso objects
+        expresso_objects = futils.get_expresso_objects_list()
+        for obj in expresso_objects:
             if obj != main_obj:
                 obj.hide_set(True)
 
         return {'FINISHED'}
 
 
-class FACEIT_OT_MaskGroup(bpy.types.Operator):
+class EXPRESSO_OT_MaskGroup(bpy.types.Operator):
     '''	Mask all vertices that are not assigned to the specified group. This only affects objects that are assigned to the group. '''
-    bl_idname = 'faceit.mask_group'
-    bl_label = 'Mask Faceit Vertex Group'
+    bl_idname = 'expresso.mask_group'
+    bl_label = 'Mask Expresso Vertex Group'
     bl_options = {'UNDO', 'INTERNAL'}
 
     vgroup_name: bpy.props.StringProperty(
@@ -1627,8 +1627,8 @@ class FACEIT_OT_MaskGroup(bpy.types.Operator):
         return True
 
     def invoke(self, context, event):
-        faceit_objects = futils.get_faceit_objects_list()
-        grps = vg_utils.get_vertex_groups_from_objects(faceit_objects)
+        expresso_objects = futils.get_expresso_objects_list()
+        grps = vg_utils.get_vertex_groups_from_objects(expresso_objects)
         if self.vgroup_name in grps:
             return self.execute(context)
         else:
@@ -1639,15 +1639,15 @@ class FACEIT_OT_MaskGroup(bpy.types.Operator):
         mode_save = futils.get_object_mode_from_context_mode(context.mode)
         if mode_save != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
-        faceit_objects = futils.get_faceit_objects_list()
-        is_main = 'faceit_main' == self.vgroup_name
+        expresso_objects = futils.get_expresso_objects_list()
+        is_main = 'expresso_main' == self.vgroup_name
         if is_main:
-            vgroup_mask_name = 'faceit_main_mask'
+            vgroup_mask_name = 'expresso_main_mask'
         else:
             vgroup_mask_name = self.vgroup_name
 
         mod_name = "Mask " + self.vgroup_name
-        for obj in faceit_objects:
+        for obj in expresso_objects:
             if self.vgroup_name in obj.vertex_groups:
                 mod = obj.modifiers.get(mod_name)
                 if self.operation == 'REMOVE':
@@ -1660,13 +1660,13 @@ class FACEIT_OT_MaskGroup(bpy.types.Operator):
                         # break
                 elif self.operation == 'ADD':
                     # if it's the main group, create a temp vgroup that holds only vertices thare assigned to main group !only!
-                    # Remove all verts from group that are assigned to other faceit groups.
+                    # Remove all verts from group that are assigned to other expresso groups.
                     if is_main:
                         vids = set([v.index for v in vg_utils.get_verts_in_vgroup(obj, self.vgroup_name)])
                         for grp in obj.vertex_groups:
                             if grp.name == self.vgroup_name:
                                 continue
-                            if grp.name.startswith("faceit_"):
+                            if grp.name.startswith("expresso_"):
                                 vids -= set([v.index for v in vg_utils.get_verts_in_vgroup(obj, grp.name)])
                         if vids:
                             vg_utils.assign_vertex_grp(
@@ -1692,9 +1692,9 @@ class FACEIT_OT_MaskGroup(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_UnmaskMainObject(bpy.types.Operator):
+class EXPRESSO_OT_UnmaskMainObject(bpy.types.Operator):
     '''	Mask all geometry that is not assigned to the main face. '''
-    bl_idname = 'faceit.unmask_main'
+    bl_idname = 'expresso.unmask_main'
     bl_label = 'Remove Mask'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -1704,12 +1704,12 @@ class FACEIT_OT_UnmaskMainObject(bpy.types.Operator):
 
     def execute(self, context):
 
-        main_obj = futils.get_main_faceit_object()
+        main_obj = futils.get_main_expresso_object()
         main_group = None
         if main_obj:
-            main_group = main_obj.vertex_groups.get("faceit_main")
+            main_group = main_obj.vertex_groups.get("expresso_main")
         if not main_group:
-            self.report({'WARNING'}, "Couldn't find the faceit_main vertex group. Make sure to assign it in the setup tab.")
+            self.report({'WARNING'}, "Couldn't find the expresso_main vertex group. Make sure to assign it in the setup tab.")
             return {'CANCELLED'}
         # add the mask modifier
         mod = main_obj.modifiers.get("Main Mask")
@@ -1717,9 +1717,9 @@ class FACEIT_OT_UnmaskMainObject(bpy.types.Operator):
             main_obj.modifiers.remove(mod)
         # mod.vertex_group = main_group
 
-        # hide all other faceit objects
-        faceit_objects = futils.get_faceit_objects_list()
-        for obj in faceit_objects:
+        # hide all other expresso objects
+        expresso_objects = futils.get_expresso_objects_list()
+        for obj in expresso_objects:
             if obj != main_obj:
                 obj.hide_set(False)
 

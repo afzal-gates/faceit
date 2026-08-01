@@ -15,17 +15,17 @@ from .landmarks_utils import check_if_area_is_active, set_front_view, check_is_q
 # from ..rigging.pivot_manager import PivotManager, set_locator_hidden_state
 from ..core.mesh_utils import get_max_dim_in_direction, select_vertices
 from ..panels.draw_utils import draw_text_block
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core import shape_key_utils as sk_utils
 from ..core import vgroup_utils as vg_utils
 from ..rigging import rig_utils
 from ..rigging.pivot_manager import PivotManager
 
 
-class FACEIT_OT_FacialLandmarks(bpy.types.Operator):
+class EXPRESSO_OT_FacialLandmarks(bpy.types.Operator):
     '''Place the facial landmarks. 1. Match Chin Position, 2. Match Eye Height, 3. Match Jaw Width'''
-    bl_idname = 'faceit.facial_landmarks'
+    bl_idname = 'expresso.facial_landmarks'
     bl_label = 'facial_landmarks'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -57,12 +57,12 @@ class FACEIT_OT_FacialLandmarks(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.mode == 'OBJECT':
-            return context.scene.faceit_face_objects
+            return context.scene.expresso_face_objects
 
     def invoke(self, context, event):
         self.mouse_x = event.mouse_x
         self.mouse_y = event.mouse_y
-        self.is_asymmetric_landmarks = context.scene.faceit_asymmetric
+        self.is_asymmetric_landmarks = context.scene.expresso_asymmetric
         area = context.area
         self.area_width = area.width
         self.area_height = area.height
@@ -78,17 +78,17 @@ class FACEIT_OT_FacialLandmarks(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        bpy.ops.faceit.unlock_3d_view()
+        bpy.ops.expresso.unlock_3d_view()
         if context.object:
             if not futils.get_hide_obj(context.object):  # context.object.hide_viewport == False:
                 bpy.ops.object.mode_set(mode='OBJECT')
-        # create the collection that holds faceit objects
-        faceit_collection = futils.get_faceit_collection()
+        # create the collection that holds expresso objects
+        expresso_collection = futils.get_expresso_collection()
         lm_obj = futils.get_object('facial_landmarks')
         if lm_obj is not None:
             bpy.data.objects.remove(lm_obj, do_unlink=True)
         futils.clear_object_selection()
-        main_obj = futils.get_main_faceit_object()
+        main_obj = futils.get_main_expresso_object()
         if main_obj is None:
             self.report({'ERROR'}, 'Please assign the Main Vertex Group to the Face Mesh! (Setup Tab)')
             return {'CANCELLED'}
@@ -107,7 +107,7 @@ class FACEIT_OT_FacialLandmarks(bpy.types.Operator):
         if not context.object:
             futils.set_active_object(main_obj)
         futils.set_active_object(main_obj.name)
-        vs = vg_utils.get_verts_in_vgroup(main_obj, 'faceit_main')
+        vs = vg_utils.get_verts_in_vgroup(main_obj, 'expresso_main')
         select_vertices(main_obj, [v.index for v in vs], deselect_others=True)
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.view3d.view_selected(use_all_regions=False)
@@ -122,20 +122,20 @@ class FACEIT_OT_FacialLandmarks(bpy.types.Operator):
             if obj.type == 'MESH':
                 if self.is_asymmetric_landmarks:
                     if obj.name == 'facial_landmarks_asymmetric':
-                        faceit_collection.objects.link(obj)
+                        expresso_collection.objects.link(obj)
                         lm_obj = futils.get_object('facial_landmarks_asymmetric')
                     else:
                         bpy.data.objects.remove(obj)
                 else:
                     if obj.name == 'facial_landmarks':
-                        faceit_collection.objects.link(obj)
+                        expresso_collection.objects.link(obj)
                         lm_obj = futils.get_object('facial_landmarks')
                     else:
                         bpy.data.objects.remove(obj)
         lm_obj.name = 'facial_landmarks'
         if main_obj:
             lm_obj.location.y = get_max_dim_in_direction(
-                obj=main_obj, direction=Vector((0, -1, 0)), vertex_group_name="faceit_main")[1] - lm_obj.dimensions[1]
+                obj=main_obj, direction=Vector((0, -1, 0)), vertex_group_name="expresso_main")[1] - lm_obj.dimensions[1]
         futils.clear_object_selection()
         futils.set_active_object(lm_obj.name)
         # initialize the state prop
@@ -150,7 +150,7 @@ class FACEIT_OT_FacialLandmarks(bpy.types.Operator):
                 disabled_mods.append(mod)
                 mod.show_viewport = False
         context.evaluated_depsgraph_get().update()
-        vgroup_positions = rig_utils.get_evaluated_vertex_group_positions(main_obj, 'faceit_main')
+        vgroup_positions = rig_utils.get_evaluated_vertex_group_positions(main_obj, 'expresso_main')
         bounds = rig_utils.get_bounds_from_locations(vgroup_positions, 'z')
         for mod in disabled_mods:
             mod.show_viewport = True
@@ -162,9 +162,9 @@ class FACEIT_OT_FacialLandmarks(bpy.types.Operator):
 
     def set_scale_to_head_height(self, lm_obj):
         '''Set scale after applying the chin position.'''
-        main_obj = futils.get_main_faceit_object()
+        main_obj = futils.get_main_expresso_object()
         mw = main_obj.matrix_world
-        vs = vg_utils.get_verts_in_vgroup(main_obj, "faceit_main")
+        vs = vg_utils.get_verts_in_vgroup(main_obj, "expresso_main")
         # get the global coordinates
         v_highest = max([(mw @ v.co).z for v in vs])
         # get the highest point in head mesh (temple)
@@ -344,7 +344,7 @@ class FACEIT_OT_FacialLandmarks(bpy.types.Operator):
                 futils.set_active_object(lm_obj.name)
                 lm_obj["state"] = 3
                 context.tool_settings.mesh_select_mode = (True, False, False)
-                bpy.ops.faceit.lock_3d_view_front('INVOKE_DEFAULT', lock_value=True)
+                bpy.ops.expresso.lock_3d_view_front('INVOKE_DEFAULT', lock_value=True)
                 bpy.ops.object.mode_set(mode='EDIT')
                 self.report({'INFO'}, "Fine-tune the landmarks in Edit mode until they match the face.")
                 return {'FINISHED'}
@@ -385,9 +385,9 @@ class FACEIT_OT_FacialLandmarks(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class FACEIT_OT_ResetFacial(bpy.types.Operator):
+class EXPRESSO_OT_ResetFacial(bpy.types.Operator):
     '''	Discard Landmarks and start over '''
-    bl_idname = 'faceit.reset_facial_landmarks'
+    bl_idname = 'expresso.reset_facial_landmarks'
     bl_label = 'Reset Landmarks'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -404,22 +404,22 @@ class FACEIT_OT_ResetFacial(bpy.types.Operator):
 
         # Remove locators
         # set_locator_hidden_state(hide=True)
-        bpy.ops.faceit.unlock_3d_view()
+        bpy.ops.expresso.unlock_3d_view()
         context.scene.tool_settings.use_snap = False
         # PivotManager.remove_handle()
         jaw_pivot_object = context.scene.objects.get('Jaw Pivot')
         if jaw_pivot_object:
-            # context.scene.faceit_use_jaw_pivot = True
-            context.scene.faceit_jaw_pivot = jaw_pivot_object.location
+            # context.scene.expresso_use_jaw_pivot = True
+            context.scene.expresso_jaw_pivot = jaw_pivot_object.location
             bpy.data.objects.remove(jaw_pivot_object)
         # Reset the eye pivots
         PivotManager.reset_pivots(context)
         return {'FINISHED'}
 
 
-class FACEIT_OT_ProjectLandmarks(bpy.types.Operator):
+class EXPRESSO_OT_ProjectLandmarks(bpy.types.Operator):
     '''Project the Landmarks onto the Main Object. (Make sure you assigned to Main Vertex Group correctly) '''
-    bl_idname = 'faceit.project_landmarks'
+    bl_idname = 'expresso.project_landmarks'
     bl_label = 'Project Landmarks'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
     mouse_x: bpy.props.IntProperty()
@@ -437,16 +437,16 @@ class FACEIT_OT_ProjectLandmarks(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-        bpy.ops.faceit.unlock_3d_view()
+        bpy.ops.expresso.unlock_3d_view()
         lm_obj = futils.get_object('facial_landmarks')
-        bpy.ops.faceit.mask_main('EXEC_DEFAULT')
+        bpy.ops.expresso.mask_main('EXEC_DEFAULT')
 
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
         futils.set_active_object(lm_obj.name)
         # get the main object
-        surface_obj = futils.get_main_faceit_object()
+        surface_obj = futils.get_main_expresso_object()
         # move in front of face
         if surface_obj:
             lm_obj.location.y = get_max_dim_in_direction(
@@ -471,7 +471,7 @@ class FACEIT_OT_ProjectLandmarks(bpy.types.Operator):
         bpy.ops.view3d.view_selected(use_all_regions=False)
         bpy.ops.view3d.view_axis(type='RIGHT')
 
-        chin_vert = 0 if scene.faceit_asymmetric else 1
+        chin_vert = 0 if scene.expresso_asymmetric else 1
         obj_origin = lm_obj.matrix_world @ lm_obj.data.vertices[chin_vert].co
         context.scene.cursor.location = obj_origin
         # bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
@@ -498,24 +498,24 @@ class FACEIT_OT_ProjectLandmarks(bpy.types.Operator):
 
         bpy.ops.ed.undo_push()
         lm_obj["state"] = 4
-        PivotManager.symmetric = not scene.faceit_asymmetric
+        PivotManager.symmetric = not scene.expresso_asymmetric
         found_pos = PivotManager.initialize_pivots(context)
         if not found_pos:
             self.report(
                 {'WARNING'},
                 " Pivot points are only estimated. Please assign the eyeball vertex groups or use manual placement.")
-        if scene.faceit_eye_pivot_placement == 'MANUAL':
-            bpy.ops.faceit.add_manual_pivot_vertex('EXEC_DEFAULT', select_vertex=False)
+        if scene.expresso_eye_pivot_placement == 'MANUAL':
+            bpy.ops.expresso.add_manual_pivot_vertex('EXEC_DEFAULT', select_vertex=False)
         PivotManager.start_drawing(context, initialize=True)
-        # bpy.ops.faceit.draw_pivot_point('INVOKE_DEFAULT')
+        # bpy.ops.expresso.draw_pivot_point('INVOKE_DEFAULT')
         bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.faceit.unmask_main('EXEC_DEFAULT')
+        bpy.ops.expresso.unmask_main('EXEC_DEFAULT')
         return {'FINISHED'}
 
 
-class FACEIT_OT_RevertProjection(bpy.types.Operator):
+class EXPRESSO_OT_RevertProjection(bpy.types.Operator):
     '''Revert landmark projection and edit in front view'''
-    bl_idname = 'faceit.revert_projection'
+    bl_idname = 'expresso.revert_projection'
     bl_label = 'Revert Projection (Edit Front)'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -535,19 +535,19 @@ class FACEIT_OT_RevertProjection(bpy.types.Operator):
             v.select = True
             v.co.y = 0
         # return {'FINISHED'}
-        main_obj = futils.get_main_faceit_object()
+        main_obj = futils.get_main_expresso_object()
         lm_obj.location.y = get_max_dim_in_direction(
             obj=main_obj, direction=Vector((0, -1, 0)))[1] - lm_obj.dimensions[1]
         # bpy.ops.ed.undo_push()
         lm_obj["state"] -= 1
-        bpy.ops.faceit.lock_3d_view_front('INVOKE_DEFAULT')
+        bpy.ops.expresso.lock_3d_view_front('INVOKE_DEFAULT')
         # PivotManager.remove_handle()
         return {'FINISHED'}
 
 
-class FACEIT_OT_Lock3DViewFront(bpy.types.Operator):
+class EXPRESSO_OT_Lock3DViewFront(bpy.types.Operator):
     '''Lock the 3D view rotation and enable Front view'''
-    bl_idname = 'faceit.lock_3d_view_front'
+    bl_idname = 'expresso.lock_3d_view_front'
     bl_label = 'Set Front View'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -618,9 +618,9 @@ class FACEIT_OT_Lock3DViewFront(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_Unlock3DView(bpy.types.Operator):
+class EXPRESSO_OT_Unlock3DView(bpy.types.Operator):
     '''Lock the 3D view rotation and enable Front view'''
-    bl_idname = 'faceit.unlock_3d_view'
+    bl_idname = 'expresso.unlock_3d_view'
     bl_label = 'Unlock 3D View'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -649,9 +649,9 @@ def _reset_snap_settings(context):
         scene.tool_settings.use_snap_backface_culling = True
 
 
-class FACEIT_OT_ResetSnapSettings(bpy.types.Operator):
+class EXPRESSO_OT_ResetSnapSettings(bpy.types.Operator):
     '''Set the correct Snap to Face Settings automatically.'''
-    bl_idname = 'faceit.reset_snap_settings'
+    bl_idname = 'expresso.reset_snap_settings'
     bl_label = 'Reset Snap Settings'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -672,9 +672,9 @@ class FACEIT_OT_ResetSnapSettings(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_MirrorSelectedVerts(bpy.types.Operator):
+class EXPRESSO_OT_MirrorSelectedVerts(bpy.types.Operator):
     '''Mirror selected Landmarks Vertices - In case MirrorX fails'''
-    bl_idname = 'faceit.mirror_selected_verts'
+    bl_idname = 'expresso.mirror_selected_verts'
     bl_label = 'Mirror Selected Vertices'
     bl_options = {'UNDO', 'INTERNAL', 'REGISTER'}
 
@@ -734,9 +734,9 @@ class FACEIT_OT_MirrorSelectedVerts(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ResetToLandmarks(bpy.types.Operator):
+class EXPRESSO_OT_ResetToLandmarks(bpy.types.Operator):
     '''Go back to editing the landmarks'''
-    bl_idname = 'faceit.reset_to_landmarks'
+    bl_idname = 'expresso.reset_to_landmarks'
     bl_label = 'Back to Landmarks'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -764,22 +764,22 @@ class FACEIT_OT_ResetToLandmarks(bpy.types.Operator):
 
     @ classmethod
     def poll(cls, context):
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
 
         if rig and context.mode == 'OBJECT' and rig.hide_viewport is False:
             return True
 
     def invoke(self, context, event):
-        if context.scene.faceit_expression_list:
+        if context.scene.expresso_expression_list:
             self.expressions_generated = True
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         if rig:
             deform_groups = vg_utils.get_deform_bones_from_armature(rig)
             all_registered_objects_vgroups = vg_utils.get_vertex_groups_from_objects()
             if any(grp in deform_groups for grp in all_registered_objects_vgroups):
                 self.rig_bound = True
 
-        self.corr_sk = any([sk_name.startswith('faceit_cc_')
+        self.corr_sk = any([sk_name.startswith('expresso_cc_')
                             for sk_name in sk_utils.get_shape_key_names_from_objects()])
         if self.expressions_generated or self.rig_bound:
             wm = context.window_manager
@@ -801,47 +801,47 @@ class FACEIT_OT_ResetToLandmarks(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        sh_action = bpy.data.actions.get('faceit_shape_action')
+        sh_action = bpy.data.actions.get('expresso_shape_action')
         ow_action = bpy.data.actions.get('overwrite_shape_action')
         if self.keep_expressions:
             if sh_action:
                 sh_action.use_fake_user = True
             if ow_action:
                 ow_action.use_fake_user = True
-            context.scene.faceit_expressions_restorable = True
+            context.scene.expresso_expressions_restorable = True
         else:
             if sh_action:
                 bpy.data.actions.remove(sh_action)
             if ow_action:
                 bpy.data.actions.remove(ow_action)
-            context.scene.faceit_expression_list.clear()
-            context.scene.faceit_expressions_restorable = False
+            context.scene.expresso_expression_list.clear()
+            context.scene.expresso_expressions_restorable = False
         # Set eye locator visibility
         # set_locator_hidden_state(target_locators='EYE',hide=False)
         if self.corr_sk:
-            faceit_objects = futils.get_faceit_objects_list()
-            corrective_sk_action = bpy.data.actions.get('faceit_corrective_shape_keys', None)
-            for obj in faceit_objects:
+            expresso_objects = futils.get_expresso_objects_list()
+            corrective_sk_action = bpy.data.actions.get('expresso_corrective_shape_keys', None)
+            for obj in expresso_objects:
                 if sk_utils.has_shape_keys(obj):
                     for sk in obj.data.shape_keys.key_blocks:
-                        if sk.name.startswith('faceit_cc_'):
+                        if sk.name.startswith('expresso_cc_'):
                             # mute corrective shapes!
                             if self.keep_corrective_shape_keys:
                                 sk.mute = True
-                                scene.faceit_corrective_sk_restorable = True
+                                scene.expresso_corrective_sk_restorable = True
                             else:
                                 obj.shape_key_remove(sk)
-                                scene.faceit_corrective_sk_restorable = False
+                                scene.expresso_corrective_sk_restorable = False
                     if obj.data.shape_keys.animation_data:
                         if obj.data.shape_keys.animation_data.action == corrective_sk_action:
                             obj.data.shape_keys.animation_data.action = None
                     if len(obj.data.shape_keys.key_blocks) == 1:
                         obj.shape_key_clear()
 
-        bpy.ops.faceit.unbind_facial(remove_deform_groups=not self.keep_weights)
-        scene.faceit_weights_restorable = self.keep_weights
+        bpy.ops.expresso.unbind_facial(remove_deform_groups=not self.keep_weights)
+        scene.expresso_weights_restorable = self.keep_weights
         # remove rig
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         bpy.data.objects.remove(rig)
         # turn on landmarks visibility
         lm = bpy.data.objects.get('facial_landmarks')
@@ -850,19 +850,19 @@ class FACEIT_OT_ResetToLandmarks(bpy.types.Operator):
         else:
             self.report({'ERROR'}, 'Landmarks mesh does not exist anymore.')
             return {'CANCELLED'}
-        bpy.ops.faceit.edit_landmarks('EXEC_DEFAULT')
+        bpy.ops.expresso.edit_landmarks('EXEC_DEFAULT')
         bpy.ops.outliner.orphans_purge()
         scene.tool_settings.use_snap = True
         scene.tool_settings.mesh_select_mode = (True, False, False)
         # lm_obj = bpy.data.objects.get('facial_landmarks')
-        if context.scene.faceit_use_jaw_pivot:
-            bpy.ops.faceit.add_jaw_pivot_empty('EXEC_DEFAULT', restore_saved_pivot=True)
+        if context.scene.expresso_use_jaw_pivot:
+            bpy.ops.expresso.add_jaw_pivot_empty('EXEC_DEFAULT', restore_saved_pivot=True)
         return {'FINISHED'}
 
 
-class FACEIT_OT_EditLandmarks(bpy.types.Operator):
+class EXPRESSO_OT_EditLandmarks(bpy.types.Operator):
     '''Edit the landmarks'''
-    bl_idname = 'faceit.edit_landmarks'
+    bl_idname = 'expresso.edit_landmarks'
     bl_label = 'Edit Landmarks'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -883,7 +883,7 @@ class FACEIT_OT_EditLandmarks(bpy.types.Operator):
             bpy.ops.object.mode_set(mode='OBJECT')
         # else:
         PivotManager.start_drawing(context)
-        # bpy.ops.faceit.draw_pivot_point('INVOKE_DEFAULT')
+        # bpy.ops.expresso.draw_pivot_point('INVOKE_DEFAULT')
         futils.clear_object_selection()
         futils.set_active_object(lm.name)
         bpy.ops.object.mode_set(mode='EDIT')
@@ -891,9 +891,9 @@ class FACEIT_OT_EditLandmarks(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_FinishEditLandmarks(bpy.types.Operator):
+class EXPRESSO_OT_FinishEditLandmarks(bpy.types.Operator):
     '''Edit the landmarks'''
-    bl_idname = 'faceit.finish_edit_landmarks'
+    bl_idname = 'expresso.finish_edit_landmarks'
     bl_label = 'Edit Landmarks'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -903,14 +903,14 @@ class FACEIT_OT_FinishEditLandmarks(bpy.types.Operator):
             return context.object.name == 'facial_landmarks' and context.mode == 'EDIT_MESH'
 
     def execute(self, context):
-        bpy.ops.faceit.unmask_main('EXEC_DEFAULT')
+        bpy.ops.expresso.unmask_main('EXEC_DEFAULT')
         bpy.ops.object.mode_set(mode='OBJECT')
         return {'FINISHED'}
 
 
-class FACEIT_OT_SnapLandmarkToVertex(bpy.types.Operator):
+class EXPRESSO_OT_SnapLandmarkToVertex(bpy.types.Operator):
     '''Pick a vertex from the main mesh to snap the selected landmark point. Select a landmark vertex first, then click this button and pick a vertex from your face mesh'''
-    bl_idname = 'faceit.snap_landmark_to_vertex'
+    bl_idname = 'expresso.snap_landmark_to_vertex'
     bl_label = 'Pick Vertex to Snap'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -953,7 +953,7 @@ class FACEIT_OT_SnapLandmarkToVertex(bpy.types.Operator):
                 )
 
                 # Get the main face object
-                main_obj = futils.get_main_faceit_object()
+                main_obj = futils.get_main_expresso_object()
                 if not main_obj:
                     self.report({'WARNING'}, "No main face object found")
                     return {'RUNNING_MODAL'}

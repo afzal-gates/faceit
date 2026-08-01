@@ -7,13 +7,13 @@
 
 ## 1. Addon Loading
 - [ ] Start Blender
-- [ ] Enable FaceIt addon in preferences
+- [ ] Enable Expresso addon in preferences
 - [ ] Check for any error messages in system console
 - [ ] Verify addon loads without errors
 
 ## 2. UI Presence
 - [ ] Open 3D View sidebar (N panel)
-- [ ] Navigate to FaceIt panel
+- [ ] Navigate to Expresso panel
 - [ ] Switch to CREATE tab
 - [ ] Expand "Landmarks" section
 - [ ] Verify "Manual Landmark Picker" sub-panel exists
@@ -56,7 +56,7 @@
 ### Disable Preview
 - [ ] Disable "Preview Landmarks" toggle
 - [ ] Verify all preview empties are removed
-- [ ] Verify collection "FaceIt_Manual_Landmarks_Preview" is removed
+- [ ] Verify collection "Expresso_Manual_Landmarks_Preview" is removed
 
 ## 5. Category Organization
 - [ ] Verify landmarks are organized by category:
@@ -137,10 +137,10 @@
 
 ## 11. Integration Testing
 
-### With Existing FaceIt Features
+### With Existing Expresso Features
 - [ ] Verify manual landmarks don't interfere with automatic landmarks
 - [ ] Verify rigging operations still work
-- [ ] Verify other FaceIt panels still function
+- [ ] Verify other Expresso panels still function
 
 ### Undo/Redo
 - [ ] Pick a landmark
@@ -170,7 +170,7 @@
 **Date:** ___________
 **Tester:** ___________
 **Blender Version:** ___________
-**FaceIt Version:** ___________
+**Expresso Version:** ___________
 
 **Tests Passed:** __ / __
 **Tests Failed:** __ / __

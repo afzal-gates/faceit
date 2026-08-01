@@ -10,16 +10,16 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 
 from ..core.retarget_list_utils import get_target_shapes_dict
-from ..core import faceit_utils as futils
-from ..core.faceit_data import get_face_region_items
+from ..core import expresso_utils as futils
+from ..core.expresso_data import get_face_region_items
 from ..core.shape_key_utils import has_shape_keys
 from . import custom_slider_utils
 from .control_rig_data import get_driver_from_retarget_dictionary_fixed_slider_range, get_pose_bone_range_from_limit_constraint
 
 
-class FACEIT_OT_SearchShapeKeys(bpy.types.Operator):
+class EXPRESSO_OT_SearchShapeKeys(bpy.types.Operator):
     ''' Invoke a search popup for all Shape Keys on registered objects'''
-    bl_idname = 'faceit.search_shape_keys'
+    bl_idname = 'expresso.search_shape_keys'
     bl_label = 'Search Popup'
     bl_property = 'shape'
 
@@ -30,7 +30,7 @@ class FACEIT_OT_SearchShapeKeys(bpy.types.Operator):
 
     def execute(self, context):
         self.report({'INFO'}, "You've selected: %s" % self.shape)
-        context.scene.faceit_new_slider = self.shape
+        context.scene.expresso_new_slider = self.shape
         for region in context.area.regions:
             region.tag_redraw()
         return {'FINISHED'}
@@ -41,9 +41,9 @@ class FACEIT_OT_SearchShapeKeys(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_SetupCustomController(bpy.types.Operator):
+class EXPRESSO_OT_SetupCustomController(bpy.types.Operator):
     '''Setup Controllers for shapes that are not covered by the standart control rig.'''
-    bl_idname = 'faceit.setup_custom_controller'
+    bl_idname = 'expresso.setup_custom_controller'
     bl_label = 'Custom Controller'
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -75,14 +75,14 @@ class FACEIT_OT_SetupCustomController(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            ctrl_rig = futils.get_faceit_control_armature()
+            ctrl_rig = futils.get_expresso_control_armature()
             if ctrl_rig:
                 if ctrl_rig.library or ctrl_rig.override_library:
                     return False
-                return ctrl_rig.faceit_crig_objects or context.scene.faceit_face_objects
+                return ctrl_rig.expresso_crig_objects or context.scene.expresso_face_objects
 
     def invoke(self, context, event):
-        for obj in futils.get_faceit_objects_list():
+        for obj in futils.get_expresso_objects_list():
             if has_shape_keys(obj):
                 if obj.data.shape_keys.animation_data:
                     dr = obj.data.shape_keys.animation_data.drivers.find(
@@ -90,7 +90,7 @@ class FACEIT_OT_SetupCustomController(bpy.types.Operator):
                     if dr:
                         self.driver_exists = True
                         break
-        if not context.scene.faceit_new_slider:
+        if not context.scene.expresso_new_slider:
             self.report({'ERROR'}, 'No custom shape keys were found on the registered objects.')
             return {'CANCELLED'}
         wm = context.window_manager
@@ -108,8 +108,8 @@ class FACEIT_OT_SetupCustomController(bpy.types.Operator):
 
         row = layout.row(align=True)
         # Show the scene property in the UI
-        row.prop(context.scene, 'faceit_new_slider', text='')
-        row.operator('faceit.search_shape_keys', text='Search Shape Keys', icon='VIEWZOOM')
+        row.prop(context.scene, 'expresso_new_slider', text='')
+        row.operator('expresso.search_shape_keys', text='Search Shape Keys', icon='VIEWZOOM')
 
         row = layout.row()
         row.prop(self, 'region')
@@ -118,11 +118,11 @@ class FACEIT_OT_SetupCustomController(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if not c_rig:
             self.report({'ERROR'}, 'No Control Armature found.')
             return {'CANCELLED'}
-        if not c_rig.faceit_crig_targets:
+        if not c_rig.expresso_crig_targets:
             self.report(
                 {'ERROR'},
                 'No Control Rig target shapes found. Please update the rig or populate the target shapes first.')
@@ -130,8 +130,8 @@ class FACEIT_OT_SetupCustomController(bpy.types.Operator):
         if context.active_object != c_rig:
             futils.set_active_object(c_rig.name)
         # Get the slider name from the scene property
-        self.new_slider = scene.faceit_new_slider
-        crig_targets = c_rig.faceit_crig_targets
+        self.new_slider = scene.expresso_new_slider
+        crig_targets = c_rig.expresso_crig_targets
         item = None
         if self.new_slider not in crig_targets:
             item = crig_targets.add()
@@ -144,9 +144,9 @@ class FACEIT_OT_SetupCustomController(bpy.types.Operator):
             target_item.name = self.new_slider
         item.slider_name = custom_slider_utils.generate_extra_sliders(
             context, self.new_slider, 'full_range' if self.slider_range == 'FULL' else 'pos_range', rig_obj=c_rig, overwrite=True)
-        faceit_objects = futils.get_faceit_objects_list()
+        expresso_objects = futils.get_expresso_objects_list()
         connected_any = False
-        for obj in faceit_objects:
+        for obj in expresso_objects:
             shapekeys = obj.data.shape_keys
             if not shapekeys:
                 self.report({'WARNING'}, 'Object {} contains no Shape Keys'.format(obj.name))
@@ -166,15 +166,15 @@ class FACEIT_OT_SetupCustomController(bpy.types.Operator):
         else:
             self.report({'WARNING'}, 'Wasn\'t able to connect any drivers for the new controller {}.'.format(self.new_slider))
         try:
-            bpy.ops.faceit.rearrange_custom_controllers()
+            bpy.ops.expresso.rearrange_custom_controllers()
         except RuntimeError:
             pass
         return {'FINISHED'}
 
 
-class FACEIT_OT_SaveControlRigTemplate(bpy.types.Operator, ExportHelper):
+class EXPRESSO_OT_SaveControlRigTemplate(bpy.types.Operator, ExportHelper):
     ''' Save Target Shapes and Controllers to a template file (.json) '''
-    bl_idname = 'faceit.save_control_rig_template'
+    bl_idname = 'expresso.save_control_rig_template'
     bl_label = 'Save Control Rig Template'
     bl_options = {'UNDO', }
 
@@ -201,9 +201,9 @@ class FACEIT_OT_SaveControlRigTemplate(bpy.types.Operator, ExportHelper):
 
     @classmethod
     def poll(cls, context):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if c_rig:
-            return c_rig.faceit_crig_targets
+            return c_rig.expresso_crig_targets
 
         # retarget_list = get_active_retarget_list()
         # if retarget_list:
@@ -216,7 +216,7 @@ class FACEIT_OT_SaveControlRigTemplate(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
 
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         data = save_control_rig_template(c_rig, self.save_regions, self.save_amplify_values)
         if not data:
             self.report({'ERROR'}, 'Export Failed. Could not find retarget data')
@@ -233,9 +233,9 @@ class FACEIT_OT_SaveControlRigTemplate(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
 
-class FACEIT_OT_LoadControlRigTemplate(bpy.types.Operator, ImportHelper):
+class EXPRESSO_OT_LoadControlRigTemplate(bpy.types.Operator, ImportHelper):
     ''' Load Target Shapes and Controllers from a template file (.json) '''
-    bl_idname = 'faceit.load_control_rig_template'
+    bl_idname = 'expresso.load_control_rig_template'
     bl_label = 'Custom Controllers from Template'
     bl_options = {'UNDO', }
 
@@ -265,11 +265,11 @@ class FACEIT_OT_LoadControlRigTemplate(bpy.types.Operator, ImportHelper):
     @classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            ctrl_rig = futils.get_faceit_control_armature()
+            ctrl_rig = futils.get_expresso_control_armature()
             if ctrl_rig:
                 if ctrl_rig.library or ctrl_rig.override_library:
                     return False
-                return ctrl_rig.faceit_crig_objects or context.scene.faceit_face_objects
+                return ctrl_rig.expresso_crig_objects or context.scene.expresso_face_objects
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
@@ -287,11 +287,11 @@ class FACEIT_OT_LoadControlRigTemplate(bpy.types.Operator, ImportHelper):
         row.prop(self, 'overwrite_existing_controllers')
 
     def execute(self, context):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if not c_rig:
             self.report({'ERROR'}, 'No Control Armature found.')
             return {'CANCELLED'}
-        if not c_rig.faceit_crig_targets:
+        if not c_rig.expresso_crig_targets:
             self.report(
                 {'ERROR'},
                 'No Control Rig target shapes found. Please update the rig or populate the target shapes first.')
@@ -317,16 +317,16 @@ class FACEIT_OT_LoadControlRigTemplate(bpy.types.Operator, ImportHelper):
                 )
         if created_any_custom_controllers:
             # Reconnect the drivers.
-            bpy.ops.faceit.setup_control_drivers('EXEC_DEFAULT')
+            bpy.ops.expresso.setup_control_drivers('EXEC_DEFAULT')
             self.report({'INFO'}, 'Imported template from {}'.format(self.filepath))
         else:
             self.report({'INFO'}, 'No custom controllers were created. Please check the console for more info.')
         return {'FINISHED'}
 
 
-class FACEIT_OT_RemoveCustomController(bpy.types.Operator):
+class EXPRESSO_OT_RemoveCustomController(bpy.types.Operator):
     ''' Remove Custom Controllers from control rig and crig_targets '''
-    bl_idname = 'faceit.remove_custom_controller'
+    bl_idname = 'expresso.remove_custom_controller'
     bl_label = 'Remove Custom Controller'
     bl_options = {'UNDO', 'INTERNAL'}
     bl_property = 'custom_slider'
@@ -344,12 +344,12 @@ class FACEIT_OT_RemoveCustomController(bpy.types.Operator):
     @ classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            ctrl_rig = futils.get_faceit_control_armature()
+            ctrl_rig = futils.get_expresso_control_armature()
             if ctrl_rig:
                 if ctrl_rig.library or ctrl_rig.override_library:
                     return False
             return True
-            # return (ctrl_rig.faceit_crig_targets[ctrl_rig.faceit_crig_targets_index] in custom_slider_utils.get_slider_shape_names_in_crig(c_rig))
+            # return (ctrl_rig.expresso_crig_targets[ctrl_rig.expresso_crig_targets_index] in custom_slider_utils.get_slider_shape_names_in_crig(c_rig))
 
     def invoke(self, context, event):
 
@@ -358,13 +358,13 @@ class FACEIT_OT_RemoveCustomController(bpy.types.Operator):
         return {'FINISHED'}
 
     def execute(self, context):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if not c_rig:
             self.report({'ERROR'}, 'No Control Armature found.')
             return {'CANCELLED'}
         if context.active_object != c_rig:
             futils.set_active_object(c_rig.name)
-        crig_targets = c_rig.faceit_crig_targets
+        crig_targets = c_rig.expresso_crig_targets
         found_index = crig_targets.find(self.custom_slider)
         if found_index != -1:
             # Remove Drivers!
@@ -390,11 +390,11 @@ class FACEIT_OT_RemoveCustomController(bpy.types.Operator):
                 bone = edit_bones[bone_name]
                 edit_bones.remove(bone)
             bpy.ops.object.mode_set(mode=mode)
-            if c_rig.faceit_crig_targets_index >= found_index:
-                c_rig.faceit_crig_targets_index -= 1
+            if c_rig.expresso_crig_targets_index >= found_index:
+                c_rig.expresso_crig_targets_index -= 1
             crig_targets.remove(found_index)
             try:
-                bpy.ops.faceit.rearrange_custom_controllers()
+                bpy.ops.expresso.rearrange_custom_controllers()
             except RuntimeError:
                 pass
         else:
@@ -403,25 +403,25 @@ class FACEIT_OT_RemoveCustomController(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_RearrangeCustomControllers(bpy.types.Operator):
+class EXPRESSO_OT_RearrangeCustomControllers(bpy.types.Operator):
     ''' Rearrange Custom Controllers in crig_targets '''
-    bl_idname = 'faceit.rearrange_custom_controllers'
+    bl_idname = 'expresso.rearrange_custom_controllers'
     bl_label = 'Rearrange Custom Controllers'
     bl_options = {'UNDO', 'INTERNAL'}
 
     @ classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            ctrl_rig = futils.get_faceit_control_armature()
+            ctrl_rig = futils.get_expresso_control_armature()
             if ctrl_rig:
                 return True
 
     def execute(self, context):
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if not c_rig:
             self.report({'ERROR'}, 'No Control Armature found.')
             return {'CANCELLED'}
-        max_rows = c_rig.faceit_crig_rows
+        max_rows = c_rig.expresso_crig_rows
         if context.active_object != c_rig:
             futils.set_active_object(c_rig.name)
         custom_slider_utils.get_properties_for_sliders(c_rig)
@@ -451,9 +451,9 @@ class FACEIT_OT_RearrangeCustomControllers(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_MoveTargetShapeItem(bpy.types.Operator):
+class EXPRESSO_OT_MoveTargetShapeItem(bpy.types.Operator):
     '''Move a specific Expression Item index in the list. Also effects the expression actions '''
-    bl_idname = "faceit.move_target_shape_item"
+    bl_idname = "expresso.move_target_shape_item"
     bl_label = "Move"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -468,15 +468,15 @@ class FACEIT_OT_MoveTargetShapeItem(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        c_rig = futils.get_faceit_control_armature()
-        idx = c_rig.faceit_crig_targets_index
-        target_shapes = c_rig.faceit_crig_targets
+        c_rig = futils.get_expresso_control_armature()
+        idx = c_rig.expresso_crig_targets_index
+        target_shapes = c_rig.expresso_crig_targets
         return target_shapes and idx >= 0 and idx < len(target_shapes)
 
     def execute(self, context):
-        c_rig = futils.get_faceit_control_armature()
-        index = c_rig.faceit_crig_targets_index
-        target_shapes = c_rig.faceit_crig_targets
+        c_rig = futils.get_expresso_control_armature()
+        index = c_rig.expresso_crig_targets_index
+        target_shapes = c_rig.expresso_crig_targets
 
         add_index = -1 if self.direction == 'UP' else 1
         new_index = index + add_index
@@ -488,9 +488,9 @@ class FACEIT_OT_MoveTargetShapeItem(bpy.types.Operator):
         target_shapes.move(new_index, index)
         list_length = len(target_shapes) - 1
         new_index = index + (-1 if self.direction == 'UP' else 1)
-        c_rig.faceit_crig_targets_index = max(0, min(new_index, list_length))
+        c_rig.expresso_crig_targets_index = max(0, min(new_index, list_length))
         try:
-            bpy.ops.faceit.rearrange_custom_controllers()
+            bpy.ops.expresso.rearrange_custom_controllers()
         except RuntimeError:
             print('Wasn\'t able to rearrange the custom controllers.')
             pass

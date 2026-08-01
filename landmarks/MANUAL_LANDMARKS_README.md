@@ -6,7 +6,7 @@ The Manual Landmark Picker allows users to manually assign facial landmark point
 ## Usage Instructions
 
 ### 1. Initial Setup
-1. Navigate to the **FaceIt** panel in the 3D View sidebar (N panel)
+1. Navigate to the **Expresso** panel in the 3D View sidebar (N panel)
 2. Go to the **CREATE** tab
 3. Expand the **Landmarks** section
 4. Find the **Manual Landmark Picker** sub-panel
@@ -90,20 +90,20 @@ For each landmark:
 - `panels/manual_landmarks_panel.py` - UI panels
 
 ### Properties
-- `Scene.faceit_manual_landmarks` - Collection of landmark data
-- `Scene.faceit_manual_landmarks_preview` - Preview toggle
-- `Scene.faceit_manual_landmarks_target_mesh` - Target mesh reference
+- `Scene.expresso_manual_landmarks` - Collection of landmark data
+- `Scene.expresso_manual_landmarks_preview` - Preview toggle
+- `Scene.expresso_manual_landmarks_target_mesh` - Target mesh reference
 
 ### Operators
-- `faceit.pick_landmark_vertex` - Pick vertex for landmark
-- `faceit.clear_landmark` - Clear single landmark
-- `faceit.clear_all_landmarks` - Clear all landmarks
-- `faceit.initialize_manual_landmarks` - Initialize landmark collection
-- `faceit.preview_manual_landmarks` - Toggle preview empties
-- `faceit.export_manual_landmarks` - Export to JSON
-- `faceit.import_manual_landmarks` - Import from JSON
+- `expresso.pick_landmark_vertex` - Pick vertex for landmark
+- `expresso.clear_landmark` - Clear single landmark
+- `expresso.clear_all_landmarks` - Clear all landmarks
+- `expresso.initialize_manual_landmarks` - Initialize landmark collection
+- `expresso.preview_manual_landmarks` - Toggle preview empties
+- `expresso.export_manual_landmarks` - Export to JSON
+- `expresso.import_manual_landmarks` - Import from JSON
 
-## Integration with FaceIt
+## Integration with Expresso
 The manual landmarks are stored separately from the automatic landmarks system. They can be used:
 - As reference points for custom rigging
 - For verification of automatic landmark placement

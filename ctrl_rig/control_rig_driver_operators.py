@@ -1,8 +1,8 @@
 import bpy
 from bpy.props import BoolProperty
 
-from ..core import faceit_data as fdata
-from ..core import faceit_utils as futils
+from ..core import expresso_data as fdata
+from ..core import expresso_utils as futils
 from ..core import retarget_list_utils as rutils
 from ..core import shape_key_utils
 from ..core.fc_dr_utils import clear_invalid_drivers
@@ -10,9 +10,9 @@ from . import control_rig_data as ctrl_data
 from . import control_rig_utils as ctrl_utils
 
 
-class FACEIT_OT_SetupControlDrivers(bpy.types.Operator):
+class EXPRESSO_OT_SetupControlDrivers(bpy.types.Operator):
     '''Setup drivers to control the shape keys with control rig'''
-    bl_idname = 'faceit.setup_control_drivers'
+    bl_idname = 'expresso.setup_control_drivers'
     bl_label = 'Connect Control Rig'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -24,20 +24,20 @@ class FACEIT_OT_SetupControlDrivers(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            c_rig = futils.get_faceit_control_armature()
+            c_rig = futils.get_expresso_control_armature()
             if c_rig:
-                return c_rig.faceit_crig_objects
+                return c_rig.expresso_crig_objects
 
     def execute(self, context):
         scene = context.scene
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         auto_key = scene.tool_settings.use_keyframe_insert_auto
         scene.tool_settings.use_keyframe_insert_auto = False
         futils.set_hide_obj(c_rig, False)
-        bpy.ops.faceit.remove_control_drivers('EXEC_DEFAULT', remove_all=False)
-        crig_targets = c_rig.faceit_crig_targets
+        bpy.ops.expresso.remove_control_drivers('EXEC_DEFAULT', remove_all=False)
+        crig_targets = c_rig.expresso_crig_targets
         # crig_objects = []
-        # for item in c_rig.faceit_crig_objects:
+        # for item in c_rig.expresso_crig_objects:
         #     obj = futils.get_object(item.name)
         #     if obj is not None:
         #         crig_objects.append(obj)
@@ -94,9 +94,9 @@ class FACEIT_OT_SetupControlDrivers(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_RemoveControlDrivers(bpy.types.Operator):
+class EXPRESSO_OT_RemoveControlDrivers(bpy.types.Operator):
     '''Remove all drivers for active control rig'''
-    bl_idname = 'faceit.remove_control_drivers'
+    bl_idname = 'expresso.remove_control_drivers'
     bl_label = 'Disconnect Control Rig'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -109,7 +109,7 @@ class FACEIT_OT_RemoveControlDrivers(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.mode in ('OBJECT', 'POSE'):
-            c_rig = futils.get_faceit_control_armature()
+            c_rig = futils.get_expresso_control_armature()
             if c_rig:
                 return True
 
@@ -118,23 +118,23 @@ class FACEIT_OT_RemoveControlDrivers(bpy.types.Operator):
         auto_key = scene.tool_settings.use_keyframe_insert_auto
         scene.tool_settings.use_keyframe_insert_auto = False
 
-        use_faceit_scene_settings_fallback = bool(len(futils.get_faceit_control_armatures()) <= 1)
+        use_expresso_scene_settings_fallback = bool(len(futils.get_expresso_control_armatures()) <= 1)
 
         clear_any = False
-        c_rig = futils.get_faceit_control_armature()
+        c_rig = futils.get_expresso_control_armature()
         if c_rig:
-            faceit_objects = ctrl_utils.get_crig_objects_list(c_rig)
-            all_target_shapes = rutils.get_all_set_target_shapes(c_rig.faceit_crig_targets)
-            if not faceit_objects:
+            expresso_objects = ctrl_utils.get_crig_objects_list(c_rig)
+            all_target_shapes = rutils.get_all_set_target_shapes(c_rig.expresso_crig_targets)
+            if not expresso_objects:
                 self.report({'WARNING'}, 'Couldn\'t find any target objects. Please update the control rig.')
-                if use_faceit_scene_settings_fallback:
-                    faceit_objects = futils.get_faceit_objects_list()
+                if use_expresso_scene_settings_fallback:
+                    expresso_objects = futils.get_expresso_objects_list()
             if not all_target_shapes:
                 self.report({'WARNING'}, 'Couldn\'t find any target shapes. Please update the control rig.')
-                if use_faceit_scene_settings_fallback:
-                    all_target_shapes = rutils.get_all_set_target_shapes(scene.faceit_arkit_retarget_shapes)
+                if use_expresso_scene_settings_fallback:
+                    all_target_shapes = rutils.get_all_set_target_shapes(scene.expresso_arkit_retarget_shapes)
 
-            for obj in faceit_objects:
+            for obj in expresso_objects:
                 if shape_key_utils.has_shape_keys(obj):
                     shapekeys = obj.data.shape_keys
                 else:
@@ -174,9 +174,9 @@ class FACEIT_OT_RemoveControlDrivers(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_ClearOldCtrlRigData(bpy.types.Operator):
+class EXPRESSO_OT_ClearOldCtrlRigData(bpy.types.Operator):
     '''Find inactive control rigs, remove them and clear eventual drivers.'''
-    bl_idname = 'faceit.clear_old_ctrl_rig_data'
+    bl_idname = 'expresso.clear_old_ctrl_rig_data'
     bl_label = 'Purge Old Control Rigs and Drivers'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -199,23 +199,23 @@ class FACEIT_OT_ClearOldCtrlRigData(bpy.types.Operator):
                         old_control_rig_objects.append(obj)
                         continue
                     else:
-                        if 'FaceitControlRig' in obj.name:
+                        if 'ExpressoControlRig' in obj.name:
                             old_control_rig_objects.append(obj)
-        use_faceit_scene_settings_fallback = bool(len(futils.get_faceit_control_armatures()) <= 1)
+        use_expresso_scene_settings_fallback = bool(len(futils.get_expresso_control_armatures()) <= 1)
 
         for c_rig in old_control_rig_objects:
-            faceit_objects = ctrl_utils.get_crig_objects_list(c_rig)
-            all_target_shapes = rutils.get_all_set_target_shapes(c_rig.faceit_crig_targets)
-            if not faceit_objects:
+            expresso_objects = ctrl_utils.get_crig_objects_list(c_rig)
+            all_target_shapes = rutils.get_all_set_target_shapes(c_rig.expresso_crig_targets)
+            if not expresso_objects:
                 self.report({'WARNING'}, 'Couldn\'t find any target objects. Please update the control rig.')
-                if use_faceit_scene_settings_fallback:
-                    faceit_objects = futils.get_faceit_objects_list()
+                if use_expresso_scene_settings_fallback:
+                    expresso_objects = futils.get_expresso_objects_list()
             if not all_target_shapes:
                 self.report({'WARNING'}, 'Couldn\'t find any target shapes. Please update the control rig.')
-                if use_faceit_scene_settings_fallback:
-                    all_target_shapes = rutils.get_all_set_target_shapes(scene.faceit_arkit_retarget_shapes)
+                if use_expresso_scene_settings_fallback:
+                    all_target_shapes = rutils.get_all_set_target_shapes(scene.expresso_arkit_retarget_shapes)
 
-            for obj in faceit_objects:
+            for obj in expresso_objects:
                 if shape_key_utils.has_shape_keys(obj):
                     shapekeys = obj.data.shape_keys
                 else:

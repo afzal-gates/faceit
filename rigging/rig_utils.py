@@ -3,7 +3,7 @@ from operator import attrgetter
 import bpy
 from mathutils import Vector, Quaternion
 
-from ..core import faceit_utils as futils
+from ..core import expresso_utils as futils
 from ..core import vgroup_utils as vg_utils
 import numpy as np
 from mathutils import Vector
@@ -186,7 +186,7 @@ def set_bone_groups_from_dict(rig, bone_groups_dict):
         bg = rig.pose.bone_groups.get(bg_name)
         if bg:
             # Create a new group if the name already exists
-            bg_name = bg_name + '_Faceit'
+            bg_name = bg_name + '_Expresso'
         bpy.ops.pose.group_add()
         bg = rig.pose.bone_groups[-1]
         bg.name = bg_name

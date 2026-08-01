@@ -27,7 +27,7 @@ def decode_live_link_face(bytes_data: bytes):
 
 
 def convert_live_link_face_to_face_cap_format(data):
-    '''Converts the data from the PyLiveLinkFace App to the Face Cap format (used in faceit).'''
+    '''Converts the data from the PyLiveLinkFace App to the Face Cap format (used in expresso).'''
     animation_data = []
     for i, x in enumerate(data):
         if i < 52:

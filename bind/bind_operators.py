@@ -7,17 +7,17 @@ from bpy.types import Key, Object
 from bpy.props import BoolProperty, IntProperty, FloatProperty, EnumProperty
 from mathutils import Vector
 
-from ..core.modifier_utils import add_faceit_armature_modifier, get_faceit_armature_modifier, set_bake_modifier_item
-from ..core.faceit_data import GENERATORS
-from ..core import faceit_utils as futils
+from ..core.modifier_utils import add_expresso_armature_modifier, get_expresso_armature_modifier, set_bake_modifier_item
+from ..core.expresso_data import GENERATORS
+from ..core import expresso_utils as futils
 from ..core import mesh_utils, shape_key_utils
 from ..core import vgroup_utils as vg_utils
 from . import bind_utils
 
 
-class FACEIT_OT_SmartBind(bpy.types.Operator):
+class EXPRESSO_OT_SmartBind(bpy.types.Operator):
     '''Bind main objects (Face, Eyes, Teeth, Tongue)'''
-    bl_idname = "faceit.smart_bind"
+    bl_idname = "expresso.smart_bind"
     bl_label = "Bind"
     bl_options = {'UNDO', 'INTERNAL', 'REGISTER'}
 
@@ -69,12 +69,12 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
     )
     weight_eyes: BoolProperty(
         name="Eyes",
-        description="Overwrite Faceit Vertex Groups with specific bone weights (Eyes)",
+        description="Overwrite Expresso Vertex Groups with specific bone weights (Eyes)",
         default=True
     )
     weight_teeth: BoolProperty(
         name="Teeth",
-        description="Overwrite Faceit Vertex Groups with specific bone weights (Teeth)",
+        description="Overwrite Expresso Vertex Groups with specific bone weights (Teeth)",
         default=True
     )
     weight_tongue: BoolProperty(
@@ -96,7 +96,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
     )
     tranfer_to_hair_only: BoolProperty(
         name="Transfer to Hair Only",
-        description="Automatically find hair geometry. All geometry that is not assigned to Faceit vertex groups.",
+        description="Automatically find hair geometry. All geometry that is not assigned to Expresso vertex groups.",
         default=False,
     )
     clean_eyelashes_weights: BoolProperty(
@@ -105,7 +105,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
         default=True,)
     remove_rigid_weights: BoolProperty(
         name="Clear Rigid Geometry",
-        description="Removes all weights from geometry assigned to the faceit_rigid group.",
+        description="Removes all weights from geometry assigned to the expresso_rigid group.",
         default=True
     )
     keep_split_objects: BoolProperty(
@@ -165,9 +165,9 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
         min=-1.0,
         max=1.0,
     )
-    remove_old_faceit_weights: BoolProperty(
-        name="Remove Old Faceit Weights",
-        description="Removes all weights associated with the FaceitRig before rebinding.",
+    remove_old_expresso_weights: BoolProperty(
+        name="Remove Old Expresso Weights",
+        description="Removes all weights associated with the ExpressoRig before rebinding.",
         default=True
     )
     make_single_user: BoolProperty(
@@ -176,29 +176,29 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
         default=True
     )
 
-    found_faceit_eyelashes_grp = False
-    found_faceit_eyes_grp = False
-    found_faceit_teeth_grp = False
-    found_faceit_tongue_grp = False
+    found_expresso_eyelashes_grp = False
+    found_expresso_eyes_grp = False
+    found_expresso_teeth_grp = False
+    found_expresso_tongue_grp = False
 
     @classmethod
     def poll(cls, context):
-        rig = futils.get_faceit_armature(force_original=True)
-        if rig and context.scene.faceit_face_objects:
+        rig = futils.get_expresso_armature(force_original=True)
+        if rig and context.scene.expresso_face_objects:
             if rig.hide_viewport is False and context.mode == 'OBJECT':
                 return True
 
     def invoke(self, context, event):
-        objects = futils.get_faceit_objects_list()
-        self.found_faceit_eyelashes_grp = bool(vg_utils.get_objects_with_vertex_group(
-            "faceit_eyelashes", objects=objects, get_all=False))
-        if not self.found_faceit_eyelashes_grp:
+        objects = futils.get_expresso_objects_list()
+        self.found_expresso_eyelashes_grp = bool(vg_utils.get_objects_with_vertex_group(
+            "expresso_eyelashes", objects=objects, get_all=False))
+        if not self.found_expresso_eyelashes_grp:
             self.smooth_expand_eyelashes = self.clean_eyelashes_weights = False
-        # teeth_grps = ("faceit_upper_teeth", "faceit_lower_teeth")
+        # teeth_grps = ("expresso_upper_teeth", "expresso_lower_teeth")
         # for grp in teeth_grps:
-        #     self.found_faceit_teeth_grp = bool(vg_utils.get_objects_with_vertex_group(
+        #     self.found_expresso_teeth_grp = bool(vg_utils.get_objects_with_vertex_group(
         #         grp, objects=objects, get_all=False))
-        # if not self.found_faceit_teeth_grp:
+        # if not self.found_expresso_teeth_grp:
         #     self.weight_teeth = False
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
@@ -233,7 +233,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
             row = col_bind.row()
             row.prop(self, "weight_secondary_method", expand=True)
             row = col_bind.row()
-            row.prop(self, "remove_old_faceit_weights")
+            row.prop(self, "remove_old_expresso_weights")
             row.prop(self, "remove_rigid_weights")
             row = col_bind.row()
             row.prop(self, "weight_eyes")
@@ -259,7 +259,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
             row = col_bind.row()
             row.prop(self, "clean_eyelashes_weights")
             row.prop(self, "smooth_expand_eyelashes")
-            if not self.found_faceit_eyelashes_grp:
+            if not self.found_expresso_eyelashes_grp:
                 row.enabled = False
                 row.active = False
                 row = col_bind.row()
@@ -283,20 +283,20 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
         scene = context.scene
         # --------------- RELEVANT OBJECTS -------------------
         start_time = time.time()
-        faceit_objects = futils.get_faceit_objects_list()
-        if not faceit_objects:
+        expresso_objects = futils.get_expresso_objects_list()
+        if not expresso_objects:
             self.report({'ERROR'}, "No objects registered! Complete Setup")
             return {'FINISHED'}
         lm_obj = futils.get_object("facial_landmarks")
         if not lm_obj:
-            self.report({'ERROR'}, "Faceit landmarks not found!")
+            self.report({'ERROR'}, "Expresso landmarks not found!")
             return {'FINISHED'}
-        rig = futils.get_faceit_armature()
+        rig = futils.get_expresso_armature()
         if not rig:
-            self.report({'ERROR'}, "Faceit rig not found!")
+            self.report({'ERROR'}, "Expresso rig not found!")
             return {'FINISHED'}
         # --------------- CHECK MAIN GROUP/OBJECT ---------------
-        face_obj = futils.get_main_faceit_object()
+        face_obj = futils.get_main_expresso_object()
         if not face_obj:
             self.report(
                 {'ERROR'},
@@ -339,7 +339,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
         obj_mod_drivers = {}
         obj_settings = {}
         obj_sk_dict = {}
-        for obj in faceit_objects:
+        for obj in expresso_objects:
 
             obj_settings[obj.name] = {
                 "topology_mirror": obj.data.use_mirror_topology,
@@ -351,7 +351,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
             obj.lock_location[:] = (False,) * 3
             obj.lock_rotation[:] = (False,) * 3
             obj.data.use_mirror_topology = False
-            obj.data.use_mirror_x = False if scene.faceit_asymmetric else True
+            obj.data.use_mirror_x = False if scene.expresso_asymmetric else True
 
             if obj.data.users > 1:
                 if self.make_single_user:
@@ -390,8 +390,8 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
                         obj_mod_show_dict[obj.name] = {mod.name: mod.show_viewport}
                     mod.show_viewport = False
 
-            # Remove all FaceitRig vertex groups
-            if self.remove_old_faceit_weights:
+            # Remove all ExpressoRig vertex groups
+            if self.remove_old_expresso_weights:
                 other_deform_groups = []
                 if other_rigs:
                     for o_rig in other_rigs:
@@ -402,7 +402,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
                 if vertex_group_intersect:
                     self.report(
                         {'WARNING'},
-                        "There seems to be another rig with similar bone names: {}. This can lead to weight conflicts. Faceit will add the influence.".
+                        "There seems to be another rig with similar bone names: {}. This can lead to weight conflicts. Expresso will add the influence.".
                         format(vertex_group_intersect))
                 for grp in obj.vertex_groups:
                     if grp.name in deform_groups:
@@ -411,7 +411,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
 
             if shape_key_utils.has_shape_keys(obj):
                 for sk in obj.data.shape_keys.key_blocks:
-                    if sk.name.startswith('faceit_cc_'):
+                    if sk.name.startswith('expresso_cc_'):
                         sk.mute = True
                 # --------------- DUPLICATE OBJECT(S) -------------------
                 # | - Preserve Data (Vertex Groups + Shape Keys)
@@ -421,7 +421,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
         obj_data_dict = {}
         dg = bpy.context.evaluated_depsgraph_get()
         futils.clear_object_selection()
-        for obj in faceit_objects:
+        for obj in expresso_objects:
             eval_mesh_data = shape_key_utils.get_mesh_data(obj, dg)
             # Create static duplicates of all meshes for binding.
             if bpy.app.version < (3, 0, 0):
@@ -452,9 +452,9 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
 
             basis_data = shape_key_utils.get_mesh_data(obj, evaluated=False)
             obj_data_dict[obj.name] = [basis_data, eval_mesh_data]
-            # Remove all vertex groups from duplicates, except for faceitgroups
+            # Remove all vertex groups from duplicates, except for expressogroups
             for grp in dup_obj.vertex_groups:
-                if "faceit_" not in grp.name:
+                if "expresso_" not in grp.name:
                     dup_obj.vertex_groups.remove(grp)
         # Remove parent - keep transform! Parent objects with Transforms can mess up the process!
         bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
@@ -533,7 +533,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
                 shape_key_utils.apply_stored_shape_keys(obj, sk_dict, apply_drivers=True)
                 if getattr(sk_id, 'key_blocks', None):
                     for sk in sk_id.key_blocks:
-                        if sk.name.startswith('faceit_cc_'):
+                        if sk.name.startswith('expresso_cc_'):
                             sk.mute = False
                 if sk_action:
                     anim_data = sk_id.animation_data
@@ -544,13 +544,13 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
                         if anim_data.action_suitable_slots:
                             anim_data.action_slot = anim_data.action_suitable_slots[0]
 
-            # ----------------- FACEIT MODIFIER --------------------------
+            # ----------------- EXPRESSO MODIFIER --------------------------
             # | - Check for bind groups and ensure the modifier is applied
             # -------------------------------------------------------------
             deform_groups = vg_utils.get_deform_bones_from_armature(rig)
             if not any([grp in obj.vertex_groups for grp in deform_groups]):
                 continue
-            add_faceit_armature_modifier(obj, rig)
+            add_expresso_armature_modifier(obj, rig)
         # --------------- RESTORE SETTINGS -------------------
         rig.data.pose_position = 'POSE'
         # restore the layer visibillity to its original state
@@ -573,33 +573,33 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
         futils.set_active_object(rig.name)
         bpy.ops.outliner.orphans_purge()
         if bind_success:
-            self.report({'INFO'}, "Faceit Binding Successful")
+            self.report({'INFO'}, "Expresso Binding Successful")
             print("Bound in {}".format(round(time.time() - start_time, 2)))
         else:
-            self.report({'ERROR'}, "Faceit Binding Failed. See Console for more info.")
+            self.report({'ERROR'}, "Expresso Binding Failed. See Console for more info.")
         return {'FINISHED'}
 
     def _bind(self, context, bind_objects, rig, lm_obj) -> bool:
-        """Start the Faceit Binding progress on the passed bind objects
+        """Start the Expresso Binding progress on the passed bind objects
         @face_obj: the main object, can also be retrieved from bind_objects (main group)
-        @bind_objects: the bind objects. Should have cleared vertex groups except for faceit groups
+        @bind_objects: the bind objects. Should have cleared vertex groups except for expresso groups
         @rig: the armature object to bind to
         Returns True if binding was successful, False if not
         """
 
-        faceit_vertex_groups = [
-            "faceit_right_eyeball",
-            "faceit_left_eyeball",
-            "faceit_left_eyes_other",
-            "faceit_right_eyes_other",
-            "faceit_upper_teeth",
-            "faceit_lower_teeth",
-            "faceit_tongue",
-            # "faceit_rigid",
+        expresso_vertex_groups = [
+            "expresso_right_eyeball",
+            "expresso_left_eyeball",
+            "expresso_left_eyes_other",
+            "expresso_right_eyes_other",
+            "expresso_upper_teeth",
+            "expresso_lower_teeth",
+            "expresso_tongue",
+            # "expresso_rigid",
         ]
-        # "faceit_eyelashes", "faceit_facial_hair", "faceit_main",
+        # "expresso_eyelashes", "expresso_facial_hair", "expresso_main",
         # ----------------------- SPLIT OBJECTS BEFORE BIND ----------------------------
-        # | - Split by Faceit Group assignments
+        # | - Split by Expresso Group assignments
         # | - Sort objects for different bind methods
         # ------------------------------------------------------------------------------
         bind_problem = False
@@ -616,30 +616,30 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
             # Unlock all groups:
             for grp in obj.vertex_groups:
                 grp.lock_weight = False
-            split_objects = bind_utils.split_by_faceit_groups(obj)
+            split_objects = bind_utils.split_by_expresso_groups(obj)
             all_split_objects.extend(split_objects)
             split_bind_objects_dict[obj] = split_objects
         # Remove double entries
         all_split_objects = list(set(all_split_objects))
         futils.clear_object_selection()
         for s_obj in all_split_objects:
-            if "faceit_main" in s_obj.vertex_groups and len(
-                    s_obj.vertex_groups) == 1:  # or "faceit_tongue" in s_obj.vertex_groups:
+            if "expresso_main" in s_obj.vertex_groups and len(
+                    s_obj.vertex_groups) == 1:  # or "expresso_tongue" in s_obj.vertex_groups:
                 main_obj = s_obj
                 continue
             # Remove all vertex groups that don't cover the whole split surface.
             for grp in s_obj.vertex_groups:
-                if 'faceit_' in grp.name:
+                if 'expresso_' in grp.name:
                     vs = vg_utils.get_verts_in_vgroup(s_obj, grp.name)
                     if len(vs) != len(s_obj.data.vertices):
                         # No need to split, the object is already separated
                         print(f'removing {grp.name} from {s_obj.name}')
                         s_obj.vertex_groups.remove(grp)
-            if any([grp.name in faceit_vertex_groups for grp in s_obj.vertex_groups]):
+            if any([grp.name in expresso_vertex_groups for grp in s_obj.vertex_groups]):
                 secondary_bind_objects.append(s_obj)
-            elif "faceit_facial_hair" in s_obj.vertex_groups or not self.tranfer_to_hair_only:
+            elif "expresso_facial_hair" in s_obj.vertex_groups or not self.tranfer_to_hair_only:
                 transfer_weights_objects.append(s_obj)
-                if "faceit_eyelashes" in s_obj.vertex_groups:
+                if "expresso_eyelashes" in s_obj.vertex_groups:
                     eyelashes_objects.append(s_obj)
 
         if self.weight_secondary_method == 'AUTO':
@@ -742,20 +742,20 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
                     expand=self.eyelashes_smooth_expand,
                 )
         # ----------------------- USER WEIGHTS ---------------------------
-        # | Faceit groups -> eyes, teeth, tongue, rigid
+        # | Expresso groups -> eyes, teeth, tongue, rigid
         # --------------------------------------------------------------------
         if self.weight_eyes:
-            eye_grps = ("faceit_left_eyes_other", "faceit_right_eyes_other",
-                        "faceit_left_eyeball", "faceit_right_eyeball")
+            eye_grps = ("expresso_left_eyes_other", "expresso_right_eyes_other",
+                        "expresso_left_eyeball", "expresso_right_eyeball")
             for vgroup in eye_grps:
                 if is_new_rigify:
                     new_grp = "DEF-eye.L" if "left" in vgroup else "DEF-eye.R"
                 else:
                     new_grp = "DEF_eye.L" if "left" in vgroup else "DEF_eye.R"
-                self.overwrite_faceit_group(all_split_objects, vgroup, new_grp)
+                self.overwrite_expresso_group(all_split_objects, vgroup, new_grp)
 
         if self.weight_teeth:
-            teeth_grps = ("faceit_upper_teeth", "faceit_lower_teeth")
+            teeth_grps = ("expresso_upper_teeth", "expresso_lower_teeth")
             for vgroup in teeth_grps:
                 if "lower_teeth" in vgroup:
                     if rig.pose.bones.get("DEF-teeth.B"):
@@ -773,17 +773,17 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
                             {'WARNING'},
                             "Uppper Teeth bone 'DEF - teeth.T' does not exist. Create the bone manually or specify Teeth Vertex Groups and regenerate the Rig.")
                         continue
-                self.overwrite_faceit_group(all_split_objects, vgroup, new_grp)
+                self.overwrite_expresso_group(all_split_objects, vgroup, new_grp)
 
         if self.weight_tongue:
             objects_with_vgroup = vg_utils.get_objects_with_vertex_group(
-                "faceit_tongue", objects=secondary_bind_objects, get_all=True)
+                "expresso_tongue", objects=secondary_bind_objects, get_all=True)
             tongue_bones = [
                 "DEF-tongue",
                 "DEF-tongue.001",
                 "DEF-tongue.002"
             ]
-            self._auto_weight_selection_to_bones(objects_with_vgroup, rig, tongue_bones, "faceit_tongue")
+            self._auto_weight_selection_to_bones(objects_with_vgroup, rig, tongue_bones, "expresso_tongue")
 
         # ----------------------- MERGE SPLIT OBJECTS ---------------------------
         if bpy.context.mode != 'OBJECT':
@@ -801,7 +801,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
             if len(split_objects) > 1:
                 futils.set_active_object(obj.name)
                 bpy.ops.object.join()
-            add_faceit_armature_modifier(obj, rig)
+            add_expresso_armature_modifier(obj, rig)
 
         # ----------------------- SMOOTH ALL ---------------------------
         # | Smooth pass on all bind objects
@@ -812,14 +812,14 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
                 rig=rig,
             )
         # ----------------------- REMOVE RIGID ---------------------------
-        # | Remove Weights from Verts with faceit_rigid group (pass only faceit_rigid)
+        # | Remove Weights from Verts with expresso_rigid group (pass only expresso_rigid)
         # -----------------------------------------------------------------
         if self.remove_rigid_weights:
-            self.overwrite_faceit_group(bind_objects, "faceit_rigid", new_grp=None)
+            self.overwrite_expresso_group(bind_objects, "expresso_rigid", new_grp=None)
 
         for obj in bind_objects:
             for grp in obj.vertex_groups:
-                if "faceit_" in grp.name:
+                if "expresso_" in grp.name:
                     obj.vertex_groups.remove(grp)
 
         return not bind_problem
@@ -949,7 +949,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
                 return
         bpy.ops.object.mode_set(mode='OBJECT')
         for obj in objects:
-            add_faceit_armature_modifier(obj, rig)
+            add_expresso_armature_modifier(obj, rig)
             futils.clear_object_selection()
             futils.set_active_object(rig.name)
             futils.set_active_object(obj.name)
@@ -980,16 +980,16 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
             for from_obj in transfer_from_objects:
                 futils.clear_object_selection()
                 for obj in transfer_to_objects:
-                    faceit_groups_per_obj = set(vg_utils.get_faceit_vertex_grps(obj))
-                    # get objects that were not bound and are registered in faceit objects
+                    expresso_groups_per_obj = set(vg_utils.get_expresso_vertex_grps(obj))
+                    # get objects that were not bound and are registered in expresso objects
                     bind_utils.data_transfer_vertex_groups(obj_from=from_obj, obj_to=obj, method='NEAREST')
-                    # remove all faceit groups that were transferred from the auto bind objects. These will messup re-binding.
-                    for grp in set(vg_utils.get_faceit_vertex_grps(obj)) - faceit_groups_per_obj:
-                        false_assigned_faceit_group = obj.vertex_groups.get(grp)
-                        obj.vertex_groups.remove(false_assigned_faceit_group)
+                    # remove all expresso groups that were transferred from the auto bind objects. These will messup re-binding.
+                    for grp in set(vg_utils.get_expresso_vertex_grps(obj)) - expresso_groups_per_obj:
+                        false_assigned_expresso_group = obj.vertex_groups.get(grp)
+                        obj.vertex_groups.remove(false_assigned_expresso_group)
 
     def _auto_weight_selection_to_bones(
-            self, auto_weight_objects, rig, bones, faceit_group="faceit_tongue"):
+            self, auto_weight_objects, rig, bones, expresso_group="expresso_tongue"):
         '''Bind a vertex selection to specific bones'''
         if bpy.context.mode != 'OBJECT':
             bpy.ops.object.mode_set()
@@ -1006,7 +1006,7 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
             else:
                 continue
         if not any_selected:
-            self.report({'WARNING'}, f"{faceit_group} bones do not exist. Regenerate the rig.")
+            self.report({'WARNING'}, f"{expresso_group} bones do not exist. Regenerate the rig.")
             return
         bpy.ops.object.mode_set(mode='OBJECT')
         for obj in auto_weight_objects:
@@ -1014,13 +1014,13 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
             futils.set_active_object(rig.name)
             futils.set_active_object(obj.name)
 
-            vs = vg_utils.get_verts_in_vgroup(obj, faceit_group)
+            vs = vg_utils.get_verts_in_vgroup(obj, expresso_group)
             if not vs:
                 continue
-            # Add Faceit_Armature mod
-            add_faceit_armature_modifier(obj, rig)
+            # Add Expresso_Armature mod
+            add_expresso_armature_modifier(obj, rig)
             # remove all weights of other bones that got weighted in autoweighting process
-            vg_utils.remove_vgroups_from_verts(obj, vs=vs, filter_keep=faceit_group)
+            vg_utils.remove_vgroups_from_verts(obj, vs=vs, filter_keep=expresso_group)
             if vg_utils.vertex_group_sanity_check(obj):
                 vg_utils.remove_zero_weights_from_verts(obj)
                 vg_utils.remove_unused_vertex_groups_thresh(obj)
@@ -1040,18 +1040,18 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
             obj.data.use_paint_mask_vertex = use_mask
             bpy.ops.object.mode_set(mode='OBJECT')
 
-    def overwrite_faceit_group(self, objects, faceit_vertex_group, new_grp=""):
+    def overwrite_expresso_group(self, objects, expresso_vertex_group, new_grp=""):
         """
         bind user defined vertices to respective bones with constant weight of 1 on all vertices
         @objects - the bind objects
-        @faceit_vertex_group - the user defined groups holding all vertices that should be assigned to new group
+        @expresso_vertex_group - the user defined groups holding all vertices that should be assigned to new group
         @new_grp - the name of the new vertex group
         """
-        # get all vertices in the faceit group
+        # get all vertices in the expresso group
         objects_with_vgroup = vg_utils.get_objects_with_vertex_group(
-            faceit_vertex_group, objects=objects, get_all=True)
+            expresso_vertex_group, objects=objects, get_all=True)
         for obj in objects_with_vgroup:
-            vs = vg_utils.get_verts_in_vgroup(obj, faceit_vertex_group)
+            vs = vg_utils.get_verts_in_vgroup(obj, expresso_vertex_group)
             if not vs:
                 continue
             vg_utils.remove_all_weight(obj, vs)
@@ -1059,9 +1059,9 @@ class FACEIT_OT_SmartBind(bpy.types.Operator):
                 vg_utils.assign_vertex_grp(obj, [v.index for v in vs], new_grp)
 
 
-class FACEIT_OT_PairArmature(bpy.types.Operator):
-    '''Pair the FaceitRig to the facial objects without generating weights'''
-    bl_idname = "faceit.pair_armature"
+class EXPRESSO_OT_PairArmature(bpy.types.Operator):
+    '''Pair the ExpressoRig to the facial objects without generating weights'''
+    bl_idname = "expresso.pair_armature"
     bl_label = "Pair Armature"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -1071,22 +1071,22 @@ class FACEIT_OT_PairArmature(bpy.types.Operator):
 
     def execute(self, context):
 
-        faceit_objects = futils.get_faceit_objects_list()
-        faceit_rig = futils.get_faceit_armature(force_original=True)
-        if not faceit_rig:
+        expresso_objects = futils.get_expresso_objects_list()
+        expresso_rig = futils.get_expresso_armature(force_original=True)
+        if not expresso_rig:
             return {'CANCELLED'}
 
-        for obj in faceit_objects:
-            add_faceit_armature_modifier(obj, faceit_rig)
+        for obj in expresso_objects:
+            add_expresso_armature_modifier(obj, expresso_rig)
 
-        context.scene.faceit_weights_restorable = False
+        context.scene.expresso_weights_restorable = False
 
         return {'FINISHED'}
 
 
-class FACEIT_OT_UnbindFacial(bpy.types.Operator):
-    '''Unbind the FaceitRig from the facial objects'''
-    bl_idname = "faceit.unbind_facial"
+class EXPRESSO_OT_UnbindFacial(bpy.types.Operator):
+    '''Unbind the ExpressoRig from the facial objects'''
+    bl_idname = "expresso.unbind_facial"
     bl_label = "Unbind"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -1100,10 +1100,10 @@ class FACEIT_OT_UnbindFacial(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        rig = futils.get_faceit_armature()
-        faceit_objects = futils.get_faceit_objects_list()
-        for obj in faceit_objects:
-            a_mod = get_faceit_armature_modifier(obj)
+        rig = futils.get_expresso_armature()
+        expresso_objects = futils.get_expresso_objects_list()
+        for obj in expresso_objects:
+            a_mod = get_expresso_armature_modifier(obj)
             if a_mod:
                 obj.modifiers.remove(a_mod)
             if self.remove_deform_groups:
@@ -1113,10 +1113,10 @@ class FACEIT_OT_UnbindFacial(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FACEIT_OT_CorrectiveSmooth(bpy.types.Operator):
+class EXPRESSO_OT_CorrectiveSmooth(bpy.types.Operator):
     '''Add corrective smooth modifier to the active object'''
 
-    bl_idname = "faceit.smooth_correct"
+    bl_idname = "expresso.smooth_correct"
     bl_label = "Smooth Correct Modifier"
     bl_options = {'UNDO', 'INTERNAL'}
 
@@ -1125,16 +1125,16 @@ class FACEIT_OT_CorrectiveSmooth(bpy.types.Operator):
         obj = context.object
         if obj is not None:
             if context.mode == 'OBJECT' and obj.type == 'MESH':
-                if not obj.modifiers.get("Faceit_CorrectiveSmooth"):
+                if not obj.modifiers.get("Expresso_CorrectiveSmooth"):
                     return True
 
     def execute(self, context):
         obj = context.object
-        mod = obj.modifiers.new(name="Faceit_CorrectiveSmooth", type="CORRECTIVE_SMOOTH")
+        mod = obj.modifiers.new(name="Expresso_CorrectiveSmooth", type="CORRECTIVE_SMOOTH")
         mod.smooth_type = "LENGTH_WEIGHTED"
         mod.iterations = 4
         mod.use_pin_boundary = True
-        arm_mod = get_faceit_armature_modifier(obj)
+        arm_mod = get_expresso_armature_modifier(obj)
         if arm_mod and mod:
             new_index = obj.modifiers.find(arm_mod.name) + 1
             if bpy.app.version < (3, 6, 0):
@@ -1147,5 +1147,5 @@ class FACEIT_OT_CorrectiveSmooth(bpy.types.Operator):
             else:
                 index = obj.modifiers.find(mod.name)
                 obj.modifiers.move(index, new_index)
-        set_bake_modifier_item(mod, set_bake=True, is_faceit_mod=True)
+        set_bake_modifier_item(mod, set_bake=True, is_expresso_mod=True)
         return {'FINISHED'}
