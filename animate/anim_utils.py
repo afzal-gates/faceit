@@ -1,6 +1,8 @@
 import bpy
-from bpy.types import Action, FCurve, ID, ActionFCurves
+from bpy.types import Action, FCurve, ID
 from bpy_extras import anim_utils
+
+ActionFCurves = getattr(bpy.types, "ActionFCurves", object)
 
 
 def find_slot_by_handle(action: Action, handle: int):
@@ -41,11 +43,13 @@ def get_active_animation_fcurves_from_id(id: ID = None) -> list[FCurve]:
     if bpy.app.version >= (4, 4, 0):
         slot = adt.action_slot
         if slot is None:
-            pass
+            fcurves = action.fcurves
         else:
             channelbag = anim_utils.action_get_channelbag_for_slot(action, slot)
             if channelbag:
                 fcurves = channelbag.fcurves
+            else:
+                fcurves = action.fcurves
     else:
         fcurves = action.fcurves
     return fcurves

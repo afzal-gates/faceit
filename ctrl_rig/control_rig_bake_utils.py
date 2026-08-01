@@ -2,7 +2,9 @@ from typing import Iterable
 
 import bpy
 import numpy as np
-from bpy.types import Action, Context, Object, ActionFCurves
+from bpy.types import Action, Context, Object
+
+ActionFCurves = getattr(bpy.types, "ActionFCurves", object)
 
 from ..animate.anim_utils import get_fcurves_from_slot
 from ..core.shape_key_utils import has_shape_keys

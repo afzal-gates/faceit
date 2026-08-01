@@ -94,7 +94,12 @@ def iter_my_register_deps(cls, my_classes, my_classes_by_idname):
 
 
 def iter_my_deps_from_annotations(cls, my_classes):
-    for value in typing.get_type_hints(cls, {}, {}).values():
+    try:
+        hints = typing.get_type_hints(cls, {}, {})
+    except Exception:
+        hints = getattr(cls, "__annotations__", {})
+
+    for value in hints.values():
         dependency = get_dependency_from_annotation(value)
         if dependency is not None:
             if dependency in my_classes:
@@ -103,7 +108,8 @@ def iter_my_deps_from_annotations(cls, my_classes):
 
 def get_dependency_from_annotation(value):
     if blender_version >= (2, 93):
-        if isinstance(value, bpy.props._PropertyDeferred):
+        property_deferred = getattr(bpy.props, "_PropertyDeferred", None)
+        if property_deferred is not None and isinstance(value, property_deferred):
             return value.keywords.get("type")
     else:
         if isinstance(value, tuple) and len(value) == 2:
