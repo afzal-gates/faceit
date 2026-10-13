@@ -107,8 +107,18 @@ def get_fcurves_from_slot(action: Action, slot=None, ensure=True) -> ActionFCurv
         if channelbag:
             fcurves = channelbag.fcurves
         elif ensure:
-            channelbag = anim_utils._ensure_channelbag_exists(action, slot)
-            fcurves = channelbag.fcurves
+            if hasattr(anim_utils, 'action_ensure_channelbag_for_slot'):
+                channelbag = anim_utils.action_ensure_channelbag_for_slot(action, slot)
+            elif hasattr(anim_utils, '_ensure_channelbag_exists'):
+                channelbag = anim_utils._ensure_channelbag_exists(action, slot)
+            else:
+                channelbag = None
+            if channelbag:
+                fcurves = channelbag.fcurves
+            else:
+                fcurves = action.fcurves
+        else:
+            fcurves = action.fcurves
     else:
         fcurves = action.fcurves
     return fcurves

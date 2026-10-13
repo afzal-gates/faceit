@@ -36,6 +36,8 @@ class EXPRESSO_PT_SetupRegister(EXPRESSO_PT_BaseSetup, bpy.types.Panel):
             row = col.row(align=True)
             op = row.operator('expresso.add_facial_part', text='Register Face Objects', icon='ADD')
             op.facial_part = 'main'
+            row = col.row(align=True)
+            row.operator('expresso.auto_detect_face_parts', text='Auto Detect Face Parts', icon='VIEWZOOM')
         else:
             col.separator(factor=1.0)
             row = col.row()
@@ -59,6 +61,8 @@ class EXPRESSO_PT_SetupRegister(EXPRESSO_PT_BaseSetup, bpy.types.Panel):
             op.direction = 'DOWN'
             row = col.row(align=True)
             op = row.operator('expresso.add_facial_part', icon='ADD')
+            row = col.row(align=True)
+            row.operator('expresso.auto_detect_face_parts', text='Auto Detect Face Parts', icon='VIEWZOOM')
             row = col.row(align=True)
             if scene.expresso_workspace.workspace != 'MOCAP' and not scene.expresso_use_existing_armature:
                 row = col.row(align=True)
@@ -282,6 +286,8 @@ class EXPRESSO_PT_SetupVertexGroups(EXPRESSO_PT_BaseSetup, bpy.types.Panel):
         row = col_utils.row(align=True)
         row.operator('expresso.draw_expresso_vertex_group', text='Show Unassigned',
                      icon='HIDE_OFF', depress=False).expresso_vertex_group_name = 'UNASSIGNED'
+        row = col_utils.row(align=True)
+        row.operator('expresso.auto_detect_face_parts', text='Auto Detect Face Parts', icon='VIEWZOOM')
         col_utils.separator()
         row = col_utils.row(align=True)
         row.operator('expresso.remove_all_expresso_groups', text='Reset All', icon='TRASH')

@@ -117,18 +117,22 @@ def split_by_expresso_groups(obj):
     '''Split the object into parts by assigned expresso vertex groups'''
     futils.clear_object_selection()
     futils.set_active_object(obj.name)
-    for grp in obj.vertex_groups:
+    for grp in list(obj.vertex_groups):
         if 'expresso_' in grp.name:
             vs = vg_utils.get_verts_in_vgroup(obj, grp.name)
             if grp.name == 'expresso_main':
-                # get the vertices that are only in the main group
-                vs = [v for v in vs if len(v.groups) == 1]
+                # get the vertices that are not in any other expresso_* group
+                other_expresso_indices = {
+                    g.index for g in obj.vertex_groups
+                    if g.name.startswith('expresso_') and g.name != 'expresso_main'
+                }
+                if other_expresso_indices:
+                    vs = [v for v in vs if not any(element.group in other_expresso_indices for element in v.groups)]
             if not vs:
-                obj.vertex_groups.remove(grp)
                 continue
             if len(vs) == len(obj.data.vertices):
                 # No need to split, the object is already separated
-                break
+                continue
             bpy.ops.object.mode_set(mode='EDIT')
             mesh_utils.select_vertices(obj, [v.index for v in vs], deselect_others=True)
             bpy.ops.mesh.separate(type='SELECTED')
@@ -136,7 +140,7 @@ def split_by_expresso_groups(obj):
 
     split_objects = [split_obj for split_obj in bpy.context.selected_objects if split_obj.type == 'MESH']
     for s_obj in split_objects:
-        if vg_utils.vertex_group_sanity_check(obj):
+        if vg_utils.vertex_group_sanity_check(s_obj):
             vg_utils.remove_zero_weights_from_verts(s_obj)
             vg_utils.remove_unused_vertex_groups(s_obj)
     return split_objects

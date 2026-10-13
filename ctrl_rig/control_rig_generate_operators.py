@@ -129,7 +129,7 @@ class EXPRESSO_OT_GenerateControlRig(bpy.types.Operator):
         obj = None
         for obj in data_to.objects:
             if obj:
-                if obj.type == 'ARMATURE' and 'ExpressoControlRig' in obj.name:
+                if obj.type == 'ARMATURE':
                     expresso_collection.objects.link(obj)
                     obj['ctrl_rig_id'] = new_rig_id
                     ctrl_rig = obj

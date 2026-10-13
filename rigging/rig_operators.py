@@ -112,15 +112,26 @@ class EXPRESSO_OT_GenerateRig(bpy.types.Operator):
         if rig:
             bpy.data.objects.remove(rig, do_unlink=True)
             rig = None
+        # Clean up any leftover unlinked FaceitRig
+        old_faceit_rig = bpy.data.objects.get('FaceitRig')
+        if old_faceit_rig and old_faceit_rig.users == 0:
+            bpy.data.objects.remove(old_faceit_rig, do_unlink=True)
+
         # load the objects data in the rig file
         with bpy.data.libraries.load(rig_filepath) as (data_from, data_to):
             data_to.objects = data_from.objects
         # add only the armature
         for obj in data_to.objects:
-            if obj.type == 'ARMATURE' and obj.name == 'ExpressoRig':
+            if obj and obj.type == 'ARMATURE':
+                obj.name = 'ExpressoRig'
                 expresso_collection.objects.link(obj)
                 rig = obj
                 break
+
+        if rig is None:
+            self.report({'ERROR'}, 'Could not load Expresso armature from rig file.')
+            return {'CANCELLED'}
+
         rig['expresso_rig_id'] = get_random_rig_id()
 
         futils.clear_object_selection()
@@ -133,16 +144,29 @@ class EXPRESSO_OT_GenerateRig(bpy.types.Operator):
 
         # Update the bone collections to 4.0
         if bpy.app.version >= (4, 0, 0):
-            face_coll = rig.data.collections["Layer 1"]
-            face_coll.name = 'Face'
-            rig.data.collections.get("Layer 2").name = 'Face (Primary)'
-            rig.data.collections.get("Layer 3").name = 'Face (Secondary)'
-            rig.data.collections["Layer 30"].name = 'DEF'
-            rig.data.collections["Layer 31"].name = 'MCH'
-            eye_master_L = rig.data.bones['master_eye.L']
-            eye_master_R = rig.data.bones['master_eye.R']
-            face_coll.assign(eye_master_L)
-            face_coll.assign(eye_master_R)
+            face_coll = rig.data.collections.get("Layer 1")
+            if face_coll:
+                face_coll.name = 'Face'
+            coll_l2 = rig.data.collections.get("Layer 2")
+            if coll_l2:
+                coll_l2.name = 'Face (Primary)'
+            coll_l3 = rig.data.collections.get("Layer 3")
+            if coll_l3:
+                coll_l3.name = 'Face (Secondary)'
+            coll_l30 = rig.data.collections.get("Layer 30")
+            if coll_l30:
+                coll_l30.name = 'DEF'
+            coll_l31 = rig.data.collections.get("Layer 31")
+            if coll_l31:
+                coll_l31.name = 'MCH'
+            face_coll = rig.data.collections.get('Face')
+            if face_coll:
+                eye_master_L = rig.data.bones.get('master_eye.L')
+                eye_master_R = rig.data.bones.get('master_eye.R')
+                if eye_master_L:
+                    face_coll.assign(eye_master_L)
+                if eye_master_R:
+                    face_coll.assign(eye_master_R)
             # remove old bone groups.
             if bpy.app.version >= (4, 1, 0):
                 coll_remove = []

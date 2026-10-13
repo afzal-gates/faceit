@@ -184,12 +184,15 @@ class EXPRESSO_OT_UpdateControlRig(bpy.types.Operator):
                 data_to.objects = data_from.objects
             # add only the armature
             obj = None
-            for obj in data_to.objects:
-                if obj:
-                    if obj.type == 'ARMATURE' and 'ExpressoControlRig' in obj.name:
-                        expresso_collection.objects.link(obj)
-                        obj['ctrl_rig_id'] = ctrl_data.get_random_rig_id()
-                        break
+            for o in data_to.objects:
+                if o and o.type == 'ARMATURE':
+                    expresso_collection.objects.link(o)
+                    o['ctrl_rig_id'] = ctrl_data.get_random_rig_id()
+                    obj = o
+                    break
+            if obj is None:
+                self.report({'ERROR'}, 'Could not append the control rig armature.')
+                return {'CANCELLED'}
             print('linking', obj.name)
             futils.clear_object_selection()
             futils.set_active_object(obj.name)
@@ -602,10 +605,10 @@ class EXPRESSO_OT_SelectBoneFromSourceShape(bpy.types.Operator):
             return {'CANCELLED'}
         if context.mode != 'POSE':
             bpy.ops.object.mode_set(mode='POSE')
-        for b in c_rig.data.bones:
-            b.select = False
+        for pb in c_rig.pose.bones:
+            pb.select = False
         c_rig.data.bones.active = pose_bone.bone
-        pose_bone.bone.select = True
+        pose_bone.select = True
         return {'FINISHED'}
 
 
@@ -784,7 +787,7 @@ class EXPRESSO_OT_SetCustomControllerSliderRange(bpy.types.Operator):
         custom_shape_names = [
             t.name for t in c_rig.expresso_crig_targets if t.name not in retarget_list]
         if self.affect_controllers == 'SELECTED':
-            selected_bones = [b for b in c_rig.pose.bones if b.bone.select]
+            selected_bones = [b for b in c_rig.pose.bones if b.select]
         else:
             selected_bones = c_rig.pose.bones
         # selected_bones = [b for b in selected_bones if b.name == custom_shape_names]

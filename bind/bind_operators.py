@@ -563,7 +563,11 @@ class EXPRESSO_OT_SmartBind(bpy.types.Operator):
         scene.tool_settings.transform_pivot_point = pivot_setting
         context.scene.tool_settings.use_auto_normalize = use_auto_normalize
         scene.transform_orientation_slots[0].type = transform_orientation
-        context.space_data.overlay.show_relationship_lines = False
+        try:
+            if context.space_data:
+                context.space_data.overlay.show_relationship_lines = False
+        except (AttributeError, RuntimeError):
+            pass
         scene.tool_settings.use_keyframe_insert_auto = auto_key
         scene.render.use_simplify = simplify_value
         scene.render.simplify_subdivision = simplify_subd
@@ -623,12 +627,14 @@ class EXPRESSO_OT_SmartBind(bpy.types.Operator):
         all_split_objects = list(set(all_split_objects))
         futils.clear_object_selection()
         for s_obj in all_split_objects:
-            if "expresso_main" in s_obj.vertex_groups and len(
-                    s_obj.vertex_groups) == 1:  # or "expresso_tongue" in s_obj.vertex_groups:
-                main_obj = s_obj
+            if s_obj is None:
+                continue
+            if "expresso_main" in s_obj.vertex_groups:
+                if main_obj is None or len(s_obj.vertex_groups) == 1:
+                    main_obj = s_obj
                 continue
             # Remove all vertex groups that don't cover the whole split surface.
-            for grp in s_obj.vertex_groups:
+            for grp in list(s_obj.vertex_groups):
                 if 'expresso_' in grp.name:
                     vs = vg_utils.get_verts_in_vgroup(s_obj, grp.name)
                     if len(vs) != len(s_obj.data.vertices):
@@ -642,10 +648,21 @@ class EXPRESSO_OT_SmartBind(bpy.types.Operator):
                 if "expresso_eyelashes" in s_obj.vertex_groups:
                     eyelashes_objects.append(s_obj)
 
+        if main_obj is None and all_split_objects:
+            for candidate in all_split_objects:
+                if candidate and candidate not in secondary_bind_objects and candidate not in transfer_weights_objects:
+                    main_obj = candidate
+                    break
+            if main_obj is None and all_split_objects:
+                main_obj = all_split_objects[0]
+
+        if main_obj and "expresso_main" not in main_obj.vertex_groups:
+            vg_utils.assign_vertex_grp(main_obj, [v.index for v in main_obj.data.vertices], "expresso_main", overwrite=False)
+
         if self.weight_secondary_method == 'AUTO':
-            auto_weight_objects = all_split_objects
+            auto_weight_objects = [o for o in all_split_objects if o is not None]
         else:
-            auto_weight_objects = [main_obj]
+            auto_weight_objects = [main_obj] if main_obj else [o for o in all_split_objects if o is not None]
 
         if self.keep_split_objects:
             print("------- SPLIT OBJECTS ----------")
@@ -672,7 +689,7 @@ class EXPRESSO_OT_SmartBind(bpy.types.Operator):
         # ----------------------- SMART WEIGHTS ---------------------------
         # | Remove weights out of the face.
         # -----------------------------------------------------------------
-        if self.smart_weights:
+        if self.smart_weights and main_obj:
             start_time = time.time()
             self._apply_smart_weighting(
                 context,
@@ -871,6 +888,8 @@ class EXPRESSO_OT_SmartBind(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='OBJECT')
         deform_groups = vg_utils.get_deform_bones_from_armature(rig)
         for obj in objects:
+            if obj is None or not hasattr(obj, 'vertex_groups'):
+                continue
 
             if any([grp in obj.vertex_groups for grp in deform_groups]):
                 face_hull = bind_utils.create_facial_hull(context, lm_obj)
@@ -940,7 +959,7 @@ class EXPRESSO_OT_SmartBind(bpy.types.Operator):
             for bone in filter_bone_names:
                 pbone = rig.pose.bones.get(bone)
                 if pbone:
-                    pbone.bone.select = True
+                    pbone.select = True
                     any_selected = True
                 else:
                     continue
@@ -1001,7 +1020,7 @@ class EXPRESSO_OT_SmartBind(bpy.types.Operator):
         for bone in bones:
             pbone = rig.pose.bones.get(bone)
             if pbone:
-                pbone.bone.select = True
+                pbone.select = True
                 any_selected = True
             else:
                 continue

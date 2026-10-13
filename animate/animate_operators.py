@@ -598,7 +598,7 @@ class EXPRESSO_OT_SelectControlBones(bpy.types.Operator):
         for item in rig.data.expresso_control_bones:
             pb = rig.pose.bones.get(item.name)
             if pb:
-                pb.bone.select = True
+                pb.select = True
         return {'FINISHED'}
 
 
@@ -1731,7 +1731,7 @@ class EXPRESSO_OT_PoseAmplify(bpy.types.Operator):
         if self.selected_bones_only:
             selected_pbones = []
             for pb in rig.pose.bones:
-                if pb.bone.select is True:
+                if pb.select:
                     selected_pbones.append(pb.name)
             a_utils.amplify_pose(action, filter_pose_bone_names=selected_pbones,
                                  frame=frame, scale_factor=self.percentage)
@@ -1820,7 +1820,7 @@ class EXPRESSO_OT_ResetExpression(bpy.types.Operator):
         selected_pbones = []
         if self.selected_bones_only:
             for pb in rig.pose.bones:
-                if pb.bone.select is True:
+                if pb.select:
                     selected_pbones.append(pb.name)
         for exp in expressions_operate:
             frame = exp.frame

@@ -146,10 +146,10 @@ def update_crig_target_index(self, context):
     if not slider:
         slider = c_rig.pose.bones.get(slider_name)
     if slider:
-        for b in c_rig.data.bones:
-            b.select = False
+        for pb in c_rig.pose.bones:
+            pb.select = False
         c_rig.data.bones.active = slider.bone
-        slider.bone.select = True
+        slider.select = True
     # try:
     #     bpy.ops.expresso.select_bone_from_source_shape('EXEC_DEFAULT', expression=active_target.name)
     # except RuntimeError:

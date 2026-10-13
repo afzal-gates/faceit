@@ -23,7 +23,11 @@ from bpy.props import IntProperty
 
 
 from . import auto_load
+from .core.action_compat import init_action_compatibility
 from .landmarks.landmarks_utils import unlock_3d_view
+
+# Initialize compatibility for Blender 4.4 / 5.0+ slotted actions
+init_action_compatibility()
 
 VERSION = 2
 bl_info = {
@@ -179,6 +183,7 @@ auto_load.init()
 
 
 def register():
+    init_action_compatibility()
     bpy.utils.register_class(ExpressoPreferences)
     auto_load.register()
 

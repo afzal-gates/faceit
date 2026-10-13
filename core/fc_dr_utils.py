@@ -1,6 +1,9 @@
 import bpy
 import numpy as np
 from bpy.types import FCurve, Action
+from .action_compat import init_action_compatibility
+
+init_action_compatibility()
 
 MODIFIER_TYPES = [
     'GENERATOR',
